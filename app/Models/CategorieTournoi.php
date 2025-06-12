@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CategorieTournoi extends Model
 {
-    use HasFactory;
+    protected $fillable = ['nom'];
+
+    // Relationships
+    public function tournois() { return $this->hasMany(Tournoi::class); }
 }
