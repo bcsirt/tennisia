@@ -7,19 +7,20 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+## About TennisIA
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+TennisIA is a Laravel application that analyzes professional tennis data and generates AI-based predictions. The project aggregates player statistics, tournament results and surface-specific performance metrics to forecast upcoming matches.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Running the Project
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. Install dependencies with `composer install` and `npm install`.
+2. Copy `.env.example` to `.env` and run `php artisan key:generate`.
+3. Run database migrations using `php artisan migrate`.
+4. Start the development server with `php artisan serve` and compile assets with `npm run dev`.
+
+### Documentation
+
+Additional information about the domain models and prediction logic is available in `tennis_context.php`. See the [Laravel documentation](https://laravel.com/docs) for framework usage details.
 
 ## Learning Laravel
 

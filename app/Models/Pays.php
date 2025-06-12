@@ -294,7 +294,7 @@ class Pays extends Model
 
     protected $appends = [
         'force_tennis_globale',
-        'potentiel_competitive',
+        'potentiel_competitif',
         'avantage_geographique',
         'qualite_ecosystem_tennis',
         'influence_internationale',
@@ -402,7 +402,7 @@ class Pays extends Model
         return $facteurs > 0 ? round($score / $facteurs * 100, 1) : 50;
     }
 
-    public function getPotentielCompetitiveAttribute()
+    public function getPotentielCompetitifAttribute()
     {
         $potentiel = 0;
 
