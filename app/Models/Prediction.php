@@ -436,6 +436,29 @@ class Prediction extends Model
         return $prediction;
     }
 
+    // Dans votre classe de prédiction
+    public function ajusterPredictionPourSanctions(MatchTennis $match): array
+    {
+        $facteurs = ['joueur1' => 1.0, 'joueur2' => 1.0];
+
+        foreach ([$match->joueur1, $match->joueur2] as $index => $joueur) {
+            $sanctionsRecentes = Sanction::pourJoueur($joueur->id)
+                ->recentes(7) // 7 derniers jours
+                ->graves()
+                ->get();
+
+            if ($sanctionsRecentes->isNotEmpty()) {
+                $impactMoyen = $sanctionsRecentes->avg(function($sanction) {
+                    return $sanction->impactSurMatch()['probabilite_victoire_reduite'];
+                });
+
+                $facteurs['joueur' . ($index + 1)] -= $impactMoyen;
+            }
+        }
+
+        return $facteurs;
+    }
+
     /**
      * Collecter toutes les features pour ML
      */
