@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StatutMatch extends Model
@@ -18,26 +18,44 @@ class StatutMatch extends Model
 
     // IDs constants pour référence rapide
     const PROGRAMME = 1;
+
     const EN_COURS = 2;
+
     const TERMINE = 3;
+
     const ABANDONNE = 4;
+
     const REPORTE = 5;
+
     const ANNULE = 6;
+
     const WALKOVER = 7;
+
     const FORFAIT = 8;
+
     const INTERROMPU = 9;
+
     const SUSPENDU = 10;
 
     // Codes string pour l'API et logique métier
     const CODE_PROGRAMME = 'programme';
+
     const CODE_EN_COURS = 'en_cours';
+
     const CODE_TERMINE = 'termine';
+
     const CODE_ABANDONNE = 'abandonne';
+
     const CODE_REPORTE = 'reporte';
+
     const CODE_ANNULE = 'annule';
+
     const CODE_WALKOVER = 'walkover';
+
     const CODE_FORFAIT = 'forfait';
+
     const CODE_INTERROMPU = 'interrompu';
+
     const CODE_SUSPENDU = 'suspendu';
 
     protected $fillable = [
@@ -101,7 +119,7 @@ class StatutMatch extends Model
         'est_visible',            // Visible dans l'interface publique
         'est_interne',            // Statut interne uniquement
         'notes',
-        'actif'
+        'actif',
     ];
 
     protected $casts = [
@@ -135,7 +153,7 @@ class StatutMatch extends Model
         'permet_reprogrammation' => 'boolean',
         'est_visible' => 'boolean',
         'est_interne' => 'boolean',
-        'actif' => 'boolean'
+        'actif' => 'boolean',
     ];
 
     protected $appends = [
@@ -144,7 +162,7 @@ class StatutMatch extends Model
         'actions_possibles',
         'impact_classification',
         'duree_type',
-        'couleur_affichage'
+        'couleur_affichage',
     ];
 
     // ===================================================================
@@ -175,19 +193,33 @@ class StatutMatch extends Model
     {
         $suffixes = [];
 
-        if ($this->est_final) $suffixes[] = '🔒';
-        if ($this->necessite_confirmation) $suffixes[] = '⚠️';
-        if ($this->est_interne) $suffixes[] = '🔒';
+        if ($this->est_final) {
+            $suffixes[] = '🔒';
+        }
+        if ($this->necessite_confirmation) {
+            $suffixes[] = '⚠️';
+        }
+        if ($this->est_interne) {
+            $suffixes[] = '🔒';
+        }
 
-        return $this->nom . (empty($suffixes) ? '' : ' ' . implode(' ', $suffixes));
+        return $this->nom.(empty($suffixes) ? '' : ' '.implode(' ', $suffixes));
     }
 
     public function getNiveauUrgenceAttribute()
     {
-        if ($this->code === self::CODE_INTERROMPU) return 'Critique';
-        if ($this->code === self::CODE_EN_COURS) return 'Élevée';
-        if ($this->code === self::CODE_REPORTE) return 'Modérée';
-        if ($this->est_final) return 'Faible';
+        if ($this->code === self::CODE_INTERROMPU) {
+            return 'Critique';
+        }
+        if ($this->code === self::CODE_EN_COURS) {
+            return 'Élevée';
+        }
+        if ($this->code === self::CODE_REPORTE) {
+            return 'Modérée';
+        }
+        if ($this->est_final) {
+            return 'Faible';
+        }
 
         return 'Standard';
     }
@@ -196,10 +228,18 @@ class StatutMatch extends Model
     {
         $actions = [];
 
-        if ($this->autorise_score) $actions[] = 'Enregistrer score';
-        if ($this->autorise_statistiques) $actions[] = 'Saisir statistiques';
-        if ($this->autorise_modification) $actions[] = 'Modifier match';
-        if ($this->permet_reprogrammation) $actions[] = 'Reprogrammer';
+        if ($this->autorise_score) {
+            $actions[] = 'Enregistrer score';
+        }
+        if ($this->autorise_statistiques) {
+            $actions[] = 'Saisir statistiques';
+        }
+        if ($this->autorise_modification) {
+            $actions[] = 'Modifier match';
+        }
+        if ($this->permet_reprogrammation) {
+            $actions[] = 'Reprogrammer';
+        }
 
         // Actions selon le statut
         if ($this->code === self::CODE_PROGRAMME) {
@@ -225,26 +265,42 @@ class StatutMatch extends Model
 
     public function getImpactClassificationAttribute()
     {
-        if (!$this->est_comptabilise) return 'Aucun impact';
-        if ($this->points_atp_wta && $this->prize_money) return 'Impact complet';
-        if ($this->points_atp_wta) return 'Points uniquement';
-        if ($this->prize_money) return 'Prize money uniquement';
+        if (! $this->est_comptabilise) {
+            return 'Aucun impact';
+        }
+        if ($this->points_atp_wta && $this->prize_money) {
+            return 'Impact complet';
+        }
+        if ($this->points_atp_wta) {
+            return 'Points uniquement';
+        }
+        if ($this->prize_money) {
+            return 'Prize money uniquement';
+        }
 
         return 'Impact partiel';
     }
 
     public function getDureeTypeAttribute()
     {
-        if ($this->est_actif) return 'Variable';
-        if ($this->est_final) return 'Permanent';
-        if ($this->duree_expiration) return "Temporaire ({$this->duree_expiration}h)";
+        if ($this->est_actif) {
+            return 'Variable';
+        }
+        if ($this->est_final) {
+            return 'Permanent';
+        }
+        if ($this->duree_expiration) {
+            return "Temporaire ({$this->duree_expiration}h)";
+        }
 
         return 'Indéterminée';
     }
 
     public function getCouleurAffichageAttribute()
     {
-        if ($this->couleur_hex) return $this->couleur_hex;
+        if ($this->couleur_hex) {
+            return $this->couleur_hex;
+        }
 
         // Couleurs par défaut selon le statut
         $couleurs = [
@@ -257,7 +313,7 @@ class StatutMatch extends Model
             self::CODE_WALKOVER => '#f39c12',      // Orange
             self::CODE_FORFAIT => '#e67e22',       // Orange foncé
             self::CODE_INTERROMPU => '#e74c3c',    // Rouge
-            self::CODE_SUSPENDU => '#34495e'       // Gris foncé
+            self::CODE_SUSPENDU => '#34495e',       // Gris foncé
         ];
 
         return $couleurs[$this->code] ?? '#bdc3c7';
@@ -321,7 +377,7 @@ class StatutMatch extends Model
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('code', 'LIKE', "%{$terme}%")
                 ->orWhere('description', 'LIKE', "%{$terme}%");
@@ -351,7 +407,7 @@ class StatutMatch extends Model
                 'permet_reprogrammation' => true,
                 'declenche_notification' => true,
                 'couleur_hex' => '#3498db',
-                'icone' => 'calendar'
+                'icone' => 'calendar',
             ],
             [
                 'id' => self::EN_COURS,
@@ -368,7 +424,7 @@ class StatutMatch extends Model
                 'autorise_statistiques' => true,
                 'declenche_notification' => true,
                 'couleur_hex' => '#e74c3c',
-                'icone' => 'play'
+                'icone' => 'play',
             ],
             [
                 'id' => self::TERMINE,
@@ -387,7 +443,7 @@ class StatutMatch extends Model
                 'prize_money' => true,
                 'compte_confrontation' => true,
                 'couleur_hex' => '#27ae60',
-                'icone' => 'check'
+                'icone' => 'check',
             ],
             [
                 'id' => self::ABANDONNE,
@@ -407,7 +463,7 @@ class StatutMatch extends Model
                 'compte_confrontation' => true,
                 'motif_requis' => true,
                 'couleur_hex' => '#f39c12',
-                'icone' => 'stop'
+                'icone' => 'stop',
             ],
             [
                 'id' => self::REPORTE,
@@ -423,7 +479,7 @@ class StatutMatch extends Model
                 'duree_expiration' => 168, // 7 jours
                 'motif_requis' => true,
                 'couleur_hex' => '#9b59b6',
-                'icone' => 'clock'
+                'icone' => 'clock',
             ],
             [
                 'id' => self::ANNULE,
@@ -440,7 +496,7 @@ class StatutMatch extends Model
                 'commentaire_requis' => true,
                 'approbation_requise' => true,
                 'couleur_hex' => '#95a5a6',
-                'icone' => 'x'
+                'icone' => 'x',
             ],
             [
                 'id' => self::WALKOVER,
@@ -460,7 +516,7 @@ class StatutMatch extends Model
                 'compte_confrontation' => true,
                 'motif_requis' => true,
                 'couleur_hex' => '#f39c12',
-                'icone' => 'user-x'
+                'icone' => 'user-x',
             ],
             [
                 'id' => self::FORFAIT,
@@ -481,7 +537,7 @@ class StatutMatch extends Model
                 'motif_requis' => true,
                 'approbation_requise' => true,
                 'couleur_hex' => '#e67e22',
-                'icone' => 'ban'
+                'icone' => 'ban',
             ],
             [
                 'id' => self::INTERROMPU,
@@ -497,7 +553,7 @@ class StatutMatch extends Model
                 'autorise_modification' => true,
                 'necessité_confirmation' => true,
                 'couleur_hex' => '#e74c3c',
-                'icone' => 'pause'
+                'icone' => 'pause',
             ],
             [
                 'id' => self::SUSPENDU,
@@ -514,12 +570,12 @@ class StatutMatch extends Model
                 'niveau_acces_requis' => 5, // Superviseur
                 'est_interne' => true,
                 'couleur_hex' => '#34495e',
-                'icone' => 'shield'
-            ]
+                'icone' => 'shield',
+            ],
         ];
 
         foreach ($statuts as $statut) {
-            $statut['est_visible'] = !($statut['est_interne'] ?? false);
+            $statut['est_visible'] = ! ($statut['est_interne'] ?? false);
             $statut['actif'] = true;
 
             self::firstOrCreate(
@@ -551,7 +607,7 @@ class StatutMatch extends Model
         return self::actifs()
             ->whereNotNull('suivants_possibles')
             ->get()
-            ->mapWithKeys(function($statut) {
+            ->mapWithKeys(function ($statut) {
                 return [$statut->code => $statut->suivants_possibles];
             });
     }
@@ -565,7 +621,9 @@ class StatutMatch extends Model
      */
     public function peutTransitionnerVers($codeStatutCible)
     {
-        if (!$this->suivants_possibles) return false;
+        if (! $this->suivants_possibles) {
+            return false;
+        }
 
         return in_array($codeStatutCible, $this->suivants_possibles);
     }
@@ -575,7 +633,9 @@ class StatutMatch extends Model
      */
     public function getStatutsSuivantsPossibles()
     {
-        if (!$this->suivants_possibles) return collect();
+        if (! $this->suivants_possibles) {
+            return collect();
+        }
 
         return self::whereIn('code', $this->suivants_possibles)
             ->actifs()
@@ -590,10 +650,18 @@ class StatutMatch extends Model
     {
         $necessites = [];
 
-        if ($this->motif_requis) $necessites[] = 'motif';
-        if ($this->commentaire_requis) $necessites[] = 'commentaire';
-        if ($this->attribue_victoire && !$this->gagnant_automatique) $necessites[] = 'gagnant';
-        if ($this->autorise_score) $necessites[] = 'score';
+        if ($this->motif_requis) {
+            $necessites[] = 'motif';
+        }
+        if ($this->commentaire_requis) {
+            $necessites[] = 'commentaire';
+        }
+        if ($this->attribue_victoire && ! $this->gagnant_automatique) {
+            $necessites[] = 'gagnant';
+        }
+        if ($this->autorise_score) {
+            $necessites[] = 'score';
+        }
 
         return $necessites;
     }
@@ -610,7 +678,7 @@ class StatutMatch extends Model
             'points_classement' => $this->points_atp_wta,
             'prize_money' => $this->prize_money,
             'confrontation_h2h' => $this->compte_confrontation,
-            'statistiques_detaillees' => $this->autorise_statistiques && $this->est_termine
+            'statistiques_detaillees' => $this->autorise_statistiques && $this->est_termine,
         ];
     }
 
@@ -625,7 +693,7 @@ class StatutMatch extends Model
             'icone' => $this->icone,
             'est_final' => $this->est_final,
             'impact' => $this->impact_classification,
-            'actions_possibles' => $this->actions_possibles
+            'actions_possibles' => $this->actions_possibles,
         ];
 
         if ($ancienStatut) {
@@ -652,7 +720,7 @@ class StatutMatch extends Model
         $erreurs = [];
 
         // Vérifier si la transition est autorisée
-        if (!$statutActuel->peutTransitionnerVers($this->code)) {
+        if (! $statutActuel->peutTransitionnerVers($this->code)) {
             $erreurs[] = "Transition non autorisée de '{$statutActuel->nom}' vers '{$this->nom}'";
         }
 
@@ -666,16 +734,16 @@ class StatutMatch extends Model
 
         // Vérifications spécifiques selon le statut
         if ($this->code === self::CODE_TERMINE && empty($donnees['score'])) {
-            $erreurs[] = "Le score est obligatoire pour terminer un match";
+            $erreurs[] = 'Le score est obligatoire pour terminer un match';
         }
 
         if ($this->attribue_victoire && empty($donnees['gagnant_id'])) {
-            $erreurs[] = "Le gagnant doit être spécifié";
+            $erreurs[] = 'Le gagnant doit être spécifié';
         }
 
         return [
             'valide' => empty($erreurs),
-            'erreurs' => $erreurs
+            'erreurs' => $erreurs,
         ];
     }
 
@@ -694,7 +762,7 @@ class StatutMatch extends Model
                 ->count(),
             'pourcentage_total' => $this->getPourcentageUtilisation(),
             'duree_moyenne' => $this->getDureeMoyenneStatut(),
-            'tendance' => $this->getTendanceUtilisation()
+            'tendance' => $this->getTendanceUtilisation(),
         ];
     }
 
@@ -704,9 +772,12 @@ class StatutMatch extends Model
     private function getPourcentageUtilisation()
     {
         $totalMatchs = MatchTennis::count();
-        if ($totalMatchs === 0) return 0;
+        if ($totalMatchs === 0) {
+            return 0;
+        }
 
         $matchsStatut = $this->matchs()->count();
+
         return round(($matchsStatut / $totalMatchs) * 100, 1);
     }
 
@@ -716,7 +787,9 @@ class StatutMatch extends Model
     private function getDureeMoyenneStatut()
     {
         // Si statut final, pas de durée
-        if ($this->est_final) return null;
+        if ($this->est_final) {
+            return null;
+        }
 
         // Logique pour calculer le temps passé dans ce statut
         // (nécessiterait un système de logs des transitions)
@@ -736,12 +809,19 @@ class StatutMatch extends Model
             ->whereMonth('date_match', now()->subMonth()->month)
             ->count();
 
-        if ($moisPrecedent === 0) return 'stable';
+        if ($moisPrecedent === 0) {
+            return 'stable';
+        }
 
         $variation = (($moisActuel - $moisPrecedent) / $moisPrecedent) * 100;
 
-        if ($variation > 10) return 'hausse';
-        if ($variation < -10) return 'baisse';
+        if ($variation > 10) {
+            return 'hausse';
+        }
+        if ($variation < -10) {
+            return 'baisse';
+        }
+
         return 'stable';
     }
 
@@ -757,7 +837,7 @@ class StatutMatch extends Model
             'categorie' => 'required|in:attente,actif,termine,annule,reporte,suspendu',
             'type' => 'required|in:normal,abandon,forfait,meteo,disciplinaire,annulation',
             'ordre_chronologique' => 'required|integer|min:0|max:10',
-            'couleur_hex' => 'nullable|regex:/^#[A-Fa-f0-9]{6}$/'
+            'couleur_hex' => 'nullable|regex:/^#[A-Fa-f0-9]{6}$/',
         ];
     }
 
@@ -797,13 +877,17 @@ class StatutMatch extends Model
             }
 
             // Ordre d'affichage par défaut
-            if (!$statut->ordre_affichage) {
+            if (! $statut->ordre_affichage) {
                 $statut->ordre_affichage = $statut->ordre_chronologique ?? 1;
             }
 
             // Valeurs par défaut
-            if ($statut->actif === null) $statut->actif = true;
-            if ($statut->est_visible === null) $statut->est_visible = true;
+            if ($statut->actif === null) {
+                $statut->actif = true;
+            }
+            if ($statut->est_visible === null) {
+                $statut->est_visible = true;
+            }
         });
     }
 }

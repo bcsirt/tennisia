@@ -2,12 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
 class ImportDonnees extends Model
 {
@@ -49,7 +47,7 @@ class ImportDonnees extends Model
 
         // Métriques quantitatives
         'nb_enregistrements_source', // Nombre dans la source
-        'nb_enregistrements_traites',// Nombre traités
+        'nb_enregistrements_traites', // Nombre traités
         'nb_insertions',             // Nouveaux enregistrements
         'nb_mises_a_jour',          // Enregistrements modifiés
         'nb_doublons_ignores',      // Doublons évités
@@ -152,7 +150,7 @@ class ImportDonnees extends Model
         'peut_etre_supprime',        // Boolean suppression possible
         'date_suppression_prevue',
         'sauvegarde_effectuee',      // Boolean sauvegardé
-        'compression_archive'        // Ratio compression
+        'compression_archive',        // Ratio compression
     ];
 
     protected $casts = [
@@ -241,7 +239,7 @@ class ImportDonnees extends Model
         'recalcul_necessaire' => 'boolean',
         'archive' => 'boolean',
         'peut_etre_supprime' => 'boolean',
-        'sauvegarde_effectuee' => 'boolean'
+        'sauvegarde_effectuee' => 'boolean',
     ];
 
     protected $appends = [
@@ -253,7 +251,7 @@ class ImportDonnees extends Model
         'score_performance',
         'est_reussi',
         'necessite_attention',
-        'resume_execution'
+        'resume_execution',
     ];
 
     // ===================================================================
@@ -393,12 +391,19 @@ class ImportDonnees extends Model
 
     public function getDureeHumanizedAttribute()
     {
-        if (!$this->duree_execution) return 'N/A';
+        if (! $this->duree_execution) {
+            return 'N/A';
+        }
 
         $duree = $this->duree_execution;
-        if ($duree < 1000) return $duree . 'ms';
-        if ($duree < 60000) return round($duree / 1000, 1) . 's';
-        return round($duree / 60000, 1) . 'min';
+        if ($duree < 1000) {
+            return $duree.'ms';
+        }
+        if ($duree < 60000) {
+            return round($duree / 1000, 1).'s';
+        }
+
+        return round($duree / 60000, 1).'min';
     }
 
     public function getStatutAvecIconeAttribute()
@@ -409,37 +414,54 @@ class ImportDonnees extends Model
             'succes' => '✅',
             'erreur' => '❌',
             'partiel' => '⚠️',
-            'annule' => '🚫'
+            'annule' => '🚫',
         ];
 
-        return ($icones[$this->statut] ?? '❓') . ' ' . ucfirst($this->statut);
+        return ($icones[$this->statut] ?? '❓').' '.ucfirst($this->statut);
     }
 
     public function getTauxSuccesAttribute()
     {
-        if ($this->nb_enregistrements_traites === 0) return 100;
+        if ($this->nb_enregistrements_traites === 0) {
+            return 100;
+        }
 
         $reussites = $this->nb_insertions + $this->nb_mises_a_jour;
+
         return round(($reussites / $this->nb_enregistrements_traites) * 100, 2);
     }
 
     public function getVitesseHumanizedAttribute()
     {
-        if (!$this->vitesse_traitement) return 'N/A';
+        if (! $this->vitesse_traitement) {
+            return 'N/A';
+        }
 
         $vitesse = $this->vitesse_traitement;
-        if ($vitesse < 1) return round($vitesse * 60, 1) . '/min';
-        return round($vitesse, 1) . '/sec';
+        if ($vitesse < 1) {
+            return round($vitesse * 60, 1).'/min';
+        }
+
+        return round($vitesse, 1).'/sec';
     }
 
     public function getImpactGlobalAttribute()
     {
         $total = $this->nb_insertions + $this->nb_mises_a_jour;
 
-        if ($total === 0) return 'aucun';
-        if ($total < 10) return 'faible';
-        if ($total < 100) return 'moyen';
-        if ($total < 1000) return 'important';
+        if ($total === 0) {
+            return 'aucun';
+        }
+        if ($total < 10) {
+            return 'faible';
+        }
+        if ($total < 100) {
+            return 'moyen';
+        }
+        if ($total < 1000) {
+            return 'important';
+        }
+
         return 'majeur';
     }
 
@@ -449,7 +471,7 @@ class ImportDonnees extends Model
             'qualite' => $this->score_qualite_global ?? 50,
             'vitesse' => $this->calculerScoreVitesse(),
             'fiabilite' => $this->calculerScoreFiabilite(),
-            'completude' => $this->completude_donnees ?? 50
+            'completude' => $this->completude_donnees ?? 50,
         ];
 
         return round(array_sum($composantes) / count($composantes), 1);
@@ -478,8 +500,8 @@ class ImportDonnees extends Model
             'nouveaux' => number_format($this->nb_insertions),
             'modifies' => number_format($this->nb_mises_a_jour),
             'erreurs' => number_format($this->nb_erreurs_total),
-            'taux_succes' => $this->taux_succes . '%',
-            'qualite' => $this->score_qualite_global . '/100'
+            'taux_succes' => $this->taux_succes.'%',
+            'qualite' => $this->score_qualite_global.'/100',
         ];
     }
 
@@ -498,13 +520,13 @@ class ImportDonnees extends Model
             'tentative_actuelle' => ($this->tentative_actuelle ?? 0) + 1,
             'parametres_import' => array_merge($this->parametres_import ?? [], $parametres),
             'etape_actuelle' => 'extraction',
-            'pourcentage_completion' => 0
+            'pourcentage_completion' => 0,
         ]);
 
         Log::info("Import démarré: {$this->nom_import}", [
             'import_id' => $this->id,
             'source' => $this->source->nom,
-            'type' => $this->type_donnees
+            'type' => $this->type_donnees,
         ]);
 
         return $this;
@@ -518,7 +540,7 @@ class ImportDonnees extends Model
         $update = [
             'etape_actuelle' => $etape,
             'pourcentage_completion' => min(100, max(0, $pourcentage)),
-            'nb_enregistrements_traites' => $donnees['traites'] ?? $this->nb_enregistrements_traites
+            'nb_enregistrements_traites' => $donnees['traites'] ?? $this->nb_enregistrements_traites,
         ];
 
         // Mettre à jour les compteurs spécifiques si fournis
@@ -548,7 +570,7 @@ class ImportDonnees extends Model
             'etape_actuelle' => 'termine',
             'vitesse_traitement' => $this->calculerVitesseTraitement(),
             'score_qualite_global' => $this->calculerScoreQualite(),
-            'impact_sur_modeles' => $this->analyserImpactModeles()
+            'impact_sur_modeles' => $this->analyserImpactModeles(),
         ]);
 
         // Mettre à jour les métriques de la source
@@ -556,7 +578,7 @@ class ImportDonnees extends Model
 
         Log::info("Import terminé avec succès: {$this->nom_import}", [
             'import_id' => $this->id,
-            'resume' => $this->resume_execution
+            'resume' => $this->resume_execution,
         ]);
 
         return $this;
@@ -569,14 +591,14 @@ class ImportDonnees extends Model
     {
         $this->update([
             'statut' => 'erreur',
-            'statut_detaille' => 'Erreur: ' . $erreur,
+            'statut_detaille' => 'Erreur: '.$erreur,
             'date_fin' => now(),
             'duree_execution' => $this->date_debut ?
                 $this->date_debut->diffInMilliseconds(now()) : null,
             'a_erreurs' => true,
             'derniere_erreur' => $erreur,
             'erreurs_critiques' => array_merge($this->erreurs_critiques ?? [], [$erreur]),
-            'prochaine_tentative' => $this->calculerProchaineeTentative()
+            'prochaine_tentative' => $this->calculerProchaineeTentative(),
         ]);
 
         // Mettre à jour les métriques de la source
@@ -585,7 +607,7 @@ class ImportDonnees extends Model
         Log::error("Import terminé en erreur: {$this->nom_import}", [
             'import_id' => $this->id,
             'erreur' => $erreur,
-            'details' => $details
+            'details' => $details,
         ]);
 
         return $this;
@@ -628,8 +650,9 @@ class ImportDonnees extends Model
                 $donneesMappees = $this->appliquerMapping($donneeJoueur, 'joueur');
 
                 // Validation
-                if (!$this->validerDonnees($donneesMappees, 'joueur')) {
-                    $this->ajouterErreur("Validation échouée pour joueur: " . json_encode($donneeJoueur));
+                if (! $this->validerDonnees($donneesMappees, 'joueur')) {
+                    $this->ajouterErreur('Validation échouée pour joueur: '.json_encode($donneeJoueur));
+
                     continue;
                 }
 
@@ -654,7 +677,7 @@ class ImportDonnees extends Model
 
             } catch (\Exception $e) {
                 $erreurs[] = $e->getMessage();
-                $this->ajouterErreur("Erreur traitement joueur: " . $e->getMessage());
+                $this->ajouterErreur('Erreur traitement joueur: '.$e->getMessage());
             }
         }
 
@@ -663,14 +686,14 @@ class ImportDonnees extends Model
             'nb_enregistrements_traites' => $joueursTraites,
             'joueurs_importes' => $joueursInseres,
             'joueurs_mis_a_jour' => $joursMisAJour,
-            'nb_erreurs_donnees' => count($erreurs)
+            'nb_erreurs_donnees' => count($erreurs),
         ]);
 
         return [
             'traites' => $joueursTraites,
             'inseres' => $joueursInseres,
             'mis_a_jour' => $joursMisAJour,
-            'erreurs' => $erreurs
+            'erreurs' => $erreurs,
         ];
     }
 
@@ -685,51 +708,51 @@ class ImportDonnees extends Model
             'source' => [
                 'nom' => $this->source->nom,
                 'type' => $this->source->type_donnees,
-                'fiabilite' => $this->source->fiabilite_score
+                'fiabilite' => $this->source->fiabilite_score,
             ],
             'donnees' => [
                 'type' => $this->type_donnees,
                 'surface' => $this->surface_concernee,
                 'periode' => $this->periode_donnees,
-                'saison' => $this->saison_tennis
+                'saison' => $this->saison_tennis,
             ],
             'resultats' => [
                 'joueurs' => [
                     'importes' => $this->joueurs_importes,
-                    'mis_a_jour' => $this->joueurs_mis_a_jour
+                    'mis_a_jour' => $this->joueurs_mis_a_jour,
                 ],
                 'matchs' => [
                     'importes' => $this->matchs_importes,
-                    'mis_a_jour' => $this->matchs_mis_a_jour
+                    'mis_a_jour' => $this->matchs_mis_a_jour,
                 ],
                 'tournois' => [
                     'importes' => $this->tournois_importes,
-                    'mis_a_jour' => $this->tournois_mis_a_jour
-                ]
+                    'mis_a_jour' => $this->tournois_mis_a_jour,
+                ],
             ],
             'qualite' => [
                 'score_global' => $this->score_qualite_global,
                 'completude' => $this->completude_donnees,
                 'coherence' => $this->coherence_donnees,
-                'fraicheur' => $this->fraicheur_donnees
+                'fraicheur' => $this->fraicheur_donnees,
             ],
             'performance' => [
                 'duree' => $this->duree_humanized,
                 'vitesse' => $this->vitesse_humanized,
-                'memoire' => $this->memoire_utilisee_mo . ' Mo',
-                'score' => $this->score_performance
+                'memoire' => $this->memoire_utilisee_mo.' Mo',
+                'score' => $this->score_performance,
             ],
             'erreurs' => [
                 'total' => $this->nb_erreurs_total,
                 'critiques' => count($this->erreurs_critiques ?? []),
-                'mineures' => count($this->erreurs_mineures ?? [])
+                'mineures' => count($this->erreurs_mineures ?? []),
             ],
             'impact_ia' => [
                 'utilise' => $this->utilise_pour_ia,
                 'modeles_affectes' => $this->modeles_ia_affectes,
                 'recalcul_necessaire' => $this->recalcul_necessaire,
-                'score_confiance' => $this->score_confiance_ia
-            ]
+                'score_confiance' => $this->score_confiance_ia,
+            ],
         ];
     }
 
@@ -756,7 +779,7 @@ class ImportDonnees extends Model
         $regles = $this->regles_validation[$typeModele] ?? [];
 
         foreach ($regles as $champ => $regle) {
-            if (!$this->validerChamp($donnees[$champ] ?? null, $regle)) {
+            if (! $this->validerChamp($donnees[$champ] ?? null, $regle)) {
                 return false;
             }
         }
@@ -767,10 +790,14 @@ class ImportDonnees extends Model
     private function validerChamp($valeur, $regle)
     {
         // Implémentation basique de validation
-        if ($regle === 'required' && empty($valeur)) return false;
+        if ($regle === 'required' && empty($valeur)) {
+            return false;
+        }
         if (strpos($regle, 'max:') === 0) {
             $max = (int) substr($regle, 4);
-            if (strlen($valeur) > $max) return false;
+            if (strlen($valeur) > $max) {
+                return false;
+            }
         }
 
         return true;
@@ -778,7 +805,9 @@ class ImportDonnees extends Model
 
     private function calculerVitesseTraitement()
     {
-        if (!$this->duree_execution || $this->duree_execution === 0) return 0;
+        if (! $this->duree_execution || $this->duree_execution === 0) {
+            return 0;
+        }
 
         return round($this->nb_enregistrements_traites / ($this->duree_execution / 1000), 2);
     }
@@ -789,7 +818,7 @@ class ImportDonnees extends Model
             'completude' => $this->completude_donnees ?? 80,
             'coherence' => $this->coherence_donnees ?? 80,
             'precision' => $this->precision_estimee ?? 80,
-            'taux_succes' => $this->taux_succes
+            'taux_succes' => $this->taux_succes,
         ];
 
         return round(array_sum($composantes) / count($composantes), 1);
@@ -801,7 +830,7 @@ class ImportDonnees extends Model
             'joueurs_impactes' => $this->joueurs_importes + $this->joueurs_mis_a_jour,
             'matchs_impactes' => $this->matchs_importes + $this->matchs_mis_a_jour,
             'classements_impactes' => $this->classements_importes,
-            'recalcul_elo_necessaire' => $this->joueurs_mis_a_jour > 0
+            'recalcul_elo_necessaire' => $this->joueurs_mis_a_jour > 0,
         ];
     }
 
@@ -816,7 +845,9 @@ class ImportDonnees extends Model
 
     private function calculerProchaineeTentative()
     {
-        if ($this->tentative_actuelle >= $this->nb_tentatives) return null;
+        if ($this->tentative_actuelle >= $this->nb_tentatives) {
+            return null;
+        }
 
         $delai = $this->delai_retry_seconds ?? 300; // 5 minutes par défaut
 
@@ -827,8 +858,15 @@ class ImportDonnees extends Model
         return now()->addSeconds($delai);
     }
 
-    private function calculerScoreVitesse() { return 75; }
-    private function calculerScoreFiabilite() { return 85; }
+    private function calculerScoreVitesse()
+    {
+        return 75;
+    }
+
+    private function calculerScoreFiabilite()
+    {
+        return 85;
+    }
 
     // ===================================================================
     // VALIDATION RULES
@@ -841,7 +879,7 @@ class ImportDonnees extends Model
             'nom_import' => 'required|string|max:255',
             'type_donnees' => 'required|in:joueurs,matchs,tournois,classements,statistiques',
             'statut' => 'required|in:en_attente,en_cours,succes,erreur,partiel,annule',
-            'priorite' => 'integer|between:1,10'
+            'priorite' => 'integer|between:1,10',
         ];
     }
 

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Confrontation extends Model
@@ -87,7 +87,7 @@ class Confrontation extends Model
         'fiabilite_donnees',
         'derniere_analyse',
         'source_donnees_id',
-        'notes_analystes'
+        'notes_analystes',
     ];
 
     protected $casts = [
@@ -137,7 +137,7 @@ class Confrontation extends Model
         'premier_match_date' => 'date',
         'dernier_match_date' => 'date',
         'derniere_analyse' => 'datetime',
-        'evolution_dominance' => 'array'
+        'evolution_dominance' => 'array',
     ];
 
     protected $appends = [
@@ -149,7 +149,7 @@ class Confrontation extends Model
         'tendance_recente',
         'surface_favorite_j1',
         'surface_favorite_j2',
-        'niveau_rivalite'
+        'niveau_rivalite',
     ];
 
     // ===================================================================
@@ -174,7 +174,7 @@ class Confrontation extends Model
     // Relation vers tous les matchs de cette confrontation
     public function matchsHistorique()
     {
-        return MatchTennis::where(function($query) {
+        return MatchTennis::where(function ($query) {
             $query->where(['joueur1_id' => $this->joueur1_id, 'joueur2_id' => $this->joueur2_id])
                 ->orWhere(['joueur1_id' => $this->joueur2_id, 'joueur2_id' => $this->joueur1_id]);
         })
@@ -220,34 +220,54 @@ class Confrontation extends Model
         } elseif ($this->victoires_joueur2 > $this->victoires_joueur1) {
             return $this->joueur2_id;
         }
+
         return null; // Égalité
     }
 
     public function getEquilibreConfrontationAttribute()
     {
-        if ($this->total_matchs < 3) return 'insuffisant';
+        if ($this->total_matchs < 3) {
+            return 'insuffisant';
+        }
 
         $difference = abs($this->victoires_joueur1 - $this->victoires_joueur2);
         $pourcentageDiff = ($difference / $this->total_matchs) * 100;
 
-        if ($pourcentageDiff <= 20) return 'très_équilibré';
-        if ($pourcentageDiff <= 40) return 'équilibré';
-        if ($pourcentageDiff <= 60) return 'déséquilibré';
+        if ($pourcentageDiff <= 20) {
+            return 'très_équilibré';
+        }
+        if ($pourcentageDiff <= 40) {
+            return 'équilibré';
+        }
+        if ($pourcentageDiff <= 60) {
+            return 'déséquilibré';
+        }
+
         return 'très_déséquilibré';
     }
 
     public function getTendanceRecenteAttribute()
     {
-        if (!$this->forme_j1_5_derniers) return 'indéterminée';
+        if (! $this->forme_j1_5_derniers) {
+            return 'indéterminée';
+        }
 
         // Analyser les 5 derniers matchs
         $forme1 = str_split($this->forme_j1_5_derniers);
-        $victoires1_recentes = count(array_filter($forme1, fn($x) => $x === 'W'));
+        $victoires1_recentes = count(array_filter($forme1, fn ($x) => $x === 'W'));
 
-        if ($victoires1_recentes >= 4) return 'j1_dominant';
-        if ($victoires1_recentes >= 3) return 'j1_légèrement_dominant';
-        if ($victoires1_recentes == 2) return 'équilibré';
-        if ($victoires1_recentes <= 1) return 'j2_dominant';
+        if ($victoires1_recentes >= 4) {
+            return 'j1_dominant';
+        }
+        if ($victoires1_recentes >= 3) {
+            return 'j1_légèrement_dominant';
+        }
+        if ($victoires1_recentes == 2) {
+            return 'équilibré';
+        }
+        if ($victoires1_recentes <= 1) {
+            return 'j2_dominant';
+        }
 
         return 'équilibré';
     }
@@ -258,10 +278,11 @@ class Confrontation extends Model
             'dur' => $this->victoires_j1_dur,
             'terre_battue' => $this->victoires_j1_terre_battue,
             'gazon' => $this->victoires_j1_gazon,
-            'indoor' => $this->victoires_j1_indoor
+            'indoor' => $this->victoires_j1_indoor,
         ];
 
         $surfaceFavorite = array_search(max($surfaces), $surfaces);
+
         return $surfaceFavorite ?: 'non_déterminée';
     }
 
@@ -271,10 +292,11 @@ class Confrontation extends Model
             'dur' => $this->victoires_j2_dur,
             'terre_battue' => $this->victoires_j2_terre_battue,
             'gazon' => $this->victoires_j2_gazon,
-            'indoor' => $this->victoires_j2_indoor
+            'indoor' => $this->victoires_j2_indoor,
         ];
 
         $surfaceFavorite = array_search(max($surfaces), $surfaces);
+
         return $surfaceFavorite ?: 'non_déterminée';
     }
 
@@ -287,9 +309,13 @@ class Confrontation extends Model
 
         // Équilibre (plus c'est équilibré, plus c'est une rivalité)
         $equilibre = $this->equilibre_confrontation;
-        if ($equilibre === 'très_équilibré') $score += 30;
-        elseif ($equilibre === 'équilibré') $score += 20;
-        elseif ($equilibre === 'déséquilibré') $score += 10;
+        if ($equilibre === 'très_équilibré') {
+            $score += 30;
+        } elseif ($equilibre === 'équilibré') {
+            $score += 20;
+        } elseif ($equilibre === 'déséquilibré') {
+            $score += 10;
+        }
 
         // Durée de la rivalité
         if ($this->premier_match_date && $this->dernier_match_date) {
@@ -305,16 +331,27 @@ class Confrontation extends Model
         // Retournements et drama
         $score += ($this->retournements_j1 + $this->retournements_j2) * 2;
 
-        if ($score >= 80) return 'rivalité_légendaire';
-        if ($score >= 60) return 'grande_rivalité';
-        if ($score >= 40) return 'rivalité_notable';
-        if ($score >= 20) return 'rivalité_émergente';
+        if ($score >= 80) {
+            return 'rivalité_légendaire';
+        }
+        if ($score >= 60) {
+            return 'grande_rivalité';
+        }
+        if ($score >= 40) {
+            return 'rivalité_notable';
+        }
+        if ($score >= 20) {
+            return 'rivalité_émergente';
+        }
+
         return 'confrontation_standard';
     }
 
     public function getDureeFormateeAttribute()
     {
-        if (!$this->duree_moyenne_matchs) return null;
+        if (! $this->duree_moyenne_matchs) {
+            return null;
+        }
 
         $heures = floor($this->duree_moyenne_matchs / 60);
         $minutes = $this->duree_moyenne_matchs % 60;
@@ -398,7 +435,7 @@ class Confrontation extends Model
         // 3. Forme récente (25%)
         if ($this->forme_j1_5_derniers) {
             $forme1 = str_split($this->forme_j1_5_derniers);
-            $victoires1_recentes = count(array_filter($forme1, fn($x) => $x === 'W'));
+            $victoires1_recentes = count(array_filter($forme1, fn ($x) => $x === 'W'));
             $avantageFormeRecente = ($victoires1_recentes - 2.5) / 2.5; // Centré sur 2.5/5
             $score += $avantageFormeRecente * 25;
         }
@@ -424,8 +461,8 @@ class Confrontation extends Model
                 'historique_global' => $this->total_matchs,
                 'surface_specifique' => $surface ? $this->getMatchsSurface($surface) : 0,
                 'forme_recente' => $this->forme_j1_5_derniers ? 5 : 0,
-                'serie_actuelle' => max($serieJ1, $serieJ2)
-            ]
+                'serie_actuelle' => max($serieJ1, $serieJ2),
+            ],
         ];
     }
 
@@ -461,14 +498,16 @@ class Confrontation extends Model
      */
     public function analyserEvolutionDominance()
     {
-        if (!$this->evolution_dominance) return null;
+        if (! $this->evolution_dominance) {
+            return null;
+        }
 
         $evolution = $this->evolution_dominance;
         $tendances = [];
 
         for ($i = 1; $i < count($evolution); $i++) {
             $periode_actuelle = $evolution[$i];
-            $periode_precedente = $evolution[$i-1];
+            $periode_precedente = $evolution[$i - 1];
 
             $changement = $periode_actuelle['ratio_j1'] - $periode_precedente['ratio_j1'];
 
@@ -476,7 +515,7 @@ class Confrontation extends Model
                 'periode' => $periode_actuelle['periode'],
                 'changement' => $changement,
                 'tendance' => $changement > 0.1 ? 'j1_progresse' :
-                    ($changement < -0.1 ? 'j2_progresse' : 'stable')
+                    ($changement < -0.1 ? 'j2_progresse' : 'stable'),
             ];
         }
 
@@ -497,13 +536,13 @@ class Confrontation extends Model
                 $facteurs[] = [
                     'type' => 'complexe_psychologique',
                     'joueur_affecte' => $this->joueur1_id,
-                    'intensite' => 'forte'
+                    'intensite' => 'forte',
                 ];
             } elseif ($ratio_j1 >= 80) {
                 $facteurs[] = [
                     'type' => 'dominance_psychologique',
                     'joueur_dominant' => $this->joueur1_id,
-                    'intensite' => 'forte'
+                    'intensite' => 'forte',
                 ];
             }
         }
@@ -513,13 +552,13 @@ class Confrontation extends Model
             $facteurs[] = [
                 'type' => 'série_victoires',
                 'joueur' => $this->joueur1_id,
-                'nombre' => $this->serie_victoires_j1_actuelle
+                'nombre' => $this->serie_victoires_j1_actuelle,
             ];
         } elseif ($this->serie_victoires_j2_actuelle >= 3) {
             $facteurs[] = [
                 'type' => 'série_victoires',
                 'joueur' => $this->joueur2_id,
-                'nombre' => $this->serie_victoires_j2_actuelle
+                'nombre' => $this->serie_victoires_j2_actuelle,
             ];
         }
 
@@ -527,7 +566,7 @@ class Confrontation extends Model
         if (($this->retournements_j1 + $this->retournements_j2) > 0) {
             $facteurs[] = [
                 'type' => 'mental_fort',
-                'description' => 'Capacité aux retournements dans cette confrontation'
+                'description' => 'Capacité aux retournements dans cette confrontation',
             ];
         }
 
@@ -554,7 +593,7 @@ class Confrontation extends Model
                     'victoires_j2' => $victJ2,
                     'pourcentage_j1' => round(($victJ1 / $total) * 100, 1),
                     'joueur_dominant' => $victJ1 > $victJ2 ? $this->joueur1_id : $this->joueur2_id,
-                    'niveau_dominance' => abs($victJ1 - $victJ2) / $total
+                    'niveau_dominance' => abs($victJ1 - $victJ2) / $total,
                 ];
             }
         }
@@ -573,25 +612,25 @@ class Confrontation extends Model
                 'duree_rivalite_annees' => $this->premier_match_date ?
                     $this->premier_match_date->diffInYears($this->dernier_match_date) : 0,
                 'niveau_rivalite' => $this->niveau_rivalite,
-                'equilibre' => $this->equilibre_confrontation
+                'equilibre' => $this->equilibre_confrontation,
             ],
             'resultats' => [
                 'joueur1' => [
                     'victoires' => $this->victoires_joueur1,
                     'pourcentage' => $this->pourcentage_j1,
                     'serie_actuelle' => $this->serie_victoires_j1_actuelle,
-                    'plus_longue_serie' => $this->plus_longue_serie_j1
+                    'plus_longue_serie' => $this->plus_longue_serie_j1,
                 ],
                 'joueur2' => [
                     'victoires' => $this->victoires_joueur2,
                     'pourcentage' => $this->pourcentage_j2,
                     'serie_actuelle' => $this->serie_victoires_j2_actuelle,
-                    'plus_longue_serie' => $this->plus_longue_serie_j2
-                ]
+                    'plus_longue_serie' => $this->plus_longue_serie_j2,
+                ],
             ],
             'par_surface' => $this->comparerParSurface(),
             'facteurs_psychologiques' => $this->getFacteursPsychologiques(),
-            'prediction_prochaine' => $this->predireProchainVainqueur()
+            'prediction_prochaine' => $this->predireProchainVainqueur(),
         ];
     }
 
@@ -621,7 +660,7 @@ class Confrontation extends Model
 
         // Mise à jour des dates
         $this->dernier_match_date = $match->date_match;
-        if (!$this->premier_match_date) {
+        if (! $this->premier_match_date) {
             $this->premier_match_date = $match->date_match;
         }
 
@@ -640,18 +679,19 @@ class Confrontation extends Model
         $resultatJ2 = $match->gagnant_id == $this->joueur2_id ? 'W' : 'L';
 
         // Ajouter le nouveau résultat et garder seulement les 5 derniers
-        $this->forme_j1_5_derniers = substr($resultatJ1 . ($this->forme_j1_5_derniers ?? ''), 0, 5);
-        $this->forme_j2_5_derniers = substr($resultatJ2 . ($this->forme_j2_5_derniers ?? ''), 0, 5);
+        $this->forme_j1_5_derniers = substr($resultatJ1.($this->forme_j1_5_derniers ?? ''), 0, 5);
+        $this->forme_j2_5_derniers = substr($resultatJ2.($this->forme_j2_5_derniers ?? ''), 0, 5);
 
         // Idem pour 10 derniers
-        $this->forme_j1_10_derniers = substr($resultatJ1 . ($this->forme_j1_10_derniers ?? ''), 0, 10);
-        $this->forme_j2_10_derniers = substr($resultatJ2 . ($this->forme_j2_10_derniers ?? ''), 0, 10);
+        $this->forme_j1_10_derniers = substr($resultatJ1.($this->forme_j1_10_derniers ?? ''), 0, 10);
+        $this->forme_j2_10_derniers = substr($resultatJ2.($this->forme_j2_10_derniers ?? ''), 0, 10);
     }
 
     private function getMatchsSurface($surface)
     {
         $victJ1 = $this->{"victoires_j1_{$surface}"} ?? 0;
         $victJ2 = $this->{"victoires_j2_{$surface}"} ?? 0;
+
         return $victJ1 + $victJ2;
     }
 
@@ -666,7 +706,7 @@ class Confrontation extends Model
             'joueur2_id' => 'required|exists:joueurs,id|different:joueur1_id',
             'victoires_joueur1' => 'required|integer|min:0',
             'victoires_joueur2' => 'required|integer|min:0',
-            'fiabilite_donnees' => 'required|numeric|between:0,100'
+            'fiabilite_donnees' => 'required|numeric|between:0,100',
         ];
     }
 

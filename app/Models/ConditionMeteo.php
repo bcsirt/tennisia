@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class ConditionMeteo extends Model
 {
@@ -84,7 +83,7 @@ class ConditionMeteo extends Model
         'altitude_station',        // Altitude en mètres
         'derniere_maj',            // Dernière mise à jour
         'est_historique',          // Donnée historique vs temps réel
-        'actif'
+        'actif',
     ];
 
     protected $casts = [
@@ -130,7 +129,7 @@ class ConditionMeteo extends Model
         'favorise_agressivite' => 'boolean',
         'necessite_protection' => 'boolean',
         'est_historique' => 'boolean',
-        'actif' => 'boolean'
+        'actif' => 'boolean',
     ];
 
     protected $appends = [
@@ -140,7 +139,7 @@ class ConditionMeteo extends Model
         'recommendations_joueurs',
         'surface_optimale',
         'facteur_ajustement_ia',
-        'indice_confort'
+        'indice_confort',
     ];
 
     // ===================================================================
@@ -173,10 +172,18 @@ class ConditionMeteo extends Model
 
         $elements[] = "{$this->temperature}°C";
 
-        if ($this->humidite) $elements[] = "{$this->humidite}% humid.";
-        if ($this->vitesse_vent > 10) $elements[] = "Vent {$this->vitesse_vent}km/h";
-        if ($this->precipitation > 0) $elements[] = "Pluie {$this->precipitation}mm/h";
-        if ($this->indice_uv >= 8) $elements[] = "UV élevé ({$this->indice_uv})";
+        if ($this->humidite) {
+            $elements[] = "{$this->humidite}% humid.";
+        }
+        if ($this->vitesse_vent > 10) {
+            $elements[] = "Vent {$this->vitesse_vent}km/h";
+        }
+        if ($this->precipitation > 0) {
+            $elements[] = "Pluie {$this->precipitation}mm/h";
+        }
+        if ($this->indice_uv >= 8) {
+            $elements[] = "UV élevé ({$this->indice_uv})";
+        }
 
         return implode(', ', $elements);
     }
@@ -186,37 +193,52 @@ class ConditionMeteo extends Model
         $score = 0;
 
         // Température extrême
-        if ($this->temperature < 5 || $this->temperature > 35) $score += 3;
-        elseif ($this->temperature < 10 || $this->temperature > 30) $score += 2;
+        if ($this->temperature < 5 || $this->temperature > 35) {
+            $score += 3;
+        } elseif ($this->temperature < 10 || $this->temperature > 30) {
+            $score += 2;
+        }
 
         // Vent fort
-        if ($this->vitesse_vent > 30) $score += 4;
-        elseif ($this->vitesse_vent > 20) $score += 2;
-        elseif ($this->vitesse_vent > 15) $score += 1;
+        if ($this->vitesse_vent > 30) {
+            $score += 4;
+        } elseif ($this->vitesse_vent > 20) {
+            $score += 2;
+        } elseif ($this->vitesse_vent > 15) {
+            $score += 1;
+        }
 
         // Humidité extrême
-        if ($this->humidite > 90 || $this->humidite < 20) $score += 2;
-        elseif ($this->humidite > 80 || $this->humidite < 30) $score += 1;
+        if ($this->humidite > 90 || $this->humidite < 20) {
+            $score += 2;
+        } elseif ($this->humidite > 80 || $this->humidite < 30) {
+            $score += 1;
+        }
 
         // Précipitations
-        if ($this->precipitation > 0) $score += 5;
+        if ($this->precipitation > 0) {
+            $score += 5;
+        }
 
         // UV très élevé
-        if ($this->indice_uv >= 10) $score += 2;
-        elseif ($this->indice_uv >= 8) $score += 1;
+        if ($this->indice_uv >= 10) {
+            $score += 2;
+        } elseif ($this->indice_uv >= 8) {
+            $score += 1;
+        }
 
         $niveaux = [
-            0-1 => 'Idéales',
-            2-3 => 'Bonnes',
-            4-6 => 'Correctes',
-            7-9 => 'Difficiles',
-            10-15 => 'Très difficiles',
-            16-20 => 'Extrêmes'
+            0 - 1 => 'Idéales',
+            2 - 3 => 'Bonnes',
+            4 - 6 => 'Correctes',
+            7 - 9 => 'Difficiles',
+            10 - 15 => 'Très difficiles',
+            16 - 20 => 'Extrêmes',
         ];
 
         foreach ($niveaux as $range => $niveau) {
             if (is_string($range)) {
-                list($min, $max) = explode('-', $range);
+                [$min, $max] = explode('-', $range);
                 if ($score >= $min && $score <= $max) {
                     return $niveau;
                 }
@@ -232,15 +254,24 @@ class ConditionMeteo extends Model
             $this->impact_vitesse_balle ?? 0,
             $this->impact_rebond ?? 0,
             $this->impact_service ?? 0,
-            $this->impact_endurance ?? 0
+            $this->impact_endurance ?? 0,
         ];
 
         $moyenne = array_sum($impacts) / count($impacts);
 
-        if ($moyenne >= 3) return 'Très favorable';
-        if ($moyenne >= 1) return 'Favorable';
-        if ($moyenne >= -1) return 'Neutre';
-        if ($moyenne >= -3) return 'Défavorable';
+        if ($moyenne >= 3) {
+            return 'Très favorable';
+        }
+        if ($moyenne >= 1) {
+            return 'Favorable';
+        }
+        if ($moyenne >= -1) {
+            return 'Neutre';
+        }
+        if ($moyenne >= -3) {
+            return 'Défavorable';
+        }
+
         return 'Très défavorable';
     }
 
@@ -283,7 +314,7 @@ class ConditionMeteo extends Model
             'dur' => $this->impact_dur ?? 0,
             'terre' => $this->impact_terre ?? 0,
             'gazon' => $this->impact_gazon ?? 0,
-            'indoor' => $this->impact_indoor ?? 0
+            'indoor' => $this->impact_indoor ?? 0,
         ];
 
         $surfaceOptimale = array_keys($impacts, max($impacts))[0];
@@ -292,7 +323,7 @@ class ConditionMeteo extends Model
             'dur' => 'Hard court',
             'terre' => 'Terre battue',
             'gazon' => 'Gazon',
-            'indoor' => 'Indoor'
+            'indoor' => 'Indoor',
         ];
 
         return $surfaces[$surfaceOptimale] ?? 'Toutes surfaces';
@@ -304,23 +335,38 @@ class ConditionMeteo extends Model
         $facteurs = [];
 
         // Impact température
-        if ($this->temperature > 35) $facteurs[] = -0.3;
-        elseif ($this->temperature > 30) $facteurs[] = -0.1;
-        elseif ($this->temperature < 5) $facteurs[] = -0.4;
-        elseif ($this->temperature < 10) $facteurs[] = -0.2;
+        if ($this->temperature > 35) {
+            $facteurs[] = -0.3;
+        } elseif ($this->temperature > 30) {
+            $facteurs[] = -0.1;
+        } elseif ($this->temperature < 5) {
+            $facteurs[] = -0.4;
+        } elseif ($this->temperature < 10) {
+            $facteurs[] = -0.2;
+        }
 
         // Impact vent
-        if ($this->vitesse_vent > 30) $facteurs[] = -0.4;
-        elseif ($this->vitesse_vent > 20) $facteurs[] = -0.2;
-        elseif ($this->vitesse_vent > 15) $facteurs[] = -0.1;
+        if ($this->vitesse_vent > 30) {
+            $facteurs[] = -0.4;
+        } elseif ($this->vitesse_vent > 20) {
+            $facteurs[] = -0.2;
+        } elseif ($this->vitesse_vent > 15) {
+            $facteurs[] = -0.1;
+        }
 
         // Impact pluie
-        if ($this->precipitation > 5) $facteurs[] = -0.8;
-        elseif ($this->precipitation > 0) $facteurs[] = -0.3;
+        if ($this->precipitation > 5) {
+            $facteurs[] = -0.8;
+        } elseif ($this->precipitation > 0) {
+            $facteurs[] = -0.3;
+        }
 
         // Impact humidité
-        if ($this->humidite > 90) $facteurs[] = -0.2;
-        elseif ($this->humidite < 20) $facteurs[] = -0.1;
+        if ($this->humidite > 90) {
+            $facteurs[] = -0.2;
+        } elseif ($this->humidite < 20) {
+            $facteurs[] = -0.1;
+        }
 
         return empty($facteurs) ? 0 : max(-1, min(1, array_sum($facteurs)));
     }
@@ -330,26 +376,43 @@ class ConditionMeteo extends Model
         $score = 100; // Score parfait de base
 
         // Pénalités température
-        if ($this->temperature > 35 || $this->temperature < 5) $score -= 40;
-        elseif ($this->temperature > 30 || $this->temperature < 10) $score -= 20;
-        elseif ($this->temperature > 28 || $this->temperature < 12) $score -= 10;
+        if ($this->temperature > 35 || $this->temperature < 5) {
+            $score -= 40;
+        } elseif ($this->temperature > 30 || $this->temperature < 10) {
+            $score -= 20;
+        } elseif ($this->temperature > 28 || $this->temperature < 12) {
+            $score -= 10;
+        }
 
         // Pénalités vent
-        if ($this->vitesse_vent > 25) $score -= 30;
-        elseif ($this->vitesse_vent > 15) $score -= 15;
-        elseif ($this->vitesse_vent > 10) $score -= 5;
+        if ($this->vitesse_vent > 25) {
+            $score -= 30;
+        } elseif ($this->vitesse_vent > 15) {
+            $score -= 15;
+        } elseif ($this->vitesse_vent > 10) {
+            $score -= 5;
+        }
 
         // Pénalités humidité
-        if ($this->humidite > 85) $score -= 20;
-        elseif ($this->humidite > 75) $score -= 10;
-        elseif ($this->humidite < 25) $score -= 10;
+        if ($this->humidite > 85) {
+            $score -= 20;
+        } elseif ($this->humidite > 75) {
+            $score -= 10;
+        } elseif ($this->humidite < 25) {
+            $score -= 10;
+        }
 
         // Pénalités précipitations
-        if ($this->precipitation > 0) $score -= 50;
+        if ($this->precipitation > 0) {
+            $score -= 50;
+        }
 
         // Bonus/pénalités UV
-        if ($this->indice_uv > 9) $score -= 15;
-        elseif ($this->indice_uv > 7) $score -= 5;
+        if ($this->indice_uv > 9) {
+            $score -= 15;
+        } elseif ($this->indice_uv > 7) {
+            $score -= 5;
+        }
 
         return max(0, min(100, $score));
     }
@@ -416,12 +479,13 @@ class ConditionMeteo extends Model
     public function scopeFavorablePourSurface($query, $surface)
     {
         $champ = "impact_{$surface}";
+
         return $query->where($champ, '>=', 3);
     }
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('description', 'LIKE', "%{$terme}%")
                 ->orWhere('categorie', 'LIKE', "%{$terme}%");
@@ -437,7 +501,7 @@ class ConditionMeteo extends Model
      */
     public static function creerDepuisDonneesBrutes(array $donnees)
     {
-        $condition = new self();
+        $condition = new self;
 
         // Mapping des données
         $condition->temperature = $donnees['temperature'] ?? null;
@@ -465,7 +529,7 @@ class ConditionMeteo extends Model
             'vitesse_vent' => [0, 10],      // 0-10 km/h
             'precipitation' => 0,            // Pas de pluie
             'indice_uv' => [3, 6],          // UV modéré
-            'couverture_nuageuse' => [20, 50] // Partiellement nuageux
+            'couverture_nuageuse' => [20, 50], // Partiellement nuageux
         ];
     }
 
@@ -548,7 +612,7 @@ class ConditionMeteo extends Model
             'Correctes' => 'correcte',
             'Difficiles' => 'difficile',
             'Très difficiles' => 'extreme',
-            'Extrêmes' => 'extreme'
+            'Extrêmes' => 'extreme',
         ];
 
         $this->categorie = $categories[$difficulte] ?? 'correcte';
@@ -627,14 +691,14 @@ class ConditionMeteo extends Model
                 'vitesse_balle' => $this->impact_vitesse_balle,
                 'rebond' => $this->impact_rebond,
                 'service' => $this->impact_service,
-                'endurance' => $this->impact_endurance
+                'endurance' => $this->impact_endurance,
             ],
             'facteur_ia' => $this->facteur_ajustement_ia,
             'risques' => [
                 'blessure' => $this->risque_blessure ?? 0,
                 'deshydratation' => $this->risque_deshydratation ?? 0,
-                'glissade' => $this->risque_glissade ?? 0
-            ]
+                'glissade' => $this->risque_glissade ?? 0,
+            ],
         ];
     }
 
@@ -655,7 +719,7 @@ class ConditionMeteo extends Model
                     $ecarts[$param] = "Trop élevé ({$valeurActuelle} > {$valeurIdeale[1]})";
                 }
             } else {
-                if ($this->$param != $valeurIdeale) {
+                if ($valeurIdeale != $this->$param) {
                     $ecarts[$param] = "Différent de l'idéal ({$this->$param} vs {$valeurIdeale})";
                 }
             }
@@ -677,7 +741,7 @@ class ConditionMeteo extends Model
             'vitesse_vent' => 'nullable|numeric|min:0|max:200',
             'precipitation' => 'nullable|numeric|min:0',
             'indice_uv' => 'nullable|integer|min:0|max:15',
-            'categorie' => 'required|in:ideale,correcte,difficile,extreme'
+            'categorie' => 'required|in:ideale,correcte,difficile,extreme',
         ];
     }
 
@@ -691,7 +755,7 @@ class ConditionMeteo extends Model
 
         static::saving(function ($condition) {
             // Auto-calculs si pas déjà définis
-            if (!$condition->nom && $condition->temperature) {
+            if (! $condition->nom && $condition->temperature) {
                 $condition->genererNomAutomatique();
             }
 
@@ -701,8 +765,12 @@ class ConditionMeteo extends Model
             $condition->evaluerJouabilite();
 
             // Valeurs par défaut
-            if ($condition->actif === null) $condition->actif = true;
-            if (!$condition->heure_mesure) $condition->heure_mesure = now();
+            if ($condition->actif === null) {
+                $condition->actif = true;
+            }
+            if (! $condition->heure_mesure) {
+                $condition->heure_mesure = now();
+            }
         });
     }
 
@@ -714,21 +782,34 @@ class ConditionMeteo extends Model
         $elements = [];
 
         // Température
-        if ($this->temperature > 30) $elements[] = 'Chaud';
-        elseif ($this->temperature < 10) $elements[] = 'Froid';
-        else $elements[] = 'Tempéré';
+        if ($this->temperature > 30) {
+            $elements[] = 'Chaud';
+        } elseif ($this->temperature < 10) {
+            $elements[] = 'Froid';
+        } else {
+            $elements[] = 'Tempéré';
+        }
 
         // Vent
-        if ($this->vitesse_vent > 25) $elements[] = 'Venteux';
-        elseif ($this->vitesse_vent > 15) $elements[] = 'Brise';
+        if ($this->vitesse_vent > 25) {
+            $elements[] = 'Venteux';
+        } elseif ($this->vitesse_vent > 15) {
+            $elements[] = 'Brise';
+        }
 
         // Humidité
-        if ($this->humidite > 80) $elements[] = 'Humide';
-        elseif ($this->humidite < 30) $elements[] = 'Sec';
+        if ($this->humidite > 80) {
+            $elements[] = 'Humide';
+        } elseif ($this->humidite < 30) {
+            $elements[] = 'Sec';
+        }
 
         // Précipitations
-        if ($this->precipitation > 5) $elements[] = 'Pluvieux';
-        elseif ($this->precipitation > 0) $elements[] = 'Bruine';
+        if ($this->precipitation > 5) {
+            $elements[] = 'Pluvieux';
+        } elseif ($this->precipitation > 0) {
+            $elements[] = 'Bruine';
+        }
 
         $this->nom = implode(' et ', $elements) ?: 'Standard';
     }

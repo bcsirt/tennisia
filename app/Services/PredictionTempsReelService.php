@@ -21,12 +21,12 @@ class PredictionTempsReelService
         // Nouvelles probabilités
         $anciennes = [
             'joueur_blesse' => $match->prediction_j1 ?? 0.5,
-            'adversaire' => $match->prediction_j2 ?? 0.5
+            'adversaire' => $match->prediction_j2 ?? 0.5,
         ];
 
         $nouvelles = [
             'joueur_blesse' => max(0.05, $anciennes['joueur_blesse'] - $ajustement),
-            'adversaire' => min(0.95, $anciennes['adversaire'] + $ajustement)
+            'adversaire' => min(0.95, $anciennes['adversaire'] + $ajustement),
         ];
 
         // Prédiction d'évolution
@@ -39,7 +39,7 @@ class PredictionTempsReelService
             'impact_detaille' => $impact,
             'evolution_predite' => $evolution,
             'recommandations' => $blessure->genererRecommandations(),
-            'confiance_prediction' => $this->calculerConfiancePrediction($blessure)
+            'confiance_prediction' => $this->calculerConfiancePrediction($blessure),
         ];
     }
 

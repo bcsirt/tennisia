@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ZoneCorporelle extends Model
@@ -142,7 +142,7 @@ class ZoneCorporelle extends Model
         'specialiste_recommande', // Type spécialiste recommandé
         'derniere_maj_medicale',  // Dernière MAJ données médicales
         'valide_medical',         // Validé par professionnel
-        'actif'
+        'actif',
     ];
 
     protected $casts = [
@@ -219,7 +219,7 @@ class ZoneCorporelle extends Model
         'actif' => 'boolean',
 
         // Dates
-        'derniere_maj_medicale' => 'date'
+        'derniere_maj_medicale' => 'date',
     ];
 
     protected $appends = [
@@ -229,7 +229,7 @@ class ZoneCorporelle extends Model
         'coups_principalement_affectes',
         'strategies_prevention',
         'programme_readaptation_type',
-        'facteur_ajustement_ia'
+        'facteur_ajustement_ia',
     ];
 
     // ===================================================================
@@ -293,13 +293,25 @@ class ZoneCorporelle extends Model
         $score += ($this->impact_performance ?? 0) * 1.5;
 
         // Temps guérison
-        if ($this->temps_guerison_moyen > 90) $score += 10;
-        elseif ($this->temps_guerison_moyen > 30) $score += 5;
+        if ($this->temps_guerison_moyen > 90) {
+            $score += 10;
+        } elseif ($this->temps_guerison_moyen > 30) {
+            $score += 5;
+        }
 
-        if ($score >= 40) return 'Critique';
-        if ($score >= 30) return 'Élevée';
-        if ($score >= 20) return 'Modérée';
-        if ($score >= 10) return 'Faible';
+        if ($score >= 40) {
+            return 'Critique';
+        }
+        if ($score >= 30) {
+            return 'Élevée';
+        }
+        if ($score >= 20) {
+            return 'Modérée';
+        }
+        if ($score >= 10) {
+            return 'Faible';
+        }
+
         return 'Très faible';
     }
 
@@ -311,15 +323,24 @@ class ZoneCorporelle extends Model
             $this->impact_revers ?? 0,
             $this->impact_vollee ?? 0,
             $this->impact_smash ?? 0,
-            $this->impact_deplacement ?? 0
+            $this->impact_deplacement ?? 0,
         ];
 
         $moyenne = array_sum($impacts) / count(array_filter($impacts));
 
-        if ($moyenne >= 8) return 'Impact majeur';
-        if ($moyenne >= 6) return 'Impact important';
-        if ($moyenne >= 4) return 'Impact modéré';
-        if ($moyenne >= 2) return 'Impact mineur';
+        if ($moyenne >= 8) {
+            return 'Impact majeur';
+        }
+        if ($moyenne >= 6) {
+            return 'Impact important';
+        }
+        if ($moyenne >= 4) {
+            return 'Impact modéré';
+        }
+        if ($moyenne >= 2) {
+            return 'Impact mineur';
+        }
+
         return 'Impact minimal';
     }
 
@@ -327,12 +348,12 @@ class ZoneCorporelle extends Model
     {
         return [
             'niveau_global' => $this->niveau_risque_tennis,
-            'frequence_blessures' => $this->frequence_blessures . '%',
+            'frequence_blessures' => $this->frequence_blessures.'%',
             'surfaces_risque' => $this->surfaces_risque ?? [],
             'styles_risque' => $this->styles_jeu_risque ?? [],
-            'age_vulnerable' => $this->age_moyen_blessures . ' ans',
+            'age_vulnerable' => $this->age_moyen_blessures.' ans',
             'saison_critique' => $this->saison_pic_blessures,
-            'temps_guerison' => $this->temps_guerison_moyen . ' jours'
+            'temps_guerison' => $this->temps_guerison_moyen.' jours',
         ];
     }
 
@@ -344,11 +365,11 @@ class ZoneCorporelle extends Model
             'Revers' => $this->impact_revers ?? 0,
             'Volée' => $this->impact_vollee ?? 0,
             'Smash' => $this->impact_smash ?? 0,
-            'Déplacement' => $this->impact_deplacement ?? 0
+            'Déplacement' => $this->impact_deplacement ?? 0,
         ];
 
         // Retourner coups avec impact >= 6
-        return array_keys(array_filter($coups, function($impact) {
+        return array_keys(array_filter($coups, function ($impact) {
             return $impact >= 6;
         }));
     }
@@ -378,14 +399,23 @@ class ZoneCorporelle extends Model
 
     public function getProgrammeReadaptationTypeAttribute()
     {
-        if (!$this->phases_readaptation) return 'Standard';
+        if (! $this->phases_readaptation) {
+            return 'Standard';
+        }
 
         $phases = count($this->phases_readaptation);
         $duree = $this->temps_guerison_moyen ?? 30;
 
-        if ($duree > 90 && $phases >= 4) return 'Complexe long terme';
-        if ($duree > 60 && $phases >= 3) return 'Intensif moyen terme';
-        if ($duree > 30) return 'Standard court terme';
+        if ($duree > 90 && $phases >= 4) {
+            return 'Complexe long terme';
+        }
+        if ($duree > 60 && $phases >= 3) {
+            return 'Intensif moyen terme';
+        }
+        if ($duree > 30) {
+            return 'Standard court terme';
+        }
+
         return 'Rapide';
     }
 
@@ -397,10 +427,14 @@ class ZoneCorporelle extends Model
         // Plus la zone est critique, plus l'impact est négatif
         $criticite = $this->niveau_criticite;
         switch ($criticite) {
-            case 'Critique': $facteur = -0.8; break;
-            case 'Élevée': $facteur = -0.6; break;
-            case 'Modérée': $facteur = -0.4; break;
-            case 'Faible': $facteur = -0.2; break;
+            case 'Critique': $facteur = -0.8;
+                break;
+            case 'Élevée': $facteur = -0.6;
+                break;
+            case 'Modérée': $facteur = -0.4;
+                break;
+            case 'Faible': $facteur = -0.2;
+                break;
             default: $facteur = -0.1;
         }
 
@@ -460,6 +494,7 @@ class ZoneCorporelle extends Model
     public function scopeAffectantCoups($query, $coup)
     {
         $champ = "impact_{$coup}";
+
         return $query->where($champ, '>=', 6);
     }
 
@@ -488,7 +523,7 @@ class ZoneCorporelle extends Model
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('nom_medical', 'LIKE', "%{$terme}%")
                 ->orWhere('code', 'LIKE', "%{$terme}%")
@@ -524,7 +559,7 @@ class ZoneCorporelle extends Model
                 'temps_guerison_moyen' => 45,
                 'types_blessures_frequentes' => ['tendinite_coiffe', 'inflammation', 'dechirure'],
                 'exercices_prevention' => ['rotations_externes', 'renforcement_coiffe', 'etirements_posterieur'],
-                'priorite_medicale' => 9
+                'priorite_medicale' => 9,
             ],
             [
                 'nom' => 'Coude',
@@ -544,7 +579,7 @@ class ZoneCorporelle extends Model
                 'types_blessures_frequentes' => ['tennis_elbow', 'epitrochleite', 'bursite'],
                 'surfaces_risque' => ['hard'],
                 'exercices_prevention' => ['renforcement_extenseurs', 'etirements_avant_bras', 'massage_transverse'],
-                'priorite_medicale' => 10
+                'priorite_medicale' => 10,
             ],
             [
                 'nom' => 'Poignet',
@@ -563,7 +598,7 @@ class ZoneCorporelle extends Model
                 'temps_guerison_moyen' => 30,
                 'types_blessures_frequentes' => ['tendinite', 'entorse', 'syndrome_canal_carpien'],
                 'exercices_prevention' => ['flexions_extensions', 'rotations', 'renforcement_grip'],
-                'priorite_medicale' => 7
+                'priorite_medicale' => 7,
             ],
 
             // MEMBRE INFÉRIEUR
@@ -584,7 +619,7 @@ class ZoneCorporelle extends Model
                 'temps_guerison_moyen' => 35,
                 'types_blessures_frequentes' => ['pubalgie', 'tendinite_psoas', 'bursite'],
                 'exercices_prevention' => ['renforcement_fessiers', 'etirements_psoas', 'stabilisation'],
-                'priorite_medicale' => 6
+                'priorite_medicale' => 6,
             ],
             [
                 'nom' => 'Genou',
@@ -603,7 +638,7 @@ class ZoneCorporelle extends Model
                 'types_blessures_frequentes' => ['syndrome_rotulien', 'entorse_lca', 'tendinite_rotulienne'],
                 'surfaces_risque' => ['hard', 'clay'],
                 'exercices_prevention' => ['renforcement_quadriceps', 'proprioception', 'etirements_ischio'],
-                'priorite_medicale' => 8
+                'priorite_medicale' => 8,
             ],
             [
                 'nom' => 'Cheville',
@@ -621,7 +656,7 @@ class ZoneCorporelle extends Model
                 'types_blessures_frequentes' => ['entorse_externe', 'tendinite_achille', 'impaction'],
                 'surfaces_risque' => ['clay', 'grass'],
                 'exercices_prevention' => ['proprioception', 'renforcement_peroneaux', 'etirements_triceps'],
-                'priorite_medicale' => 8
+                'priorite_medicale' => 8,
             ],
             [
                 'nom' => 'Pied',
@@ -639,7 +674,7 @@ class ZoneCorporelle extends Model
                 'types_blessures_frequentes' => ['fasciite_plantaire', 'metatarsalgie', 'nevrome_morton'],
                 'surfaces_risque' => ['hard'],
                 'exercices_prevention' => ['renforcement_voute', 'etirements_plantaire', 'massage_voute'],
-                'priorite_medicale' => 6
+                'priorite_medicale' => 6,
             ],
 
             // TRONC
@@ -660,7 +695,7 @@ class ZoneCorporelle extends Model
                 'temps_guerison_moyen' => 35,
                 'types_blessures_frequentes' => ['lumbago', 'hernie_discale', 'contracture'],
                 'exercices_prevention' => ['gainage', 'etirements_psoas', 'renforcement_profond'],
-                'priorite_medicale' => 8
+                'priorite_medicale' => 8,
             ],
             [
                 'nom' => 'Abdominaux',
@@ -679,8 +714,8 @@ class ZoneCorporelle extends Model
                 'temps_guerison_moyen' => 21,
                 'types_blessures_frequentes' => ['elongation', 'contracture', 'dechirure'],
                 'exercices_prevention' => ['gainage_variee', 'renforcement_progressif', 'etirements'],
-                'priorite_medicale' => 5
-            ]
+                'priorite_medicale' => 5,
+            ],
         ];
 
         foreach ($zones as $zone) {
@@ -722,7 +757,7 @@ class ZoneCorporelle extends Model
                 ->pluck('frequence_blessures', 'nom'),
             'repartition_categories' => self::selectRaw('categorie_principale, COUNT(*) as nb')
                 ->groupBy('categorie_principale')
-                ->pluck('nb', 'categorie_principale')
+                ->pluck('nb', 'categorie_principale'),
         ];
     }
 
@@ -739,7 +774,7 @@ class ZoneCorporelle extends Model
             'echauffement' => $this->echauffement_specifique ?? [],
             'renforcement' => $this->renforcement_cible ?? [],
             'etirements' => $this->etirements_recommandes ?? [],
-            'exercices_prevention' => $this->exercices_prevention ?? []
+            'exercices_prevention' => $this->exercices_prevention ?? [],
         ];
 
         // Personnalisation selon le joueur
@@ -813,7 +848,7 @@ class ZoneCorporelle extends Model
             'risque_global' => min(10, $risqueBase),
             'niveau' => $this->getNiveauRisque(min(10, $risqueBase)),
             'facteurs_contributeurs' => $facteurs,
-            'recommandations' => $this->getRecommandationsRisque($risqueBase)
+            'recommandations' => $this->getRecommandationsRisque($risqueBase),
         ];
     }
 
@@ -827,7 +862,7 @@ class ZoneCorporelle extends Model
             'phases' => $this->phases_readaptation ?? [],
             'exercices' => $this->exercices_readaptation ?? [],
             'tests_controle' => $this->tests_fonctionnels ?? [],
-            'criteres_retour' => $this->retour_jeu_criteres ?? []
+            'criteres_retour' => $this->retour_jeu_criteres ?? [],
         ];
 
         // Ajustement selon gravité
@@ -858,7 +893,7 @@ class ZoneCorporelle extends Model
             'revers' => $this->calculerImpactCoups('revers', $gravite),
             'vollee' => $this->calculerImpactCoups('vollee', $gravite),
             'smash' => $this->calculerImpactCoups('smash', $gravite),
-            'deplacement' => $this->calculerImpactCoups('deplacement', $gravite)
+            'deplacement' => $this->calculerImpactCoups('deplacement', $gravite),
         ];
 
         // Impact global
@@ -870,7 +905,7 @@ class ZoneCorporelle extends Model
             'coups_affectes' => $impacts,
             'coups_plus_touches' => $this->getCoupsPlusAffectes($impacts),
             'adaptations_recommandees' => $this->getAdaptationsRecommandees($impacts),
-            'facteur_ia' => $this->facteur_ajustement_ia * ($gravite / 10)
+            'facteur_ia' => $this->facteur_ajustement_ia * ($gravite / 10),
         ];
     }
 
@@ -884,25 +919,25 @@ class ZoneCorporelle extends Model
                 'nom' => $this->nom,
                 'nom_medical' => $this->nom_medical,
                 'categorie' => $this->categorie_principale,
-                'importance_tennis' => $this->importance_tennis . '/10'
+                'importance_tennis' => $this->importance_tennis.'/10',
             ],
             'profil_risque' => $this->profil_risque_complet,
             'impact_tennis' => [
                 'global' => $this->impact_tennis_global,
                 'coups_affectes' => $this->coups_principalement_affectes,
-                'niveau_criticite' => $this->niveau_criticite
+                'niveau_criticite' => $this->niveau_criticite,
             ],
             'prevention' => $this->strategies_prevention,
             'readaptation' => [
                 'type_programme' => $this->programme_readaptation_type,
-                'duree_moyenne' => $this->temps_guerison_moyen . ' jours'
+                'duree_moyenne' => $this->temps_guerison_moyen.' jours',
             ],
             'donnees_epidemiologiques' => [
-                'frequence' => $this->frequence_blessures . '%',
-                'age_moyen' => $this->age_moyen_blessures . ' ans',
-                'sexe_plus_touche' => $this->sexe_plus_touche
+                'frequence' => $this->frequence_blessures.'%',
+                'age_moyen' => $this->age_moyen_blessures.' ans',
+                'sexe_plus_touche' => $this->sexe_plus_touche,
             ],
-            'facteur_ia' => $this->facteur_ajustement_ia
+            'facteur_ia' => $this->facteur_ajustement_ia,
         ];
     }
 
@@ -912,10 +947,19 @@ class ZoneCorporelle extends Model
 
     private function getNiveauRisque($score)
     {
-        if ($score >= 8) return 'Très élevé';
-        if ($score >= 6) return 'Élevé';
-        if ($score >= 4) return 'Modéré';
-        if ($score >= 2) return 'Faible';
+        if ($score >= 8) {
+            return 'Très élevé';
+        }
+        if ($score >= 6) {
+            return 'Élevé';
+        }
+        if ($score >= 4) {
+            return 'Modéré';
+        }
+        if ($score >= 2) {
+            return 'Faible';
+        }
+
         return 'Très faible';
     }
 
@@ -947,16 +991,25 @@ class ZoneCorporelle extends Model
 
     private function getNiveauImpact($score)
     {
-        if ($score >= 8) return 'Majeur';
-        if ($score >= 6) return 'Important';
-        if ($score >= 4) return 'Modéré';
-        if ($score >= 2) return 'Mineur';
+        if ($score >= 8) {
+            return 'Majeur';
+        }
+        if ($score >= 6) {
+            return 'Important';
+        }
+        if ($score >= 4) {
+            return 'Modéré';
+        }
+        if ($score >= 2) {
+            return 'Mineur';
+        }
+
         return 'Minimal';
     }
 
     private function getCoupsPlusAffectes($impacts)
     {
-        return array_keys(array_filter($impacts, function($impact) {
+        return array_keys(array_filter($impacts, function ($impact) {
             return $impact >= 6;
         }));
     }
@@ -989,7 +1042,7 @@ class ZoneCorporelle extends Model
             'importance_tennis' => 'required|integer|min:1|max:10',
             'niveau_risque_tennis' => 'required|integer|min:1|max:10',
             'temps_guerison_moyen' => 'nullable|integer|min:1|max:365',
-            'frequence_blessures' => 'nullable|numeric|min:0|max:100'
+            'frequence_blessures' => 'nullable|numeric|min:0|max:100',
         ];
     }
 
@@ -1010,12 +1063,14 @@ class ZoneCorporelle extends Model
             );
 
             // Ordre d'affichage par défaut
-            if (!$zone->ordre_affichage) {
+            if (! $zone->ordre_affichage) {
                 $zone->ordre_affichage = $zone->priorite_medicale;
             }
 
             // Valeurs par défaut
-            if ($zone->actif === null) $zone->actif = true;
+            if ($zone->actif === null) {
+                $zone->actif = true;
+            }
             if ($zone->compensation_possible === null) {
                 // Membres supérieurs généralement plus compensables
                 $zone->compensation_possible = $zone->categorie_principale === 'membre_superieur';

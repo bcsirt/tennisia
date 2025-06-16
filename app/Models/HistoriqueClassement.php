@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class HistoriqueClassement extends Model
 {
@@ -185,7 +183,7 @@ class HistoriqueClassement extends Model
         'notes_automatiques',       // Notes générées automatiquement
         'commentaires_analystes',   // Commentaires analystes
         'alertes_generees',         // JSON alertes générées
-        'notifications_envoyees'    // JSON notifications envoyées
+        'notifications_envoyees',    // JSON notifications envoyées
     ];
 
     protected $casts = [
@@ -299,7 +297,7 @@ class HistoriqueClassement extends Model
         'facteurs_personnels' => 'json',
         'features_ia' => 'json',
         'alertes_generees' => 'json',
-        'notifications_envoyees' => 'json'
+        'notifications_envoyees' => 'json',
     ];
 
     protected $appends = [
@@ -314,7 +312,7 @@ class HistoriqueClassement extends Model
         'prediction_next_month',
         'zones_opportunite',
         'alertes_importantes',
-        'resume_evolution'
+        'resume_evolution',
     ];
 
     // ===================================================================
@@ -356,7 +354,7 @@ class HistoriqueClassement extends Model
     {
         return $this->hasMany(HistoriqueClassement::class, 'date_classement', 'date_classement')
             ->where('type_classement', $this->type_classement)
-            ->whereHas('joueur', function($q) {
+            ->whereHas('joueur', function ($q) {
                 $ageMin = $this->joueur->age - 2;
                 $ageMax = $this->joueur->age + 2;
                 $q->whereRaw('YEAR(CURDATE()) - YEAR(date_naissance) BETWEEN ? AND ?', [$ageMin, $ageMax]);
@@ -475,14 +473,31 @@ class HistoriqueClassement extends Model
     {
         $evolution = $this->evolution_position ?? 0;
 
-        if ($evolution > 50) return "📈 Progression spectaculaire (+{$evolution} places)";
-        if ($evolution > 20) return "🚀 Forte progression (+{$evolution} places)";
-        if ($evolution > 5) return "⬆️ Progression (+{$evolution} places)";
-        if ($evolution > 0) return "↗️ Légère progression (+{$evolution} places)";
-        if ($evolution == 0) return "➡️ Classement stable";
-        if ($evolution > -5) return "↘️ Légère baisse ({$evolution} places)";
-        if ($evolution > -20) return "⬇️ Baisse ({$evolution} places)";
-        if ($evolution > -50) return "📉 Forte baisse ({$evolution} places)";
+        if ($evolution > 50) {
+            return "📈 Progression spectaculaire (+{$evolution} places)";
+        }
+        if ($evolution > 20) {
+            return "🚀 Forte progression (+{$evolution} places)";
+        }
+        if ($evolution > 5) {
+            return "⬆️ Progression (+{$evolution} places)";
+        }
+        if ($evolution > 0) {
+            return "↗️ Légère progression (+{$evolution} places)";
+        }
+        if ($evolution == 0) {
+            return '➡️ Classement stable';
+        }
+        if ($evolution > -5) {
+            return "↘️ Légère baisse ({$evolution} places)";
+        }
+        if ($evolution > -20) {
+            return "⬇️ Baisse ({$evolution} places)";
+        }
+        if ($evolution > -50) {
+            return "📉 Forte baisse ({$evolution} places)";
+        }
+
         return "💥 Chute spectaculaire ({$evolution} places)";
     }
 
@@ -491,14 +506,19 @@ class HistoriqueClassement extends Model
         $tendances = [
             $this->tendance_4_semaines,
             $this->tendance_12_semaines,
-            $this->tendance_annee
+            $this->tendance_annee,
         ];
 
-        $positives = count(array_filter($tendances, fn($t) => $t === 'hausse'));
-        $negatives = count(array_filter($tendances, fn($t) => $t === 'baisse'));
+        $positives = count(array_filter($tendances, fn ($t) => $t === 'hausse'));
+        $negatives = count(array_filter($tendances, fn ($t) => $t === 'baisse'));
 
-        if ($positives >= 2) return 'progression_confirmee';
-        if ($negatives >= 2) return 'declin_confirme';
+        if ($positives >= 2) {
+            return 'progression_confirmee';
+        }
+        if ($negatives >= 2) {
+            return 'declin_confirme';
+        }
+
         return 'evolution_mixte';
     }
 
@@ -506,13 +526,28 @@ class HistoriqueClassement extends Model
     {
         $classement = $this->classement_actuel;
 
-        if (!$classement) return 'non_classe';
-        if ($classement <= 3) return 'elite_mondiale';
-        if ($classement <= 10) return 'top_10';
-        if ($classement <= 20) return 'top_20';
-        if ($classement <= 50) return 'top_50';
-        if ($classement <= 100) return 'top_100';
-        if ($classement <= 300) return 'professionnel';
+        if (! $classement) {
+            return 'non_classe';
+        }
+        if ($classement <= 3) {
+            return 'elite_mondiale';
+        }
+        if ($classement <= 10) {
+            return 'top_10';
+        }
+        if ($classement <= 20) {
+            return 'top_20';
+        }
+        if ($classement <= 50) {
+            return 'top_50';
+        }
+        if ($classement <= 100) {
+            return 'top_100';
+        }
+        if ($classement <= 300) {
+            return 'professionnel';
+        }
+
         return 'challenger';
     }
 
@@ -520,12 +555,25 @@ class HistoriqueClassement extends Model
     {
         $momentum = $this->momentum ?? 50;
 
-        if ($momentum >= 90) return 'momentum_exceptionnel';
-        if ($momentum >= 80) return 'momentum_excellent';
-        if ($momentum >= 70) return 'momentum_bon';
-        if ($momentum >= 60) return 'momentum_positif';
-        if ($momentum >= 40) return 'momentum_neutre';
-        if ($momentum >= 30) return 'momentum_negatif';
+        if ($momentum >= 90) {
+            return 'momentum_exceptionnel';
+        }
+        if ($momentum >= 80) {
+            return 'momentum_excellent';
+        }
+        if ($momentum >= 70) {
+            return 'momentum_bon';
+        }
+        if ($momentum >= 60) {
+            return 'momentum_positif';
+        }
+        if ($momentum >= 40) {
+            return 'momentum_neutre';
+        }
+        if ($momentum >= 30) {
+            return 'momentum_negatif';
+        }
+
         return 'momentum_tres_negatif';
     }
 
@@ -534,24 +582,48 @@ class HistoriqueClassement extends Model
         $type = $this->type_classement;
         $classement = $this->classement_actuel;
 
-        if (!$classement) return 'Non classé';
+        if (! $classement) {
+            return 'Non classé';
+        }
 
         switch ($type) {
             case 'atp':
             case 'wta':
-                if ($classement <= 3) return 'Légende du tennis';
-                if ($classement <= 10) return 'Elite mondiale';
-                if ($classement <= 20) return 'Très haut niveau';
-                if ($classement <= 50) return 'Haut niveau';
-                if ($classement <= 100) return 'Professionnel confirmé';
-                if ($classement <= 300) return 'Professionnel';
+                if ($classement <= 3) {
+                    return 'Légende du tennis';
+                }
+                if ($classement <= 10) {
+                    return 'Elite mondiale';
+                }
+                if ($classement <= 20) {
+                    return 'Très haut niveau';
+                }
+                if ($classement <= 50) {
+                    return 'Haut niveau';
+                }
+                if ($classement <= 100) {
+                    return 'Professionnel confirmé';
+                }
+                if ($classement <= 300) {
+                    return 'Professionnel';
+                }
+
                 return 'Challenger';
 
             case 'elo_global':
-                if ($this->elo_rating >= 2400) return 'Elite ELO';
-                if ($this->elo_rating >= 2200) return 'Très fort ELO';
-                if ($this->elo_rating >= 2000) return 'Bon niveau ELO';
-                if ($this->elo_rating >= 1800) return 'Niveau moyen ELO';
+                if ($this->elo_rating >= 2400) {
+                    return 'Elite ELO';
+                }
+                if ($this->elo_rating >= 2200) {
+                    return 'Très fort ELO';
+                }
+                if ($this->elo_rating >= 2000) {
+                    return 'Bon niveau ELO';
+                }
+                if ($this->elo_rating >= 1800) {
+                    return 'Niveau moyen ELO';
+                }
+
                 return 'Niveau débutant ELO';
 
             default:
@@ -564,7 +636,9 @@ class HistoriqueClassement extends Model
         $debut = $this->classement_debut_annee ?? $this->classement_actuel;
         $actuel = $this->classement_actuel;
 
-        if (!$debut || !$actuel) return 0;
+        if (! $debut || ! $actuel) {
+            return 0;
+        }
 
         return $debut - $actuel; // Positif = progression
     }
@@ -576,7 +650,7 @@ class HistoriqueClassement extends Model
             'momentum' => ($this->momentum ?? 50) / 100,
             'forme' => ($this->forme_recent ?? 50) / 100,
             'constance' => ($this->constance_resultats ?? 50) / 100,
-            'potentiel_restant' => ($this->potentiel_restant ?? 50) / 100
+            'potentiel_restant' => ($this->potentiel_restant ?? 50) / 100,
         ];
 
         return round(array_sum($facteurs) / count($facteurs) * 100, 1);
@@ -587,15 +661,29 @@ class HistoriqueClassement extends Model
         $facteurs = [];
 
         // Facteurs positifs
-        if (($this->momentum ?? 0) >= 70) $facteurs[] = 'Momentum positif';
-        if (($this->forme_recent ?? 0) >= 70) $facteurs[] = 'Forme excellente';
-        if (($this->constance_resultats ?? 0) >= 70) $facteurs[] = 'Constance résultats';
-        if ($this->evolution_position > 0) $facteurs[] = 'Progression récente';
+        if (($this->momentum ?? 0) >= 70) {
+            $facteurs[] = 'Momentum positif';
+        }
+        if (($this->forme_recent ?? 0) >= 70) {
+            $facteurs[] = 'Forme excellente';
+        }
+        if (($this->constance_resultats ?? 0) >= 70) {
+            $facteurs[] = 'Constance résultats';
+        }
+        if ($this->evolution_position > 0) {
+            $facteurs[] = 'Progression récente';
+        }
 
         // Facteurs négatifs
-        if (($this->impact_blessures ?? 0) >= 5) $facteurs[] = 'Impact blessures';
-        if ($this->evolution_position < -10) $facteurs[] = 'Baisse importante';
-        if (($this->volatilite_score ?? 0) >= 7) $facteurs[] = 'Instabilité résultats';
+        if (($this->impact_blessures ?? 0) >= 5) {
+            $facteurs[] = 'Impact blessures';
+        }
+        if ($this->evolution_position < -10) {
+            $facteurs[] = 'Baisse importante';
+        }
+        if (($this->volatilite_score ?? 0) >= 7) {
+            $facteurs[] = 'Instabilité résultats';
+        }
 
         return $facteurs;
     }
@@ -606,7 +694,7 @@ class HistoriqueClassement extends Model
             'classement_predit' => $this->classement_predit_4_semaines,
             'evolution_prevue' => ($this->classement_actuel ?? 0) - ($this->classement_predit_4_semaines ?? 0),
             'confiance' => $this->confiance_prediction ?? 50,
-            'facteurs' => $this->facteurs_prediction ?? []
+            'facteurs' => $this->facteurs_prediction ?? [],
         ];
     }
 
@@ -662,10 +750,10 @@ class HistoriqueClassement extends Model
             'momentum' => $this->momentum_description,
             'points' => number_format($this->points_actuels),
             'progression_annee' => $this->progression_annee,
-            'potentiel' => $this->potentiel_progression . '%',
+            'potentiel' => $this->potentiel_progression.'%',
             'prediction_1_mois' => $this->prediction_next_month,
             'facteurs_cles' => $this->facteurs_cles_evolution,
-            'alertes' => $this->alertes_importantes
+            'alertes' => $this->alertes_importantes,
         ];
     }
 
@@ -679,7 +767,9 @@ class HistoriqueClassement extends Model
     public function calculerEvolution()
     {
         $precedent = $this->historiquePrecedent;
-        if (!$precedent) return $this;
+        if (! $precedent) {
+            return $this;
+        }
 
         $this->evolution_position = ($precedent->classement_actuel ?? 0) - ($this->classement_actuel ?? 0);
         $this->points_evolution = ($this->points_actuels ?? 0) - ($precedent->points_actuels ?? 0);
@@ -779,7 +869,7 @@ class HistoriqueClassement extends Model
             'evolution_4_sem' => $this->calculerScoreEvolution4Semaines(),
             'constance' => $this->constance_resultats ?? 50,
             'progression_vitesse' => min(100, ($this->progression_vitesse ?? 0) * 50),
-            'points_evolution' => min(100, max(0, 50 + (($this->points_evolution ?? 0) / 100)))
+            'points_evolution' => min(100, max(0, 50 + (($this->points_evolution ?? 0) / 100))),
         ];
 
         $this->momentum = round(array_sum($facteursMomentum) / count($facteursMomentum), 1);
@@ -809,15 +899,19 @@ class HistoriqueClassement extends Model
             'evolution_recente' => $this->evolution_position ?? 0,
             'constance' => $this->constance_resultats ?? 50,
             'points_actuels' => $this->points_actuels ?? 0,
-            'surface_favorable' => $this->surface_favorisante === $this->joueur->surface_favorite ? 1 : 0
+            'surface_favorable' => $this->surface_favorisante === $this->joueur->surface_favorite ? 1 : 0,
         ];
 
         // Algorithme simplifié de prédiction
         $score_prediction = ($features['momentum'] + $features['forme'] + $features['constance']) / 3;
 
         // Ajustement selon l'âge
-        if ($features['age_joueur'] < 25) $score_prediction *= 1.1;
-        if ($features['age_joueur'] > 30) $score_prediction *= 0.9;
+        if ($features['age_joueur'] < 25) {
+            $score_prediction *= 1.1;
+        }
+        if ($features['age_joueur'] > 30) {
+            $score_prediction *= 0.9;
+        }
 
         // Prédiction classement 4 semaines
         $evolution_prevue = ($score_prediction - 50) * 0.5; // Facteur conservateur
@@ -846,13 +940,13 @@ class HistoriqueClassement extends Model
         $age = $this->joueur->age;
         $cohorte = HistoriqueClassement::where('date_classement', $this->date_classement)
             ->where('type_classement', $this->type_classement)
-            ->whereHas('joueur', function($q) use ($age) {
+            ->whereHas('joueur', function ($q) use ($age) {
                 $q->whereRaw('YEAR(CURDATE()) - YEAR(date_naissance) BETWEEN ? AND ?', [$age - 2, $age + 2]);
             })
             ->orderBy('classement_actuel')
             ->get();
 
-        $position = $cohorte->search(function($item) {
+        $position = $cohorte->search(function ($item) {
             return $item->joueur_id === $this->joueur_id;
         });
 
@@ -888,7 +982,7 @@ class HistoriqueClassement extends Model
             $anomalies[] = 'elo_incoherent';
         }
 
-        $this->anomalie_detectee = !empty($anomalies);
+        $this->anomalie_detectee = ! empty($anomalies);
         $this->alertes_generees = $anomalies;
 
         $this->save();
@@ -906,49 +1000,49 @@ class HistoriqueClassement extends Model
             'joueur' => [
                 'id' => $this->joueur_id,
                 'nom' => $this->joueur->nom_complet,
-                'age' => $this->joueur->age
+                'age' => $this->joueur->age,
             ],
             'classement' => [
                 'actuel' => $this->classement_actuel,
                 'evolution' => $this->evolution_position,
                 'niveau' => $this->niveau_classement,
-                'position_relative' => $this->position_relative
+                'position_relative' => $this->position_relative,
             ],
             'tendances' => [
                 'court_terme' => $this->tendance_4_semaines,
                 'moyen_terme' => $this->tendance_12_semaines,
                 'long_terme' => $this->tendance_annee,
-                'globale' => $this->tendance_globale
+                'globale' => $this->tendance_globale,
             ],
             'performance' => [
                 'momentum' => $this->momentum,
                 'forme' => $this->forme_recent,
                 'constance' => $this->constance_resultats,
                 'stabilite' => $this->stabilite_score,
-                'potentiel' => $this->potentiel_progression
+                'potentiel' => $this->potentiel_progression,
             ],
             'predictions' => [
                 '1_mois' => $this->prediction_next_month,
                 'probabilite_top_10' => $this->probabilite_top_10,
                 'probabilite_top_50' => $this->probabilite_top_50,
-                'confiance' => $this->confiance_prediction
+                'confiance' => $this->confiance_prediction,
             ],
             'contexte' => [
                 'facteurs_cles' => $this->facteurs_cles_evolution,
                 'zones_opportunite' => $this->zones_opportunite,
-                'alertes' => $this->alertes_importantes
+                'alertes' => $this->alertes_importantes,
             ],
             'donnees_ia' => [
                 'features' => $this->features_ia,
                 'cluster' => $this->cluster_joueur,
                 'pattern' => $this->pattern_evolution,
-                'poids' => $this->poids_echantillon
+                'poids' => $this->poids_echantillon,
             ],
             'qualite' => [
                 'fiabilite' => $this->fiabilite_donnees,
                 'anomalie' => $this->anomalie_detectee,
-                'validee' => $this->validee_officiellement
-            ]
+                'validee' => $this->validee_officiellement,
+            ],
         ];
     }
 
@@ -960,10 +1054,19 @@ class HistoriqueClassement extends Model
     {
         $age = $this->joueur->age ?? 25;
 
-        if ($age < 20) return 0.9; // Très jeune, potentiel élevé mais instable
-        if ($age < 25) return 1.0; // Age optimal pour progression
-        if ($age < 30) return 0.8; // Maturité mais progression plus lente
-        if ($age < 33) return 0.6; // Maintien niveau plus que progression
+        if ($age < 20) {
+            return 0.9;
+        } // Très jeune, potentiel élevé mais instable
+        if ($age < 25) {
+            return 1.0;
+        } // Age optimal pour progression
+        if ($age < 30) {
+            return 0.8;
+        } // Maturité mais progression plus lente
+        if ($age < 33) {
+            return 0.6;
+        } // Maintien niveau plus que progression
+
         return 0.4; // Déclin probable
     }
 
@@ -971,14 +1074,31 @@ class HistoriqueClassement extends Model
     {
         $evolution = $this->evolution_position ?? 0;
 
-        if ($evolution > 20) return 90;
-        if ($evolution > 10) return 80;
-        if ($evolution > 5) return 70;
-        if ($evolution > 0) return 60;
-        if ($evolution == 0) return 50;
-        if ($evolution > -5) return 40;
-        if ($evolution > -10) return 30;
-        if ($evolution > -20) return 20;
+        if ($evolution > 20) {
+            return 90;
+        }
+        if ($evolution > 10) {
+            return 80;
+        }
+        if ($evolution > 5) {
+            return 70;
+        }
+        if ($evolution > 0) {
+            return 60;
+        }
+        if ($evolution == 0) {
+            return 50;
+        }
+        if ($evolution > -5) {
+            return 40;
+        }
+        if ($evolution > -10) {
+            return 30;
+        }
+        if ($evolution > -20) {
+            return 20;
+        }
+
         return 10;
     }
 
@@ -988,7 +1108,7 @@ class HistoriqueClassement extends Model
         $facteurs = [
             'momentum' => $this->momentum ?? 50,
             'evolution' => $this->calculerScoreEvolution4Semaines(),
-            'constance' => $this->constance_resultats ?? 50
+            'constance' => $this->constance_resultats ?? 50,
         ];
 
         return round(array_sum($facteurs) / count($facteurs), 1);
@@ -1005,11 +1125,13 @@ class HistoriqueClassement extends Model
             ->pluck('classement_actuel')
             ->toArray();
 
-        if (count($historiques) < 3) return 50;
+        if (count($historiques) < 3) {
+            return 50;
+        }
 
         $variations = [];
         for ($i = 1; $i < count($historiques); $i++) {
-            $variations[] = abs($historiques[$i] - $historiques[$i-1]);
+            $variations[] = abs($historiques[$i] - $historiques[$i - 1]);
         }
 
         $variationMoyenne = array_sum($variations) / count($variations);
@@ -1023,7 +1145,7 @@ class HistoriqueClassement extends Model
             'momentum' => $this->momentum ?? 50,
             'age' => $this->calculerFacteurAge() * 100,
             'forme' => $this->forme_recent ?? 50,
-            'potentiel' => $this->potentiel_restant ?? 50
+            'potentiel' => $this->potentiel_restant ?? 50,
         ];
 
         $scoreGlobal = array_sum($facteurs) / count($facteurs);
@@ -1058,8 +1180,12 @@ class HistoriqueClassement extends Model
             ->where('type_classement', $type)
             ->orderBy('date_classement');
 
-        if ($periodeDebut) $query->where('date_classement', '>=', $periodeDebut);
-        if ($periodeFin) $query->where('date_classement', '<=', $periodeFin);
+        if ($periodeDebut) {
+            $query->where('date_classement', '>=', $periodeDebut);
+        }
+        if ($periodeFin) {
+            $query->where('date_classement', '<=', $periodeFin);
+        }
 
         return $query->get();
     }
@@ -1106,7 +1232,7 @@ class HistoriqueClassement extends Model
             'type_classement' => 'required|in:atp,wta,itf,elo_global,elo_surface,national,junior',
             'classement_actuel' => 'nullable|integer|min:1',
             'points_actuels' => 'nullable|integer|min:0',
-            'elo_rating' => 'nullable|numeric|between:800,3000'
+            'elo_rating' => 'nullable|numeric|between:800,3000',
         ];
     }
 

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Blessure extends Model
@@ -103,7 +103,7 @@ class Blessure extends Model
         'notes_medicales',           // Notes confidentielles médecin
         'visible_public',            // Si info publique ou privée
         'source_information_id',     // Source de l'info (joueur, staff, etc.)
-        'fiabilite_diagnostic'       // 0-100% fiabilité du diagnostic
+        'fiabilite_diagnostic',       // 0-100% fiabilité du diagnostic
     ];
 
     protected $casts = [
@@ -159,7 +159,7 @@ class Blessure extends Model
         'rechute_dans_3_mois' => 'boolean',
         'signal_alerte_avant' => 'boolean',
         'changement_equipement' => 'boolean',
-        'visible_public' => 'boolean'
+        'visible_public' => 'boolean',
     ];
 
     protected $appends = [
@@ -170,7 +170,7 @@ class Blessure extends Model
         'impact_global_performance',
         'risque_pour_match',
         'phase_recuperation',
-        'recommandation_participation'
+        'recommandation_participation',
     ];
 
     // ===================================================================
@@ -247,16 +247,19 @@ class Blessure extends Model
 
     public function getDureeTotaleAttribute()
     {
-        if (!$this->date_debut) return 0;
+        if (! $this->date_debut) {
+            return 0;
+        }
 
         $dateFin = $this->date_guerison_reelle ?? $this->date_fin ?? now();
+
         return $this->date_debut->diffInDays($dateFin);
     }
 
     public function getEstActiveAttribute()
     {
         return $this->statut_actuel === 'active' ||
-            (!$this->date_fin && $this->date_debut <= now());
+            (! $this->date_fin && $this->date_debut <= now());
     }
 
     public function getEstChroniqueAttribute()
@@ -270,10 +273,19 @@ class Blessure extends Model
     {
         $gravite = $this->gravite;
 
-        if ($gravite >= 9) return 'critique';
-        if ($gravite >= 7) return 'severe';
-        if ($gravite >= 5) return 'modere';
-        if ($gravite >= 3) return 'leger';
+        if ($gravite >= 9) {
+            return 'critique';
+        }
+        if ($gravite >= 7) {
+            return 'severe';
+        }
+        if ($gravite >= 5) {
+            return 'modere';
+        }
+        if ($gravite >= 3) {
+            return 'leger';
+        }
+
         return 'mineur';
     }
 
@@ -286,7 +298,7 @@ class Blessure extends Model
             'endurance' => $this->impact_endurance * 0.15,  // 15% - physique
             'coup_droit' => $this->impact_coup_droit * 0.15, // 15%
             'revers' => $this->impact_revers * 0.15,        // 15%
-            'mental' => $this->impact_mental * 0.10         // 10% - psychologique
+            'mental' => $this->impact_mental * 0.10,         // 10% - psychologique
         ];
 
         return round(array_sum($impacts), 1);
@@ -294,7 +306,9 @@ class Blessure extends Model
 
     public function getRisquePourMatchAttribute()
     {
-        if (!$this->est_active) return 0;
+        if (! $this->est_active) {
+            return 0;
+        }
 
         $risque = 0;
 
@@ -311,37 +325,61 @@ class Blessure extends Model
         $risque += $this->facteur_recidive * 0.3;
 
         // Phase critique
-        if ($this->phase_blessure === 'aigue') $risque += 20;
+        if ($this->phase_blessure === 'aigue') {
+            $risque += 20;
+        }
 
         return min(100, round($risque, 1));
     }
 
     public function getPhaseRecuperationAttribute()
     {
-        if (!$this->est_active) return 'guerison_complete';
+        if (! $this->est_active) {
+            return 'guerison_complete';
+        }
 
         $joursBlessure = $this->date_debut->diffInDays(now());
         $dureeEstimee = $this->duree_estimee_jours ?? 30;
 
         $progression = $joursBlessure / $dureeEstimee;
 
-        if ($progression < 0.25) return 'phase_aigue';
-        if ($progression < 0.50) return 'debut_guerison';
-        if ($progression < 0.75) return 'guerison_active';
-        if ($progression < 1.0) return 'fin_guerison';
+        if ($progression < 0.25) {
+            return 'phase_aigue';
+        }
+        if ($progression < 0.50) {
+            return 'debut_guerison';
+        }
+        if ($progression < 0.75) {
+            return 'guerison_active';
+        }
+        if ($progression < 1.0) {
+            return 'fin_guerison';
+        }
+
         return 'retour_progressif';
     }
 
     public function getRecommandationParticipationAttribute()
     {
-        if (!$this->est_active) return 'participation_normale';
+        if (! $this->est_active) {
+            return 'participation_normale';
+        }
 
         $risque = $this->risque_pour_match;
 
-        if ($risque >= 80) return 'interdiction_formelle';
-        if ($risque >= 60) return 'fortement_deconseille';
-        if ($risque >= 40) return 'participation_limitee';
-        if ($risque >= 20) return 'surveillance_medicale';
+        if ($risque >= 80) {
+            return 'interdiction_formelle';
+        }
+        if ($risque >= 60) {
+            return 'fortement_deconseille';
+        }
+        if ($risque >= 40) {
+            return 'participation_limitee';
+        }
+        if ($risque >= 20) {
+            return 'surveillance_medicale';
+        }
+
         return 'participation_normale_avec_suivi';
     }
 
@@ -352,7 +390,7 @@ class Blessure extends Model
     public function scopeActives($query)
     {
         return $query->where('statut_actuel', 'active')
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('date_fin')
                     ->orWhere('date_fin', '>=', now());
             });
@@ -376,14 +414,14 @@ class Blessure extends Model
 
     public function scopeParZone($query, $zoneCode)
     {
-        return $query->whereHas('zone', function($q) use ($zoneCode) {
+        return $query->whereHas('zone', function ($q) use ($zoneCode) {
             $q->where('code', $zoneCode);
         });
     }
 
     public function scopeParType($query, $typeCode)
     {
-        return $query->whereHas('type', function($q) use ($typeCode) {
+        return $query->whereHas('type', function ($q) use ($typeCode) {
             $q->where('code', $typeCode);
         });
     }
@@ -402,7 +440,7 @@ class Blessure extends Model
     public function scopeAnterieuresTournoi($query, Tournoi $tournoi)
     {
         return $query->where('date_debut', '<', $tournoi->date_debut)
-            ->where(function($q) use ($tournoi) {
+            ->where(function ($q) use ($tournoi) {
                 $q->whereNull('date_fin')
                     ->orWhere('date_fin', '>=', $tournoi->date_debut);
             });
@@ -417,7 +455,9 @@ class Blessure extends Model
      */
     public function evaluerImpactMatch(MatchTennis $match)
     {
-        if (!$this->est_active) return null;
+        if (! $this->est_active) {
+            return null;
+        }
 
         $impacts = [];
 
@@ -444,7 +484,7 @@ class Blessure extends Model
             'impacts_detailles' => $impacts,
             'recommandation' => $this->getRecommandationPourMatch($impactGlobal),
             'risque_aggravation' => $this->calculerRisqueAggravation($match),
-            'adaptations_necessaires' => $this->getAdaptationsNecessaires()
+            'adaptations_necessaires' => $this->getAdaptationsNecessaires(),
         ];
     }
 
@@ -468,7 +508,7 @@ class Blessure extends Model
                 'douleur_estimee' => round($douleurPrevue, 1),
                 'impact_performance' => round($impactPrevu, 1),
                 'recommandation_jour' => $this->getRecommandationJour($impactPrevu),
-                'risque_rechute' => $this->calculerRisqueRechute($jour)
+                'risque_rechute' => $this->calculerRisqueRechute($jour),
             ];
         }
 
@@ -489,7 +529,7 @@ class Blessure extends Model
             'types_recurrents' => $this->getTypesRecurrents($blessuresJoueur),
             'facteurs_declenchants' => $this->getFacteursFrequents($blessuresJoueur),
             'periodes_risque' => $this->getPeriodesRisque($blessuresJoueur),
-            'correlation_performance' => $this->getCorrelationPerformance($blessuresJoueur)
+            'correlation_performance' => $this->getCorrelationPerformance($blessuresJoueur),
         ];
 
         return $patterns;
@@ -511,7 +551,7 @@ class Blessure extends Model
             $recommandations['anti_recidive'] = [
                 'renforcement_musculaire' => 'Priorité absolue',
                 'echauffement_prolonge' => 'Obligatoire',
-                'surveillance_medicale' => 'Régulière'
+                'surveillance_medicale' => 'Régulière',
             ];
         }
 
@@ -536,7 +576,7 @@ class Blessure extends Model
         $impact = [
             'points_perdus_directs' => 0,
             'tournois_manques' => 0,
-            'degradation_estimee' => 0
+            'degradation_estimee' => 0,
         ];
 
         // Tournois manqués pendant la blessure
@@ -596,7 +636,7 @@ class Blessure extends Model
             $signaux[] = [
                 'type' => 'douleur_retour',
                 'niveau_alerte' => 'moyen',
-                'message' => 'Retour de douleur après guérison'
+                'message' => 'Retour de douleur après guérison',
             ];
         }
 
@@ -605,7 +645,7 @@ class Blessure extends Model
             $signaux[] = [
                 'type' => 'compensation_dangereuse',
                 'niveau_alerte' => 'eleve',
-                'message' => 'Compensations créant déséquilibres'
+                'message' => 'Compensations créant déséquilibres',
             ];
         }
 
@@ -614,7 +654,7 @@ class Blessure extends Model
             $signaux[] = [
                 'type' => 'surcharge_entrainement',
                 'niveau_alerte' => 'eleve',
-                'message' => 'Charge d\'entraînement excessive pour cette blessure'
+                'message' => 'Charge d\'entraînement excessive pour cette blessure',
             ];
         }
 
@@ -631,7 +671,7 @@ class Blessure extends Model
             'terre_battue' => 1.2, // Plus dur pour mobilité
             'dur' => 1.0,
             'gazon' => 0.9,
-            'indoor' => 0.95
+            'indoor' => 0.95,
         ];
 
         return $multipliers[$surface] ?? 1.0;
@@ -642,22 +682,37 @@ class Blessure extends Model
         $taux = 0.1; // Base 10% par jour
 
         // Ajustements selon gravité
-        if ($this->gravite <= 3) $taux = 0.15;
-        elseif ($this->gravite >= 7) $taux = 0.05;
+        if ($this->gravite <= 3) {
+            $taux = 0.15;
+        } elseif ($this->gravite >= 7) {
+            $taux = 0.05;
+        }
 
         // Ajustements selon phase
-        if ($this->phase_blessure === 'aigue') $taux *= 0.5;
-        elseif ($this->phase_blessure === 'recovery') $taux *= 1.5;
+        if ($this->phase_blessure === 'aigue') {
+            $taux *= 0.5;
+        } elseif ($this->phase_blessure === 'recovery') {
+            $taux *= 1.5;
+        }
 
         return $taux;
     }
 
     private function getRecommandationPourMatch($impactGlobal)
     {
-        if ($impactGlobal >= 70) return 'forfait_obligatoire';
-        if ($impactGlobal >= 50) return 'participation_tres_risquee';
-        if ($impactGlobal >= 30) return 'participation_avec_limitations';
-        if ($impactGlobal >= 15) return 'surveillance_renforcee';
+        if ($impactGlobal >= 70) {
+            return 'forfait_obligatoire';
+        }
+        if ($impactGlobal >= 50) {
+            return 'participation_tres_risquee';
+        }
+        if ($impactGlobal >= 30) {
+            return 'participation_avec_limitations';
+        }
+        if ($impactGlobal >= 15) {
+            return 'surveillance_renforcee';
+        }
+
         return 'participation_normale_avec_suivi';
     }
 
@@ -666,10 +721,14 @@ class Blessure extends Model
         $risque = $this->gravite * 5;
 
         // Plus de risque si match important
-        if ($match->importance_match >= 3) $risque += 15;
+        if ($match->importance_match >= 3) {
+            $risque += 15;
+        }
 
         // Plus de risque si adversaire difficile
-        if ($match->difficulte_prevue >= 7) $risque += 10;
+        if ($match->difficulte_prevue >= 7) {
+            $risque += 10;
+        }
 
         return min(100, $risque);
     }
@@ -711,6 +770,7 @@ class Blessure extends Model
                 }
             }
         }
+
         return $facteurs;
     }
 
@@ -767,7 +827,7 @@ class Blessure extends Model
             'periodes_risque' => self::selectRaw('MONTH(date_debut) as mois, COUNT(*) as total')
                 ->groupBy('mois')
                 ->orderBy('total', 'desc')
-                ->get()
+                ->get(),
         ];
     }
 
@@ -784,7 +844,7 @@ class Blessure extends Model
             'date_debut' => 'required|date',
             'gravite' => 'required|integer|between:1,10',
             'niveau_douleur' => 'required|integer|between:0,10',
-            'pourcentage_handicap' => 'required|numeric|between:0,100'
+            'pourcentage_handicap' => 'required|numeric|between:0,100',
         ];
     }
 }

@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class VideoHighlight extends Model
 {
@@ -36,7 +36,7 @@ class VideoHighlight extends Model
         'timestamp_creation',
         'source_video',
         'analysable_ia',
-        'metadata_technique'
+        'metadata_technique',
     ];
 
     protected $casts = [
@@ -55,14 +55,14 @@ class VideoHighlight extends Model
         'timestamp_creation' => 'datetime',
         'analysable_ia' => 'boolean',
         'tags' => 'array',
-        'metadata_technique' => 'array'
+        'metadata_technique' => 'array',
     ];
 
     protected $appends = [
         'engagement_rate',
         'categorie_impact',
         'moment_cle_match',
-        'viralite_score'
+        'viralite_score',
     ];
 
     // Relations
@@ -84,9 +84,12 @@ class VideoHighlight extends Model
     // Accessors pour les métriques calculées
     public function getEngagementRateAttribute()
     {
-        if ($this->vues_count == 0) return 0;
+        if ($this->vues_count == 0) {
+            return 0;
+        }
 
         $total_interactions = $this->likes_count + $this->shares_count;
+
         return round(($total_interactions / $this->vues_count) * 100, 2);
     }
 
@@ -94,10 +97,19 @@ class VideoHighlight extends Model
     {
         $impact = abs($this->impact_momentum);
 
-        if ($impact >= 4) return 'game_changer';
-        if ($impact >= 3) return 'tournant';
-        if ($impact >= 2) return 'important';
-        if ($impact >= 1) return 'notable';
+        if ($impact >= 4) {
+            return 'game_changer';
+        }
+        if ($impact >= 3) {
+            return 'tournant';
+        }
+        if ($impact >= 2) {
+            return 'important';
+        }
+        if ($impact >= 1) {
+            return 'notable';
+        }
+
         return 'neutre';
     }
 
@@ -111,7 +123,7 @@ class VideoHighlight extends Model
             'tie_break',
             'comeback',
             'debut_match',
-            'fin_set'
+            'fin_set',
         ];
 
         return in_array($this->type, $moments_cles) || $this->impact_momentum >= 3;
@@ -212,7 +224,7 @@ class VideoHighlight extends Model
             'effet_balle' => null, // lift, slice, flat
             'distance_parcourue' => null,
             'temps_reaction' => null,
-            'qualite_placement' => null // 1-10
+            'qualite_placement' => null, // 1-10
         ];
 
         return array_merge($analyse_suggeree, $metadata);
@@ -221,10 +233,10 @@ class VideoHighlight extends Model
     public function genererThumbnail()
     {
         // Génération automatique de thumbnail au moment clé
-        if (!$this->url_thumbnail && $this->url) {
+        if (! $this->url_thumbnail && $this->url) {
             // Logique de génération de thumbnail
             // À implémenter avec service vidéo
-            return "thumbnail_generated_at_" . ($this->duree_video / 2) . "s";
+            return 'thumbnail_generated_at_'.($this->duree_video / 2).'s';
         }
 
         return $this->url_thumbnail;
@@ -297,7 +309,7 @@ class VideoHighlight extends Model
             'moment_cle' => $this->moment_cle_match,
             'metadata_technique' => $this->extraireMetadonneesTechniques(),
             'trending_potential' => $this->estTrendingCandidate(),
-            'score_spectacle' => $this->niveau_spectaculaire
+            'score_spectacle' => $this->niveau_spectaculaire,
         ];
     }
 

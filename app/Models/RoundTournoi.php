@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RoundTournoi extends Model
@@ -58,7 +58,7 @@ class RoundTournoi extends Model
 
         // Métadonnées
         'notes',
-        'actif'
+        'actif',
     ];
 
     protected $casts = [
@@ -81,7 +81,7 @@ class RoundTournoi extends Model
         'permet_bye' => 'boolean',
         'permet_walkover' => 'boolean',
         'est_visible' => 'boolean',
-        'actif' => 'boolean'
+        'actif' => 'boolean',
     ];
 
     protected $appends = [
@@ -89,7 +89,7 @@ class RoundTournoi extends Model
         'importance_level',
         'taux_elimination',
         'est_round_decisif',
-        'difficulte_relative'
+        'difficulte_relative',
     ];
 
     // ===================================================================
@@ -105,7 +105,7 @@ class RoundTournoi extends Model
     public function matchsTermines()
     {
         return $this->hasMany(MatchTennis::class, 'round_tournoi_id')
-            ->whereHas('statut', function($q) {
+            ->whereHas('statut', function ($q) {
                 $q->where('code', 'termine');
             });
     }
@@ -113,7 +113,7 @@ class RoundTournoi extends Model
     public function matchsProgrammes()
     {
         return $this->hasMany(MatchTennis::class, 'round_tournoi_id')
-            ->whereHas('statut', function($q) {
+            ->whereHas('statut', function ($q) {
                 $q->where('code', 'programme');
             });
     }
@@ -121,7 +121,7 @@ class RoundTournoi extends Model
     public function matchsEnCours()
     {
         return $this->hasMany(MatchTennis::class, 'round_tournoi_id')
-            ->whereHas('statut', function($q) {
+            ->whereHas('statut', function ($q) {
                 $q->where('code', 'en_cours');
             });
     }
@@ -157,24 +157,38 @@ class RoundTournoi extends Model
             $suffixes[] = '(Q)';
         }
 
-        return $this->nom . (empty($suffixes) ? '' : ' ' . implode(' ', $suffixes));
+        return $this->nom.(empty($suffixes) ? '' : ' '.implode(' ', $suffixes));
     }
 
     public function getImportanceLevelAttribute()
     {
-        if ($this->est_finale) return 'Critique';
-        if ($this->position_inverse <= 2) return 'Très élevée'; // Finale, demi
-        if ($this->position_inverse <= 4) return 'Élevée';       // Quart
-        if ($this->est_phase_finale) return 'Importante';
-        if ($this->est_round_principal) return 'Modérée';
+        if ($this->est_finale) {
+            return 'Critique';
+        }
+        if ($this->position_inverse <= 2) {
+            return 'Très élevée';
+        } // Finale, demi
+        if ($this->position_inverse <= 4) {
+            return 'Élevée';
+        }       // Quart
+        if ($this->est_phase_finale) {
+            return 'Importante';
+        }
+        if ($this->est_round_principal) {
+            return 'Modérée';
+        }
+
         return 'Standard';
     }
 
     public function getTauxEliminationAttribute()
     {
-        if (!$this->nb_joueurs_entrants || !$this->est_elimination) return 0;
+        if (! $this->nb_joueurs_entrants || ! $this->est_elimination) {
+            return 0;
+        }
 
         $elimines = $this->nb_joueurs_entrants - $this->nb_joueurs_sortants;
+
         return round(($elimines / $this->nb_joueurs_entrants) * 100, 1);
     }
 
@@ -192,8 +206,12 @@ class RoundTournoi extends Model
         $score += ($this->ordre ?? 0) * 10;
 
         // Phases finales sont plus difficiles
-        if ($this->est_phase_finale) $score += 30;
-        if ($this->est_finale) $score += 50;
+        if ($this->est_phase_finale) {
+            $score += 30;
+        }
+        if ($this->est_finale) {
+            $score += 50;
+        }
 
         // Niveau de round
         $score += ($this->niveau ?? 1) * 5;
@@ -214,7 +232,7 @@ class RoundTournoi extends Model
             'premier_tour' => 'R128',
             'qualification_finale' => 'Q3',
             'qualification_deuxieme' => 'Q2',
-            'qualification_premier' => 'Q1'
+            'qualification_premier' => 'Q1',
         ];
 
         return $abreviations[$this->code] ?? $this->abreviation ?? strtoupper(substr($this->nom, 0, 2));
@@ -284,7 +302,7 @@ class RoundTournoi extends Model
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('nom_court', 'LIKE', "%{$terme}%")
                 ->orWhere('code', 'LIKE', "%{$terme}%")
@@ -328,44 +346,44 @@ class RoundTournoi extends Model
             7 => [ // 128 joueurs -> Premier tour
                 'nom' => 'Premier tour',
                 'code' => 'premier_tour',
-                'abreviation' => 'R128'
+                'abreviation' => 'R128',
             ],
             6 => [ // 64 joueurs -> Deuxième tour
                 'nom' => 'Deuxième tour',
                 'code' => 'deuxieme_tour',
-                'abreviation' => 'R64'
+                'abreviation' => 'R64',
             ],
             5 => [ // 32 joueurs -> Troisième tour
                 'nom' => 'Troisième tour',
                 'code' => 'troisieme_tour',
-                'abreviation' => 'R32'
+                'abreviation' => 'R32',
             ],
             4 => [ // 16 joueurs -> Huitièmes
                 'nom' => 'Huitièmes de finale',
                 'code' => 'huitieme',
-                'abreviation' => 'R16'
+                'abreviation' => 'R16',
             ],
             3 => [ // 8 joueurs -> Quarts
                 'nom' => 'Quarts de finale',
                 'code' => 'quart_finale',
-                'abreviation' => 'QF'
+                'abreviation' => 'QF',
             ],
             2 => [ // 4 joueurs -> Demis
                 'nom' => 'Demi-finales',
                 'code' => 'demi_finale',
-                'abreviation' => 'SF'
+                'abreviation' => 'SF',
             ],
             1 => [ // 2 joueurs -> Finale
                 'nom' => 'Finale',
                 'code' => 'finale',
-                'abreviation' => 'F'
-            ]
+                'abreviation' => 'F',
+            ],
         ];
 
         $config = $configurations[$niveau] ?? [
             'nom' => "Round {$ordre}",
             'code' => "round_{$ordre}",
-            'abreviation' => "R{$entrants}"
+            'abreviation' => "R{$entrants}",
         ];
 
         return array_merge($config, [
@@ -382,7 +400,7 @@ class RoundTournoi extends Model
             'format_match' => $niveau === 1 ? 'best_of_5' : 'best_of_3',
             'permet_bye' => $niveau >= 6,
             'est_visible' => true,
-            'actif' => true
+            'actif' => true,
         ]);
     }
 
@@ -394,12 +412,12 @@ class RoundTournoi extends Model
         return self::actifs()
             ->ordonnes()
             ->get()
-            ->mapWithKeys(function($round) {
+            ->mapWithKeys(function ($round) {
                 return [$round->code => [
                     'nom' => $round->nom,
                     'ordre' => $round->ordre,
                     'importance' => $round->importance_level,
-                    'abreviation' => $round->abreviation_standard
+                    'abreviation' => $round->abreviation_standard,
                 ]];
             });
     }
@@ -415,7 +433,9 @@ class RoundTournoi extends Model
     {
         $pointsBase = $tournoi->points_atp_wta_gagnant;
 
-        if (!$pointsBase) return 0;
+        if (! $pointsBase) {
+            return 0;
+        }
 
         // Distribution des points selon le round
         $distributions = [
@@ -425,12 +445,12 @@ class RoundTournoi extends Model
             'huitieme' => 0.18,
             'troisieme_tour' => 0.09,
             'deuxieme_tour' => 0.045,
-            'premier_tour' => 0.01
+            'premier_tour' => 0.01,
         ];
 
         $ratio = $distributions[$this->code] ?? $this->pourcentage_prize_money ?? 0.01;
 
-        return (int)($pointsBase * $ratio);
+        return (int) ($pointsBase * $ratio);
     }
 
     /**
@@ -438,7 +458,7 @@ class RoundTournoi extends Model
      */
     public function getPrizeMoneyPourTournoi(Tournoi $tournoi)
     {
-        if (!$tournoi->prize_money_total || !$this->pourcentage_prize_money) {
+        if (! $tournoi->prize_money_total || ! $this->pourcentage_prize_money) {
             return 0;
         }
 
@@ -461,9 +481,12 @@ class RoundTournoi extends Model
      */
     public function getPourcentageCompletion()
     {
-        if (!$this->nb_matchs_attendus) return 0;
+        if (! $this->nb_matchs_attendus) {
+            return 0;
+        }
 
         $matchsTermines = $this->matchsTermines()->count();
+
         return min(100, round(($matchsTermines / $this->nb_matchs_attendus) * 100, 1));
     }
 
@@ -481,7 +504,7 @@ class RoundTournoi extends Model
                 ->whereNotNull('duree_match')
                 ->avg('duree_match'),
             'nb_upsets' => $this->getNombreUpsets(),
-            'taux_completion' => $this->estComplet() ? 100 : $this->getPourcentageCompletion()
+            'taux_completion' => $this->estComplet() ? 100 : $this->getPourcentageCompletion(),
         ];
     }
 
@@ -494,7 +517,7 @@ class RoundTournoi extends Model
             ->whereNotNull('classement_joueur1')
             ->whereNotNull('classement_joueur2')
             ->get()
-            ->filter(function($match) {
+            ->filter(function ($match) {
                 // Upset si le moins bien classé a gagné
                 $classementGagnant = $match->gagnant_id == $match->joueur1_id ?
                     $match->classement_joueur1 : $match->classement_joueur2;
@@ -557,7 +580,7 @@ class RoundTournoi extends Model
             'nb_joueurs_sortants' => 'nullable|integer|min:1',
             'type' => 'required|in:qualification,principal,finale',
             'format_match' => 'required|in:best_of_3,best_of_5',
-            'pourcentage_prize_money' => 'nullable|numeric|min:0|max:1'
+            'pourcentage_prize_money' => 'nullable|numeric|min:0|max:1',
         ];
     }
 
@@ -572,7 +595,7 @@ class RoundTournoi extends Model
         // Auto-génération des valeurs calculées
         static::saving(function ($round) {
             // Générer l'ordre d'affichage si manquant
-            if (!$round->ordre_affichage) {
+            if (! $round->ordre_affichage) {
                 $round->ordre_affichage = $round->ordre ?? 1;
             }
 
@@ -580,15 +603,21 @@ class RoundTournoi extends Model
             if ($round->code) {
                 $round->est_finale = $round->code === 'finale';
                 $round->est_phase_finale = in_array($round->code, [
-                    'finale', 'demi_finale', 'quart_finale'
+                    'finale', 'demi_finale', 'quart_finale',
                 ]);
                 $round->est_qualification = str_contains($round->code, 'qualification');
             }
 
             // Valeurs par défaut
-            if ($round->actif === null) $round->actif = true;
-            if ($round->est_visible === null) $round->est_visible = true;
-            if ($round->est_elimination === null) $round->est_elimination = true;
+            if ($round->actif === null) {
+                $round->actif = true;
+            }
+            if ($round->est_visible === null) {
+                $round->est_visible = true;
+            }
+            if ($round->est_elimination === null) {
+                $round->est_elimination = true;
+            }
         });
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CategorieTournoi extends Model
@@ -27,7 +27,7 @@ class CategorieTournoi extends Model
         'ordre_affichage',        // Ordre pour les listes
         'est_majeur',             // Booléen : tournoi majeur ou non
         'genre',                  // 'homme', 'femme', 'mixte'
-        'actif'                   // Catégorie active ou obsolète
+        'actif',                   // Catégorie active ou obsolète
     ];
 
     protected $casts = [
@@ -38,14 +38,14 @@ class CategorieTournoi extends Model
         'nb_tournois_par_an' => 'integer',
         'ordre_affichage' => 'integer',
         'est_majeur' => 'boolean',
-        'actif' => 'boolean'
+        'actif' => 'boolean',
     ];
 
     protected $appends = [
         'est_grand_chelem',
         'est_masters',
         'prestige_level',
-        'tournois_count'
+        'tournois_count',
     ];
 
     // ===================================================================
@@ -68,7 +68,7 @@ class CategorieTournoi extends Model
         $annee = $annee ?? date('Y');
 
         return $this->hasMany(Tournoi::class, 'categorie_tournoi_id')
-            ->whereHas('saison', function($q) use ($annee) {
+            ->whereHas('saison', function ($q) use ($annee) {
                 $q->where('annee', $annee);
             });
     }
@@ -95,7 +95,7 @@ class CategorieTournoi extends Model
             'atp_500' => 'Majeur',
             'atp_250' => 'Standard',
             'challenger' => 'Développement',
-            'itf' => 'Formation'
+            'itf' => 'Formation',
         ];
 
         return $levels[$this->code] ?? 'Non défini';
@@ -109,7 +109,8 @@ class CategorieTournoi extends Model
     public function getNomCompletAttribute()
     {
         $suffixe = $this->est_majeur ? ' ⭐' : '';
-        return $this->nom . $suffixe;
+
+        return $this->nom.$suffixe;
     }
 
     public function getPointsMoyensAttribute()
@@ -173,7 +174,7 @@ class CategorieTournoi extends Model
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('nom_court', 'LIKE', "%{$terme}%")
                 ->orWhere('code', 'LIKE', "%{$terme}%")
@@ -204,11 +205,11 @@ class CategorieTournoi extends Model
             ->select('code', 'nom', 'niveau_hierarchique', 'couleur_hex')
             ->ordonnes()
             ->get()
-            ->mapWithKeys(function($cat) {
+            ->mapWithKeys(function ($cat) {
                 return [$cat->code => [
                     'nom' => $cat->nom,
                     'niveau' => $cat->niveau_hierarchique,
-                    'couleur' => $cat->couleur_hex
+                    'couleur' => $cat->couleur_hex,
                 ]];
             });
     }
@@ -221,17 +222,17 @@ class CategorieTournoi extends Model
         $annee = $annee ?? date('Y');
 
         return self::actifs()
-            ->withCount(['tournoiSaison as tournois_cette_annee' => function($q) use ($annee) {
+            ->withCount(['tournoiSaison as tournois_cette_annee' => function ($q) {
                 // Le withCount utilise automatiquement la relation tournoiSaison
             }])
             ->get()
-            ->map(function($categorie) {
+            ->map(function ($categorie) {
                 return [
                     'nom' => $categorie->nom,
                     'code' => $categorie->code,
                     'tournois_cette_annee' => $categorie->tournois_cette_annee,
                     'points_max' => $categorie->points_moyens,
-                    'prestige' => $categorie->prestige_level
+                    'prestige' => $categorie->prestige_level,
                 ];
             });
     }
@@ -247,7 +248,9 @@ class CategorieTournoi extends Model
     {
         $pointsBase = $this->points_moyens;
 
-        if (!$pointsBase) return [];
+        if (! $pointsBase) {
+            return [];
+        }
 
         // Distribution typique tennis professionnel
         return [
@@ -257,7 +260,7 @@ class CategorieTournoi extends Model
             'quart_finaliste' => round($pointsBase * 0.18),
             'huitieme' => round($pointsBase * 0.09),
             'deuxieme_tour' => round($pointsBase * 0.045),
-            'premier_tour' => round($pointsBase * 0.01)
+            'premier_tour' => round($pointsBase * 0.01),
         ];
     }
 
@@ -271,33 +274,33 @@ class CategorieTournoi extends Model
                 'nb_joueurs' => 128,
                 'nb_sets_victoire' => 3,
                 'format_finale' => 5,
-                'duree_jours' => 14
+                'duree_jours' => 14,
             ],
             'masters_1000' => [
                 'nb_joueurs' => 56,
                 'nb_sets_victoire' => 2,
                 'format_finale' => 3,
-                'duree_jours' => 8
+                'duree_jours' => 8,
             ],
             'atp_500' => [
                 'nb_joueurs' => 32,
                 'nb_sets_victoire' => 2,
                 'format_finale' => 3,
-                'duree_jours' => 7
+                'duree_jours' => 7,
             ],
             'atp_250' => [
                 'nb_joueurs' => 28,
                 'nb_sets_victoire' => 2,
                 'format_finale' => 3,
-                'duree_jours' => 6
-            ]
+                'duree_jours' => 6,
+            ],
         ];
 
         return $configs[$this->code] ?? [
             'nb_joueurs' => 32,
             'nb_sets_victoire' => 2,
             'format_finale' => 3,
-            'duree_jours' => 7
+            'duree_jours' => 7,
         ];
     }
 
@@ -306,7 +309,9 @@ class CategorieTournoi extends Model
      */
     public function prizeMoneySuffisant($montant)
     {
-        if (!$this->prize_money_minimum) return true;
+        if (! $this->prize_money_minimum) {
+            return true;
+        }
 
         return $montant >= $this->prize_money_minimum;
     }
@@ -327,7 +332,7 @@ class CategorieTournoi extends Model
             'atp_500' => '#4ECDC4',         // Turquoise
             'atp_250' => '#45B7D1',         // Bleu
             'challenger' => '#96CEB4',       // Vert
-            'itf' => '#DDA0DD'              // Violet
+            'itf' => '#DDA0DD',              // Violet
         ];
 
         return $couleursDefaut[$this->code] ?? '#6C757D';
@@ -346,7 +351,7 @@ class CategorieTournoi extends Model
             'points_atp_gagnant' => 'nullable|integer|min:0|max:5000',
             'points_wta_gagnant' => 'nullable|integer|min:0|max:5000',
             'genre' => 'required|in:homme,femme,mixte',
-            'couleur_hex' => 'nullable|regex:/^#[A-Fa-f0-9]{6}$/'
+            'couleur_hex' => 'nullable|regex:/^#[A-Fa-f0-9]{6}$/',
         ];
     }
 
@@ -360,7 +365,7 @@ class CategorieTournoi extends Model
 
         // Générer automatiquement l'ordre d'affichage
         static::creating(function ($categorie) {
-            if (!$categorie->ordre_affichage) {
+            if (! $categorie->ordre_affichage) {
                 $maxOrdre = self::max('ordre_affichage') ?? 0;
                 $categorie->ordre_affichage = $maxOrdre + 1;
             }

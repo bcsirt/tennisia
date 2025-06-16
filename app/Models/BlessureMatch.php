@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
-use Carbon\Carbon;
 
 /**
  * MODÈLE BLESSURE EN MATCH
@@ -38,7 +38,7 @@ class BlessureMatch extends Model
         'duree_match_avant',     // Durée du match avant blessure
         'fatigue_estimee',       // Niveau de fatigue estimé (1-10)
         'surface_match',         // Surface du match
-        'validation_medicale'    // Validation par médecin
+        'validation_medicale',    // Validation par médecin
     ];
 
     protected $casts = [
@@ -51,39 +51,62 @@ class BlessureMatch extends Model
         'temperature_court' => 'decimal:1',
         'duree_match_avant' => 'integer', // en minutes
         'fatigue_estimee' => 'integer',
-        'validation_medicale' => 'boolean'
+        'validation_medicale' => 'boolean',
     ];
 
     // CONSTANTES TYPES DE BLESSURES
     public const TYPE_MUSCULAIRE = 'musculaire';
+
     public const TYPE_ARTICULATION = 'articulation';
+
     public const TYPE_TENDON = 'tendon';
+
     public const TYPE_CRAMPE = 'crampe';
+
     public const TYPE_ENTORSE = 'entorse';
+
     public const TYPE_FATIGUE = 'fatigue';
+
     public const TYPE_DOULEUR_DOS = 'douleur_dos';
+
     public const TYPE_TROUBLE_RESPIRATOIRE = 'trouble_respiratoire';
+
     public const TYPE_MALAISE = 'malaise';
+
     public const TYPE_PLAIE = 'plaie';
 
     // ZONES CORPORELLES
     public const ZONE_EPAULE = 'epaule';
+
     public const ZONE_COUDE = 'coude';
+
     public const ZONE_POIGNET = 'poignet';
+
     public const ZONE_DOS = 'dos';
+
     public const ZONE_HANCHE = 'hanche';
+
     public const ZONE_GENOU = 'genou';
+
     public const ZONE_CHEVILLE = 'cheville';
+
     public const ZONE_PIED = 'pied';
+
     public const ZONE_MOLLET = 'mollet';
+
     public const ZONE_CUISSE = 'cuisse';
+
     public const ZONE_ABDOMEN = 'abdomen';
 
     // NIVEAUX DE GRAVITÉ
     public const GRAVITE_LEGERE = 1;        // Gêne légère
+
     public const GRAVITE_MODEREE = 3;       // Impact modéré
+
     public const GRAVITE_SIGNIFICATIVE = 5; // Impact significatif
+
     public const GRAVITE_SEVERE = 7;        // Impact sévère
+
     public const GRAVITE_CRITIQUE = 10;     // Abandon probable
 
     public static function getTypesBlessures(): array
@@ -98,7 +121,7 @@ class BlessureMatch extends Model
             self::TYPE_DOULEUR_DOS => 'Douleur dorsale',
             self::TYPE_TROUBLE_RESPIRATOIRE => 'Trouble respiratoire',
             self::TYPE_MALAISE => 'Malaise général',
-            self::TYPE_PLAIE => 'Plaie/coupure'
+            self::TYPE_PLAIE => 'Plaie/coupure',
         ];
     }
 
@@ -115,7 +138,7 @@ class BlessureMatch extends Model
             self::ZONE_PIED => 'Pied',
             self::ZONE_MOLLET => 'Mollet',
             self::ZONE_CUISSE => 'Cuisse',
-            self::ZONE_ABDOMEN => 'Abdomen'
+            self::ZONE_ABDOMEN => 'Abdomen',
         ];
     }
 
@@ -210,6 +233,7 @@ class BlessureMatch extends Model
         if ($this->score_moment) {
             $moment .= " ({$this->score_moment})";
         }
+
         return $moment;
     }
 
@@ -234,7 +258,7 @@ class BlessureMatch extends Model
             'puissance' => 0,        // Impact sur la puissance (%)
             'endurance' => 0,        // Impact sur l'endurance (%)
             'mental' => 0,           // Impact psychologique (%)
-            'probabilite_abandon' => 0 // Probabilité d'abandon (%)
+            'probabilite_abandon' => 0, // Probabilité d'abandon (%)
         ];
 
         // Impact selon la zone blessée
@@ -294,7 +318,7 @@ class BlessureMatch extends Model
 
         // Facteur temporel - plus grave si tôt dans le match
         if ($this->set_numero <= 2) {
-            $impact = array_map(fn($val) => $val * 1.2, $impact);
+            $impact = array_map(fn ($val) => $val * 1.2, $impact);
         }
 
         // Facteur surface
@@ -303,7 +327,7 @@ class BlessureMatch extends Model
             $impact['deplacement'] *= 1.3; // Terre battue plus exigeante
         }
 
-        return array_map(fn($val) => min(100, round($val, 1)), $impact);
+        return array_map(fn ($val) => min(100, round($val, 1)), $impact);
     }
 
     /**
@@ -315,12 +339,12 @@ class BlessureMatch extends Model
 
         // Formule pondérée selon l'importance de chaque aspect
         $impactGlobal = (
-                $impact['service'] * 0.25 +
-                $impact['retour'] * 0.25 +
-                $impact['deplacement'] * 0.20 +
-                $impact['endurance'] * 0.15 +
-                $impact['mental'] * 0.15
-            ) / 100;
+            $impact['service'] * 0.25 +
+            $impact['retour'] * 0.25 +
+            $impact['deplacement'] * 0.20 +
+            $impact['endurance'] * 0.15 +
+            $impact['mental'] * 0.15
+        ) / 100;
 
         // Réduction de probabilité proportionnelle
         return min(0.4, $impactGlobal * 0.6); // Max 40% de réduction
@@ -336,7 +360,7 @@ class BlessureMatch extends Model
             'stabilisation_probable' => false,
             'aggravation_probable' => false,
             'abandon_probable' => false,
-            'confiance' => 5
+            'confiance' => 5,
         ];
 
         // Analyse selon le type de blessure
@@ -424,7 +448,7 @@ class BlessureMatch extends Model
             'facteur_temperature' => $blessures->where('temperature_court', '>', 30)->count(),
             'facteur_fatigue' => $blessures->where('duree_match_avant', '>', 180)->count(),
             'tendance_gravite' => $blessures->take(10)->avg('gravite') -
-                $blessures->skip(10)->avg('gravite')
+                $blessures->skip(10)->avg('gravite'),
         ];
 
         // Détection de patterns spécifiques
@@ -432,7 +456,7 @@ class BlessureMatch extends Model
 
         if ($patterns['zones_frequentes'] &&
             array_values($patterns['zones_frequentes'])[0] >= 3) {
-            $patternsDetectes[] = 'zone_vulnerable_' .
+            $patternsDetectes[] = 'zone_vulnerable_'.
                 array_keys($patterns['zones_frequentes'])[0];
         }
 
@@ -475,7 +499,7 @@ class BlessureMatch extends Model
             'soins_immediats' => [],
             'surveillance' => [],
             'prediction_impact' => [],
-            'conseil_medical' => []
+            'conseil_medical' => [],
         ];
 
         // Soins immédiats selon le type
@@ -526,7 +550,7 @@ class BlessureMatch extends Model
             'temperature_normalized' => ($this->temperature_court - 15) / 25,
             'fatigue_normalized' => $this->fatigue_estimee / 10,
             'soins_binaire' => $this->temps_soins_minutes > 0 ? 1 : 0,
-            'abandon_resultant' => $this->abandon_cause ? 1 : 0
+            'abandon_resultant' => $this->abandon_cause ? 1 : 0,
         ];
     }
 }
@@ -544,13 +568,13 @@ class EvolutionBlessureMatch extends Model
         'evolution_type',      // amelioration, stabilisation, aggravation
         'gravite_actuelle',
         'impact_observe',
-        'notes_observateur'
+        'notes_observateur',
     ];
 
     protected $casts = [
         'set_numero' => 'integer',
         'jeu_numero' => 'integer',
-        'gravite_actuelle' => 'integer'
+        'gravite_actuelle' => 'integer',
     ];
 
     public function blessureMatch(): BelongsTo

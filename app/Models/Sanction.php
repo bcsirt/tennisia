@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
-use Carbon\Carbon;
 
 class Sanction extends Model
 {
@@ -24,7 +24,7 @@ class Sanction extends Model
         'contexte',          // Contexte de la sanction
         'recidive',          // Boolean si récidive dans le match
         'impact_match',      // Impact estimé sur le match
-        'sanction_confirmee' // Boolean si confirmée après appel
+        'sanction_confirmee', // Boolean si confirmée après appel
     ];
 
     protected $casts = [
@@ -34,19 +34,28 @@ class Sanction extends Model
         'sanction_confirmee' => 'boolean',
         'impact_match' => 'integer', // 1-5 échelle d'impact
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
     ];
 
     // CONSTANTES POUR LES TYPES DE SANCTIONS
     public const TYPE_AVERTISSEMENT = 'avertissement';
+
     public const TYPE_FAUTE = 'faute';
+
     public const TYPE_CODE_VIOLATION = 'code_violation';
+
     public const TYPE_CONDUITE_ANTISPORTIVE = 'conduite_antisportive';
+
     public const TYPE_CONTESTATION_ARBITRAGE = 'contestation_arbitrage';
+
     public const TYPE_RETARD = 'retard';
+
     public const TYPE_COACHING = 'coaching_illegal';
+
     public const TYPE_EQUIPEMENT = 'equipement_non_conforme';
+
     public const TYPE_AMENDE_FINANCIERE = 'amende_financiere';
+
     public const TYPE_FORFAIT = 'forfait';
 
     public static function getTypesSanctions(): array
@@ -61,15 +70,19 @@ class Sanction extends Model
             self::TYPE_COACHING => 'Coaching illégal',
             self::TYPE_EQUIPEMENT => 'Équipement non conforme',
             self::TYPE_AMENDE_FINANCIERE => 'Amende financière',
-            self::TYPE_FORFAIT => 'Forfait'
+            self::TYPE_FORFAIT => 'Forfait',
         ];
     }
 
     // CONSTANTES POUR LA GRAVITÉ
     public const GRAVITE_MINEURE = 1;
+
     public const GRAVITE_LEGERE = 3;
+
     public const GRAVITE_MODEREE = 5;
+
     public const GRAVITE_GRAVE = 7;
+
     public const GRAVITE_TRES_GRAVE = 10;
 
     /**
@@ -116,7 +129,7 @@ class Sanction extends Model
 
     public function scopeParTournoi(Builder $query, int $tournoiId): Builder
     {
-        return $query->whereHas('match', function($q) use ($tournoiId) {
+        return $query->whereHas('match', function ($q) use ($tournoiId) {
             $q->where('tournoi_id', $tournoiId);
         });
     }
@@ -131,7 +144,7 @@ class Sanction extends Model
 
     public function getGraviteLabelAttribute(): string
     {
-        return match($this->gravite) {
+        return match ($this->gravite) {
             1, 2 => 'Mineure',
             3, 4 => 'Légère',
             5, 6 => 'Modérée',
@@ -155,6 +168,7 @@ class Sanction extends Model
         if ($this->score_moment) {
             $moment .= " ({$this->score_moment})";
         }
+
         return $moment;
     }
 
@@ -171,7 +185,7 @@ class Sanction extends Model
             'mental' => 0,      // Impact psychologique
             'tactique' => 0,    // Impact tactique
             'physique' => 0,    // Impact physique
-            'financier' => 0    // Impact financier
+            'financier' => 0,    // Impact financier
         ];
 
         // Impact selon le type de sanction
@@ -201,7 +215,7 @@ class Sanction extends Model
 
         // Bonus si récidive
         if ($this->recidive) {
-            $impact = array_map(fn($val) => $val * 1.5, $impact);
+            $impact = array_map(fn ($val) => $val * 1.5, $impact);
         }
 
         return $impact;
@@ -223,7 +237,7 @@ class Sanction extends Model
     public static function calculerScoreFairPlay(int $joueurId, int $nombreMatchs = 10): float
     {
         $sanctions = self::pourJoueur($joueurId)
-            ->whereHas('match', function($q) {
+            ->whereHas('match', function ($q) {
                 $q->orderBy('date_match', 'desc')->limit(10);
             })
             ->get();
@@ -232,7 +246,7 @@ class Sanction extends Model
             return 10.0; // Score parfait
         }
 
-        $penalite = $sanctions->sum(function($sanction) {
+        $penalite = $sanctions->sum(function ($sanction) {
             return $sanction->gravite * 0.1;
         });
 
@@ -257,7 +271,7 @@ class Sanction extends Model
                 ->toArray(),
             'score_fair_play' => self::calculerScoreFairPlay($joueurId),
             'recidives' => $sanctions->where('recidive', true)->count(),
-            'derniere_sanction' => $sanctions->sortByDesc('created_at')->first()?->created_at
+            'derniere_sanction' => $sanctions->sortByDesc('created_at')->first()?->created_at,
         ];
     }
 
@@ -276,7 +290,7 @@ class Sanction extends Model
             'frequence_moyenne' => 0,
             'gravite_moyenne' => 0,
             'types_emergents' => [],
-            'pattern_detected' => false
+            'pattern_detected' => false,
         ];
 
         if ($sanctionsRecentes->count() < 2) {
@@ -301,7 +315,9 @@ class Sanction extends Model
 
         // Détection de patterns (ex: sanctions récurrentes vs certains arbitres)
         $arbitresFrequents = $sanctionsRecentes->groupBy('arbitre_nom')
-            ->filter(function($group) { return $group->count() > 1; });
+            ->filter(function ($group) {
+                return $group->count() > 1;
+            });
 
         if ($arbitresFrequents->isNotEmpty()) {
             $tendance['pattern_detected'] = true;
@@ -331,7 +347,7 @@ class Sanction extends Model
             'risque_abandon' => $this->gravite >= 8 ? 0.1 : 0.01,
             'impact_service' => $impact['mental'] * 0.01, // Impact sur % première balle
             'impact_retour' => $impact['mental'] * 0.015,
-            'duree_effet_estimee' => $this->gravite * 2 // en jeux
+            'duree_effet_estimee' => $this->gravite * 2, // en jeux
         ];
     }
 }

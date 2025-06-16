@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Surface extends Model
@@ -59,7 +59,7 @@ class Surface extends Model
         'impact_fatigue_generale',  // Fatigue générale (0-100)
         'risque_blessures',         // Risque blessures (0-100)
         'zones_corps_sollicitees',  // JSON: zones corps plus sollicitées
-        'recuperation_entre_points',// Temps récupération optimal
+        'recuperation_entre_points', // Temps récupération optimal
 
         // Duree et rythme de jeu
         'duree_moyenne_points',     // Durée moyenne points (secondes)
@@ -73,13 +73,13 @@ class Surface extends Model
         'efficacite_retour',        // Facilité retour service (0-100)
         'jeu_filet_facilite',       // Facilité montées au filet (0-100)
         'defense_efficacite',       // Efficacité jeu défensif (0-100)
-        'variation_tactique_needed',// Besoin variations tactiques (0-100)
+        'variation_tactique_needed', // Besoin variations tactiques (0-100)
 
         // Conditions spéciales
         'altitude_optimale',        // Altitude optimale (mètres)
         'temperature_ideale',       // Température idéale (Celsius)
         'humidite_ideale',          // Humidité idéale (%)
-        'conditions_indoor_outdoor',// 'indoor', 'outdoor', 'both'
+        'conditions_indoor_outdoor', // 'indoor', 'outdoor', 'both'
         'eclairage_influence',      // Influence éclairage artificiel
 
         // Maintenance et qualité
@@ -128,7 +128,7 @@ class Surface extends Model
         'validee_par_experts',      // Validation par experts
         'niveau_certitude_donnees', // Certitude données (0-100)
         'derniere_maj_caracteristiques',
-        'commentaires_experts'      // Notes experts tennis
+        'commentaires_experts',      // Notes experts tennis
     ];
 
     protected $casts = [
@@ -228,7 +228,7 @@ class Surface extends Model
         // Dates
         'premiere_utilisation' => 'date',
         'date_derniere_analyse' => 'date',
-        'derniere_maj_caracteristiques' => 'date'
+        'derniere_maj_caracteristiques' => 'date',
     ];
 
     protected $appends = [
@@ -238,7 +238,7 @@ class Surface extends Model
         'impact_meteorologique',
         'profil_joueur_ideal',
         'facteurs_cles_prediction',
-        'indice_spectacle'
+        'indice_spectacle',
     ];
 
     // ===================================================================
@@ -296,10 +296,11 @@ class Surface extends Model
             'vitesse' => $this->vitesse_numerique,
             'rebond' => $this->coefficient_rebond,
             'friction' => $this->coefficient_friction,
-            'regularite' => $this->regularite_rebond
+            'regularite' => $this->regularite_rebond,
         ];
 
         arsort($caracteristiques);
+
         return array_keys(array_slice($caracteristiques, 0, 2, true));
     }
 
@@ -309,7 +310,7 @@ class Surface extends Model
             'serveurs' => $this->avantage_serveurs,
             'baseliners' => $this->avantage_baseliners,
             'attaquants' => $this->avantage_attaquants,
-            'contres' => $this->avantage_contres
+            'contres' => $this->avantage_contres,
         ];
 
         $styleDominant = array_search(max($styles), $styles);
@@ -317,7 +318,7 @@ class Surface extends Model
         return [
             'style_principal' => $styleDominant,
             'score' => max($styles),
-            'styles_favorises' => array_filter($styles, fn($score) => $score >= 70)
+            'styles_favorises' => array_filter($styles, fn ($score) => $score >= 70),
         ];
     }
 
@@ -327,15 +328,24 @@ class Surface extends Model
             $this->stress_adaptation,
             $this->variation_tactique_needed,
             100 - $this->regularite_rebond, // Moins régulier = plus difficile
-            $this->sensibilite_conditions_moyenne
+            $this->sensibilite_conditions_moyenne,
         ];
 
         $moyenne = array_sum($facteurs) / count($facteurs);
 
-        if ($moyenne >= 80) return 'tres_difficile';
-        if ($moyenne >= 60) return 'difficile';
-        if ($moyenne >= 40) return 'modere';
-        if ($moyenne >= 20) return 'facile';
+        if ($moyenne >= 80) {
+            return 'tres_difficile';
+        }
+        if ($moyenne >= 60) {
+            return 'difficile';
+        }
+        if ($moyenne >= 40) {
+            return 'modere';
+        }
+        if ($moyenne >= 20) {
+            return 'facile';
+        }
+
         return 'tres_facile';
     }
 
@@ -347,9 +357,9 @@ class Surface extends Model
             'condition_optimale' => [
                 'temperature' => $this->temperature_ideale,
                 'humidite' => $this->humidite_ideale,
-                'vent' => 'faible'
+                'vent' => 'faible',
             ],
-            'conditions_problematiques' => $this->getConditionsProblematiques()
+            'conditions_problematiques' => $this->getConditionsProblematiques(),
         ];
     }
 
@@ -397,7 +407,7 @@ class Surface extends Model
             'classement' => $this->importance_classement,
             'forme_recente' => $this->importance_forme,
             'h2h' => $this->importance_h2h,
-            'experience_surface' => $this->importance_experience
+            'experience_surface' => $this->importance_experience,
         ];
 
         arsort($facteurs);
@@ -406,7 +416,7 @@ class Surface extends Model
             'facteur_principal' => array_key_first($facteurs),
             'poids_factors' => $facteurs,
             'predictibilite' => $this->predictibilite_resultats,
-            'potentiel_surprise' => $this->facteur_surprise
+            'potentiel_surprise' => $this->facteur_surprise,
         ];
     }
 
@@ -467,12 +477,13 @@ class Surface extends Model
     public function scopeFavoriseStyle($query, $style, $seuilAvantage = 70)
     {
         $colonneAvantage = "avantage_{$style}";
+
         return $query->where($colonneAvantage, '>=', $seuilAvantage);
     }
 
     public function scopeSensiblesMeteo($query, $seuilSensibilite = 60)
     {
-        return $query->where(function($q) use ($seuilSensibilite) {
+        return $query->where(function ($q) use ($seuilSensibilite) {
             $q->where('sensibilite_chaleur', '>=', $seuilSensibilite)
                 ->orWhere('sensibilite_humidite', '>=', $seuilSensibilite)
                 ->orWhere('sensibilite_vent', '>=', $seuilSensibilite);
@@ -504,7 +515,7 @@ class Surface extends Model
             'avantages_joueurs' => $this->analyserAvantagesJoueurs($match),
             'predictions_ajustements' => $this->calculerAjustementsPredictions($match),
             'duree_estimee' => $this->estimerDureeMatch($match),
-            'style_jeu_optimal' => $this->determinerStyleOptimal($match)
+            'style_jeu_optimal' => $this->determinerStyleOptimal($match),
         ];
 
         return $impact;
@@ -521,7 +532,7 @@ class Surface extends Model
             ->latest()
             ->first();
 
-        if (!$stats) {
+        if (! $stats) {
             return $this->estimerCompatibiliteSansStats($joueur);
         }
 
@@ -530,7 +541,7 @@ class Surface extends Model
             'points_forts' => $this->identifierPointsFortsSurface($joueur, $stats),
             'points_faibles' => $this->identifierPointsFaiblesSurface($joueur, $stats),
             'recommandations' => $this->genererRecommandations($joueur, $stats),
-            'potentiel_progression' => $this->evaluerPotentielProgression($joueur, $stats)
+            'potentiel_progression' => $this->evaluerPotentielProgression($joueur, $stats),
         ];
 
         return $compatibilite;
@@ -547,9 +558,9 @@ class Surface extends Model
         $joueur1Specialiste = $this->estSpecialiste($match->joueur1);
         $joueur2Specialiste = $this->estSpecialiste($match->joueur2);
 
-        if ($joueur1Specialiste && !$joueur2Specialiste) {
+        if ($joueur1Specialiste && ! $joueur2Specialiste) {
             $adaptations['bonus_joueur1'] = 15; // +15% chances
-        } elseif ($joueur2Specialiste && !$joueur1Specialiste) {
+        } elseif ($joueur2Specialiste && ! $joueur1Specialiste) {
             $adaptations['bonus_joueur2'] = 15;
         }
 
@@ -629,33 +640,33 @@ class Surface extends Model
                 'nom' => $this->nom,
                 'code' => $this->code,
                 'vitesse_categorie' => $this->getCategorieVitesse(),
-                'couleur' => $this->couleur_principale
+                'couleur' => $this->couleur_principale,
             ],
             'caracteristiques_physiques' => [
                 'vitesse' => $this->vitesse_numerique,
                 'rebond' => $this->coefficient_rebond,
                 'friction' => $this->coefficient_friction,
-                'regularite' => $this->regularite_rebond
+                'regularite' => $this->regularite_rebond,
             ],
             'impact_jeu' => [
                 'style_favorise' => $this->style_jeu_favorise,
                 'duree_moyenne_match' => $this->duree_moyenne_matchs,
                 'longueur_rallyes' => $this->longueur_rallyes_moyenne,
-                'frequence_breaks' => $this->breaks_frequence
+                'frequence_breaks' => $this->breaks_frequence,
             ],
             'adaptation_requise' => [
                 'difficulte' => $this->niveau_difficulte_adaptation,
                 'temps_requis' => $this->adaptation_temps_requis,
-                'stress_associe' => $this->stress_adaptation
+                'stress_associe' => $this->stress_adaptation,
             ],
             'conditions_optimales' => [
                 'temperature' => $this->temperature_ideale,
                 'humidite' => $this->humidite_ideale,
-                'conditions' => $this->conditions_indoor_outdoor
+                'conditions' => $this->conditions_indoor_outdoor,
             ],
             'specialistes_celebres' => $this->specialistes_celebres,
             'facteurs_prediction' => $this->facteurs_cles_prediction,
-            'indice_spectacle' => $this->indice_spectacle
+            'indice_spectacle' => $this->indice_spectacle,
         ];
     }
 
@@ -671,7 +682,7 @@ class Surface extends Model
             'correlation_classement' => $this->calculerCorrelationClassement($matchs),
             'impact_forme_recente' => $this->calculerImpactFormeRecente($matchs),
             'avantage_experience' => $this->calculerAvantageExperience($matchs),
-            'evolution_jeu' => $this->analyserEvolutionJeu($matchs)
+            'evolution_jeu' => $this->analyserEvolutionJeu($matchs),
         ];
 
         return $analyses;
@@ -756,7 +767,7 @@ class Surface extends Model
             $multiplicateur *= 1.15; // Match équilibré = plus long
         }
 
-        return (int)($dureeBase * $multiplicateur);
+        return (int) ($dureeBase * $multiplicateur);
     }
 
     private function estSpecialiste(Joueur $joueur)
@@ -766,7 +777,9 @@ class Surface extends Model
             ->latest()
             ->first();
 
-        if (!$stats) return false;
+        if (! $stats) {
+            return false;
+        }
 
         return $stats->ratio_victoires > 0.75 &&
             $stats->nombre_matchs_echantillon >= 15;
@@ -789,10 +802,19 @@ class Surface extends Model
     {
         $vitesse = $this->vitesse_numerique;
 
-        if ($vitesse >= 80) return 'tres_rapide';
-        if ($vitesse >= 65) return 'rapide';
-        if ($vitesse >= 45) return 'moyenne';
-        if ($vitesse >= 30) return 'lente';
+        if ($vitesse >= 80) {
+            return 'tres_rapide';
+        }
+        if ($vitesse >= 65) {
+            return 'rapide';
+        }
+        if ($vitesse >= 45) {
+            return 'moyenne';
+        }
+        if ($vitesse >= 30) {
+            return 'lente';
+        }
+
         return 'tres_lente';
     }
 
@@ -818,6 +840,7 @@ class Surface extends Model
     private function calculerAvantageStyle($style)
     {
         $proprieteAvantage = "avantage_{$style}";
+
         return $this->$proprieteAvantage ?? 50;
     }
 
@@ -826,11 +849,19 @@ class Surface extends Model
         // Logique simplifiée - en réalité analyserait stats détaillées
         $stats = $joueur->statistiques()->latest()->first();
 
-        if (!$stats) return 'baseliners'; // Par défaut
+        if (! $stats) {
+            return 'baseliners';
+        } // Par défaut
 
-        if ($stats->aces_par_match > 8) return 'serveurs';
-        if ($stats->force_service > 80) return 'serveurs';
-        if ($stats->longueur_rallyes_moyenne > 6) return 'baseliners';
+        if ($stats->aces_par_match > 8) {
+            return 'serveurs';
+        }
+        if ($stats->force_service > 80) {
+            return 'serveurs';
+        }
+        if ($stats->longueur_rallyes_moyenne > 6) {
+            return 'baseliners';
+        }
 
         return 'baseliners';
     }
@@ -896,12 +927,14 @@ class Surface extends Model
 
         foreach ($surfaces as $surface1) {
             foreach ($surfaces as $surface2) {
-                if ($surface1->id >= $surface2->id) continue;
+                if ($surface1->id >= $surface2->id) {
+                    continue;
+                }
 
                 $differences = [
                     'vitesse' => abs($surface1->vitesse_numerique - $surface2->vitesse_numerique),
                     'rebond' => abs($surface1->coefficient_rebond - $surface2->coefficient_rebond),
-                    'friction' => abs($surface1->coefficient_friction - $surface2->coefficient_friction)
+                    'friction' => abs($surface1->coefficient_friction - $surface2->coefficient_friction),
                 ];
 
                 $analyses["{$surface1->code}_vs_{$surface2->code}"] = $differences;
@@ -942,7 +975,7 @@ class Surface extends Model
             'coefficient_rebond' => 'required|numeric|between:0,100',
             'coefficient_friction' => 'required|numeric|between:0,100',
             'temperature_ideale' => 'required|integer|between:-10,50',
-            'niveau_certitude_donnees' => 'required|numeric|between:0,100'
+            'niveau_certitude_donnees' => 'required|numeric|between:0,100',
         ];
     }
 }

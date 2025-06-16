@@ -1,8 +1,9 @@
 <?php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class SpectateurMatch extends Model
 {
@@ -29,7 +30,7 @@ class SpectateurMatch extends Model
         'meteo_impact_affluence',
         'facteur_home_advantage',
         'tension_crowd',
-        'encouragements_audibles'
+        'encouragements_audibles',
     ];
 
     protected $casts = [
@@ -52,14 +53,14 @@ class SpectateurMatch extends Model
         'meteo_impact_affluence' => 'decimal:1',
         'facteur_home_advantage' => 'decimal:2',
         'tension_crowd' => 'integer', // 1-10
-        'encouragements_audibles' => 'boolean'
+        'encouragements_audibles' => 'boolean',
     ];
 
     protected $appends = [
         'densite_spectateurs',
         'indice_atmosphere',
         'avantage_support',
-        'impact_psychologique_estime'
+        'impact_psychologique_estime',
     ];
 
     // Relations
@@ -71,7 +72,10 @@ class SpectateurMatch extends Model
     // Accessors pour les calculs d'impact
     public function getDensiteSpectateurAttribute()
     {
-        if (!$this->capacite_court || $this->capacite_court == 0) return 0;
+        if (! $this->capacite_court || $this->capacite_court == 0) {
+            return 0;
+        }
+
         return round($this->nb_total_spectateurs / $this->capacite_court, 3);
     }
 
@@ -118,7 +122,7 @@ class SpectateurMatch extends Model
 
     public function scopeSupportDesequilibre($query, $seuil = 70)
     {
-        return $query->where(function($q) use ($seuil) {
+        return $query->where(function ($q) use ($seuil) {
             $q->where('support_j1_pourcentage', '>=', $seuil)
                 ->orWhere('support_j2_pourcentage', '>=', $seuil);
         });
@@ -134,10 +138,19 @@ class SpectateurMatch extends Model
     {
         $indice = $this->indice_atmosphere;
 
-        if ($indice >= 80) return 'explosive';
-        if ($indice >= 60) return 'intense';
-        if ($indice >= 40) return 'moderate';
-        if ($indice >= 20) return 'calme';
+        if ($indice >= 80) {
+            return 'explosive';
+        }
+        if ($indice >= 60) {
+            return 'intense';
+        }
+        if ($indice >= 40) {
+            return 'moderate';
+        }
+        if ($indice >= 20) {
+            return 'calme';
+        }
+
         return 'apathique';
     }
 
@@ -229,7 +242,7 @@ class SpectateurMatch extends Model
             'environnement_hostile_j1' => $this->estEnvironnementHostile('j1'),
             'environnement_hostile_j2' => $this->estEnvironnementHostile('j2'),
             'impact_predit_j1' => $this->predireImpactPerformance('j1'),
-            'impact_predit_j2' => $this->predireImpactPerformance('j2')
+            'impact_predit_j2' => $this->predireImpactPerformance('j2'),
         ];
     }
 }

@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class AlgorithmeIA extends Model
 {
@@ -176,7 +175,7 @@ class AlgorithmeIA extends Model
         'criticite',             // Criticité pour le système
         'environnement_dev',     // Environnement de développement
         'dependances',           // JSON des dépendances
-        'actif'
+        'actif',
     ];
 
     protected $casts = [
@@ -280,7 +279,7 @@ class AlgorithmeIA extends Model
         'date_derniere_maj' => 'datetime',
         'derniere_detection_drift' => 'datetime',
         'derniere_optimisation' => 'datetime',
-        'derniere_retrain' => 'datetime'
+        'derniere_retrain' => 'datetime',
     ];
 
     protected $appends = [
@@ -290,7 +289,7 @@ class AlgorithmeIA extends Model
         'recommandations_amelioration',
         'contextes_optimaux',
         'metriques_cles',
-        'impact_global'
+        'impact_global',
     ];
 
     // ===================================================================
@@ -364,11 +363,22 @@ class AlgorithmeIA extends Model
     {
         $score = $this->precision_globale ?? 0;
 
-        if ($score >= 85) return 'Excellent';
-        if ($score >= 75) return 'Très bon';
-        if ($score >= 65) return 'Bon';
-        if ($score >= 55) return 'Moyen';
-        if ($score >= 45) return 'Faible';
+        if ($score >= 85) {
+            return 'Excellent';
+        }
+        if ($score >= 75) {
+            return 'Très bon';
+        }
+        if ($score >= 65) {
+            return 'Bon';
+        }
+        if ($score >= 55) {
+            return 'Moyen';
+        }
+        if ($score >= 45) {
+            return 'Faible';
+        }
+
         return 'Très faible';
     }
 
@@ -397,15 +407,22 @@ class AlgorithmeIA extends Model
         }
 
         // Pas de maintenance récente
-        if (!$this->date_derniere_maj ||
+        if (! $this->date_derniere_maj ||
             $this->date_derniere_maj < now()->subMonths(3)) {
             $score -= 10;
             $facteurs[] = 'Maintenance requise';
         }
 
-        if ($score >= 90) return ['statut' => 'Excellent', 'facteurs' => []];
-        if ($score >= 70) return ['statut' => 'Bon', 'facteurs' => $facteurs];
-        if ($score >= 50) return ['statut' => 'Attention', 'facteurs' => $facteurs];
+        if ($score >= 90) {
+            return ['statut' => 'Excellent', 'facteurs' => []];
+        }
+        if ($score >= 70) {
+            return ['statut' => 'Bon', 'facteurs' => $facteurs];
+        }
+        if ($score >= 50) {
+            return ['statut' => 'Attention', 'facteurs' => $facteurs];
+        }
+
         return ['statut' => 'Critique', 'facteurs' => $facteurs];
     }
 
@@ -416,7 +433,7 @@ class AlgorithmeIA extends Model
             'stabilite' => ($this->stabilite_score ?? 5) / 10,
             'robustesse' => ($this->robustesse_score ?? 5) / 10,
             'historique' => $this->getScoreHistorique(),
-            'tests' => ($this->couverture_tests ?? 0) / 100
+            'tests' => ($this->couverture_tests ?? 0) / 100,
         ];
 
         return round(array_sum($composantes) / count($composantes) * 100, 1);
@@ -433,12 +450,12 @@ class AlgorithmeIA extends Model
         }
 
         // Basé sur l\'explicabilité
-        if (!$this->interpretable && !$this->shap_active) {
+        if (! $this->interpretable && ! $this->shap_active) {
             $recommandations[] = 'Activer SHAP pour l\'explicabilité';
         }
 
         // Basé sur le drift
-        if (!$this->drift_detection) {
+        if (! $this->drift_detection) {
             $recommandations[] = 'Activer la détection de drift';
         }
 
@@ -448,7 +465,7 @@ class AlgorithmeIA extends Model
         }
 
         // Basé sur la maintenance
-        if (!$this->date_derniere_maj ||
+        if (! $this->date_derniere_maj ||
             $this->date_derniere_maj < now()->subMonths(2)) {
             $recommandations[] = 'Maintenance et mise à jour requises';
         }
@@ -462,12 +479,22 @@ class AlgorithmeIA extends Model
 
         // Surfaces
         $surfaces = [];
-        if (($this->precision_dur ?? 0) >= 75) $surfaces[] = 'Dur';
-        if (($this->precision_terre ?? 0) >= 75) $surfaces[] = 'Terre battue';
-        if (($this->precision_gazon ?? 0) >= 75) $surfaces[] = 'Gazon';
-        if (($this->precision_indoor ?? 0) >= 75) $surfaces[] = 'Indoor';
+        if (($this->precision_dur ?? 0) >= 75) {
+            $surfaces[] = 'Dur';
+        }
+        if (($this->precision_terre ?? 0) >= 75) {
+            $surfaces[] = 'Terre battue';
+        }
+        if (($this->precision_gazon ?? 0) >= 75) {
+            $surfaces[] = 'Gazon';
+        }
+        if (($this->precision_indoor ?? 0) >= 75) {
+            $surfaces[] = 'Indoor';
+        }
 
-        if (!empty($surfaces)) $contextes['surfaces'] = $surfaces;
+        if (! empty($surfaces)) {
+            $contextes['surfaces'] = $surfaces;
+        }
 
         // Niveaux de joueurs
         if (($this->precision_top_100 ?? 0) >= 75) {
@@ -490,14 +517,14 @@ class AlgorithmeIA extends Model
     public function getMetriquesClesAttribute()
     {
         return [
-            'precision' => ($this->precision_globale ?? 0) . '%',
-            'f1_score' => ($this->f1_score ?? 0) . '%',
+            'precision' => ($this->precision_globale ?? 0).'%',
+            'f1_score' => ($this->f1_score ?? 0).'%',
             'auc_roc' => $this->auc_roc ?? 0,
-            'temps_inference' => ($this->temps_inference ?? 0) . 'ms',
-            'fiabilite' => $this->score_fiabilite . '%',
+            'temps_inference' => ($this->temps_inference ?? 0).'ms',
+            'fiabilite' => $this->score_fiabilite.'%',
             'statut' => $this->statut_sante['statut'],
             'predictions_total' => $this->predictions()->count(),
-            'taux_succes' => $this->getTauxSucces() . '%'
+            'taux_succes' => $this->getTauxSucces().'%',
         ];
     }
 
@@ -574,7 +601,7 @@ class AlgorithmeIA extends Model
 
     public function scopeNecessitentMaintenance($query)
     {
-        return $query->where(function($q) {
+        return $query->where(function ($q) {
             $q->where('date_derniere_maj', '<', now()->subMonths(2))
                 ->orWhere('precision_globale', '<', 60)
                 ->orWhere('biais_detecte', true);
@@ -609,7 +636,7 @@ class AlgorithmeIA extends Model
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('code', 'LIKE', "%{$terme}%")
                 ->orWhere('type_algorithme', 'LIKE', "%{$terme}%")
@@ -649,7 +676,7 @@ class AlgorithmeIA extends Model
                 'shap_active' => true,
                 'statut_deploiement' => 'production',
                 'complexite_niveau' => 8,
-                'priorite' => 10
+                'priorite' => 10,
             ],
             [
                 'nom' => 'Surface Specialist',
@@ -674,11 +701,11 @@ class AlgorithmeIA extends Model
                 'feature_importance' => [
                     'elo_surface' => 0.23,
                     'forme_recente' => 0.18,
-                    'h2h_surface' => 0.15
+                    'h2h_surface' => 0.15,
                 ],
                 'statut_deploiement' => 'production',
                 'complexite_niveau' => 6,
-                'priorite' => 8
+                'priorite' => 8,
             ],
             [
                 'nom' => 'Injury Risk Predictor',
@@ -701,7 +728,7 @@ class AlgorithmeIA extends Model
                 'lime_active' => true,
                 'statut_deploiement' => 'production',
                 'complexite_niveau' => 7,
-                'priorite' => 9
+                'priorite' => 9,
             ],
             [
                 'nom' => 'Score Predictor Elite',
@@ -726,7 +753,7 @@ class AlgorithmeIA extends Model
                 'shap_active' => true,
                 'statut_deploiement' => 'staging',
                 'complexite_niveau' => 9,
-                'priorite' => 7
+                'priorite' => 7,
             ],
             [
                 'nom' => 'Weather Impact Analyzer',
@@ -748,7 +775,7 @@ class AlgorithmeIA extends Model
                 'interpretable' => true,
                 'statut_deploiement' => 'production',
                 'complexite_niveau' => 5,
-                'priorite' => 6
+                'priorite' => 6,
             ],
             [
                 'nom' => 'Ensemble Master',
@@ -769,8 +796,8 @@ class AlgorithmeIA extends Model
                 'auc_roc' => 0.912,
                 'statut_deploiement' => 'production',
                 'complexite_niveau' => 10,
-                'priorite' => 10
-            ]
+                'priorite' => 10,
+            ],
         ];
 
         foreach ($algorithmes as $algo) {
@@ -818,7 +845,7 @@ class AlgorithmeIA extends Model
             'algorithme_plus_performant' => self::ordonnesParPerformance()->first(),
             'algorithme_plus_utilise' => self::withCount('predictions')
                 ->orderBy('predictions_count', 'desc')
-                ->first()
+                ->first(),
         ];
     }
 
@@ -847,7 +874,7 @@ class AlgorithmeIA extends Model
 
         // Par surface
         foreach (['dur', 'terre', 'gazon'] as $surface) {
-            $predictionsSurface = $predictions->filter(function($p) use ($surface) {
+            $predictionsSurface = $predictions->filter(function ($p) use ($surface) {
                 return $p->match?->tournoi?->surface?->code === $surface;
             });
 
@@ -860,14 +887,14 @@ class AlgorithmeIA extends Model
         }
 
         return [
-            'periode' => $periodeDays . ' jours',
+            'periode' => $periodeDays.' jours',
             'total_predictions' => $totalPredictions,
             'precision_periode' => $precision,
             'evolution_precision' => $this->calculerEvolutionPrecision($precision),
             'metriques_contexte' => $metriquesContexte,
             'confiance_moyenne' => $predictions->avg('confiance') ?? 0,
             'drift_detecte' => $this->detecterDrift($predictions),
-            'recommandations' => $this->genererRecommandations($precision, $metriquesContexte)
+            'recommandations' => $this->genererRecommandations($precision, $metriquesContexte),
         ];
     }
 
@@ -876,7 +903,7 @@ class AlgorithmeIA extends Model
      */
     public function optimiserHyperparametres($iterations = 50)
     {
-        if (!$this->hyperopt_actif) {
+        if (! $this->hyperopt_actif) {
             return ['erreur' => 'Optimisation non activée pour cet algorithme'];
         }
 
@@ -899,7 +926,7 @@ class AlgorithmeIA extends Model
             'nouveaux_params' => $bestParams,
             'score_optimal' => $bestScore,
             'nb_iterations' => $iterations,
-            'mise_a_jour_recommandee' => $bestScore > $this->precision_globale + 1
+            'mise_a_jour_recommandee' => $bestScore > $this->precision_globale + 1,
         ];
     }
 
@@ -908,14 +935,14 @@ class AlgorithmeIA extends Model
      */
     public function expliquerPrediction($prediction)
     {
-        if (!$this->interpretable && !$this->shap_active && !$this->lime_active) {
+        if (! $this->interpretable && ! $this->shap_active && ! $this->lime_active) {
             return ['erreur' => 'Algorithme non explicable'];
         }
 
         $explication = [
             'prediction' => $prediction->resultat_predit,
             'confiance' => $prediction->confiance,
-            'algorithme' => $this->nom
+            'algorithme' => $this->nom,
         ];
 
         // SHAP values si disponibles
@@ -944,7 +971,7 @@ class AlgorithmeIA extends Model
         $biais = [];
 
         // Biais par nationalité
-        $predictionsPourJoueursPays = $predictions->groupBy(function($p) {
+        $predictionsPourJoueursPays = $predictions->groupBy(function ($p) {
             return $p->match->joueur1->pays_id;
         });
 
@@ -956,14 +983,14 @@ class AlgorithmeIA extends Model
                         'type' => 'nationalite',
                         'pays_id' => $paysId,
                         'taux_succes' => round($tauxSucces * 100, 1),
-                        'nb_predictions' => $preds->count()
+                        'nb_predictions' => $preds->count(),
                     ];
                 }
             }
         }
 
         // Biais par ranking
-        $topPlayers = $predictions->filter(function($p) {
+        $topPlayers = $predictions->filter(function ($p) {
             return $p->match->joueur1->classement_atp_wta <= 50 ||
                 $p->match->joueur2->classement_atp_wta <= 50;
         });
@@ -976,21 +1003,21 @@ class AlgorithmeIA extends Model
                 $biais[] = [
                     'type' => 'ranking',
                     'ecart' => round(($tauxSuccesTop - $tauxSuccesGlobal) * 100, 1),
-                    'favorise' => $tauxSuccesTop > $tauxSuccesGlobal ? 'top_players' : 'autres'
+                    'favorise' => $tauxSuccesTop > $tauxSuccesGlobal ? 'top_players' : 'autres',
                 ];
             }
         }
 
         // Mettre à jour le statut
         $this->update([
-            'biais_detecte' => !empty($biais),
-            'types_biais' => $biais
+            'biais_detecte' => ! empty($biais),
+            'types_biais' => $biais,
         ]);
 
         return [
             'biais_detectes' => $biais,
-            'necessite_correction' => !empty($biais),
-            'recommandations_correction' => $this->getRecommandationsCorrection($biais)
+            'necessite_correction' => ! empty($biais),
+            'recommandations_correction' => $this->getRecommandationsCorrection($biais),
         ];
     }
 
@@ -1007,7 +1034,7 @@ class AlgorithmeIA extends Model
             'metriques_suivi' => ['precision', 'confiance', 'satisfaction'],
             'duree_prevue' => 30, // jours
             'seuil_signification' => 0.05,
-            'statut' => 'active'
+            'statut' => 'active',
         ];
     }
 
@@ -1021,35 +1048,35 @@ class AlgorithmeIA extends Model
                 'nom' => $this->nom,
                 'version' => $this->version,
                 'type' => $this->type_algorithme,
-                'specialisation' => $this->specialisation_tennis
+                'specialisation' => $this->specialisation_tennis,
             ],
             'performance' => [
                 'niveau' => $this->niveau_performance,
-                'precision_globale' => $this->precision_globale . '%',
+                'precision_globale' => $this->precision_globale.'%',
                 'metriques_cles' => $this->metriques_cles,
-                'contextes_optimaux' => $this->contextes_optimaux
+                'contextes_optimaux' => $this->contextes_optimaux,
             ],
             'sante_algorithme' => $this->statut_sante,
             'fiabilite' => [
-                'score' => $this->score_fiabilite . '%',
-                'facteurs' => $this->getFacteursFiabilite()
+                'score' => $this->score_fiabilite.'%',
+                'facteurs' => $this->getFacteursFiabilite(),
             ],
             'utilisation' => [
                 'statut' => $this->statut_deploiement,
                 'predictions_total' => $this->predictions()->count(),
-                'utilisation_mensuelle' => $this->getUtilisationMensuelle()
+                'utilisation_mensuelle' => $this->getUtilisationMensuelle(),
             ],
             'maintenance' => [
                 'derniere_maj' => $this->date_derniere_maj,
                 'recommandations' => $this->recommandations_amelioration,
-                'priorite_maintenance' => $this->getPrioriteMaintenance()
+                'priorite_maintenance' => $this->getPrioriteMaintenance(),
 
             ],
             'impact' => [
                 'score_global' => $this->impact_global,
-                'satisfaction_users' => $this->satisfaction_utilisateurs . '/10',
-                'gain_vs_baseline' => $this->gain_precision . '%'
-            ]
+                'satisfaction_users' => $this->satisfaction_utilisateurs.'/10',
+                'gain_vs_baseline' => $this->gain_precision.'%',
+            ],
         ];
     }
 
@@ -1065,7 +1092,9 @@ class AlgorithmeIA extends Model
             ->orderBy('created_at')
             ->get();
 
-        if ($evaluations->count() < 3) return 0.5;
+        if ($evaluations->count() < 3) {
+            return 0.5;
+        }
 
         $tendance = $evaluations->last()->precision_globale - $evaluations->first()->precision_globale;
         $stabilite = $evaluations->pluck('precision_globale')->std();
@@ -1077,9 +1106,12 @@ class AlgorithmeIA extends Model
     private function getTauxSucces()
     {
         $total = $this->predictions()->whereNotNull('est_correcte')->count();
-        if ($total === 0) return 0;
+        if ($total === 0) {
+            return 0;
+        }
 
         $succes = $this->predictionsReussies()->count();
+
         return round(($succes / $total) * 100, 1);
     }
 
@@ -1088,10 +1120,19 @@ class AlgorithmeIA extends Model
         $anciennePrecision = $this->precision_globale;
         $evolution = $precisionActuelle - $anciennePrecision;
 
-        if ($evolution > 2) return 'Amélioration significative';
-        if ($evolution > 0.5) return 'Légère amélioration';
-        if ($evolution > -0.5) return 'Stable';
-        if ($evolution > -2) return 'Légère dégradation';
+        if ($evolution > 2) {
+            return 'Amélioration significative';
+        }
+        if ($evolution > 0.5) {
+            return 'Légère amélioration';
+        }
+        if ($evolution > -0.5) {
+            return 'Stable';
+        }
+        if ($evolution > -2) {
+            return 'Légère dégradation';
+        }
+
         return 'Dégradation significative';
     }
 
@@ -1156,7 +1197,7 @@ class AlgorithmeIA extends Model
             'Forme récente' => 0.18,
             'Performance sur surface' => 0.15,
             'Head-to-head' => 0.12,
-            'Conditions météo' => 0.08
+            'Conditions météo' => 0.08,
         ];
     }
 
@@ -1166,18 +1207,19 @@ class AlgorithmeIA extends Model
         return [
             'Si ELO différence > 100 alors forte probabilité',
             'Si surface favorite alors bonus +15%',
-            'Si conditions défavorables alors malus -10%'
+            'Si conditions défavorables alors malus -10%',
         ];
     }
 
     private function getContexteTennis($prediction)
     {
         $match = $prediction->match;
+
         return [
             'surface' => $match->tournoi->surface->nom,
             'tournoi_importance' => $match->tournoi->categorie->nom,
             'conditions_meteo' => $match->conditionMeteo?->resume_conditions,
-            'phase_tournoi' => $match->round->nom
+            'phase_tournoi' => $match->round->nom,
         ];
     }
 
@@ -1205,7 +1247,7 @@ class AlgorithmeIA extends Model
             'Historique stable' => $this->getScoreHistorique() > 0.7,
             'Tests complets' => ($this->couverture_tests ?? 0) > 80,
             'Monitoring actif' => $this->drift_detection,
-            'Maintenance récente' => $this->date_derniere_maj > now()->subMonths(1)
+            'Maintenance récente' => $this->date_derniere_maj > now()->subMonths(1),
         ];
     }
 
@@ -1220,14 +1262,29 @@ class AlgorithmeIA extends Model
     {
         $score = 0;
 
-        if (($this->precision_globale ?? 0) < 70) $score += 3;
-        if ($this->biais_detecte) $score += 2;
-        if (!$this->date_derniere_maj || $this->date_derniere_maj < now()->subMonths(2)) $score += 2;
-        if ($this->derniere_detection_drift && $this->derniere_detection_drift > now()->subDays(7)) $score += 1;
+        if (($this->precision_globale ?? 0) < 70) {
+            $score += 3;
+        }
+        if ($this->biais_detecte) {
+            $score += 2;
+        }
+        if (! $this->date_derniere_maj || $this->date_derniere_maj < now()->subMonths(2)) {
+            $score += 2;
+        }
+        if ($this->derniere_detection_drift && $this->derniere_detection_drift > now()->subDays(7)) {
+            $score += 1;
+        }
 
-        if ($score >= 5) return 'Critique';
-        if ($score >= 3) return 'Élevée';
-        if ($score >= 1) return 'Modérée';
+        if ($score >= 5) {
+            return 'Critique';
+        }
+        if ($score >= 3) {
+            return 'Élevée';
+        }
+        if ($score >= 1) {
+            return 'Modérée';
+        }
+
         return 'Faible';
     }
 
@@ -1244,7 +1301,7 @@ class AlgorithmeIA extends Model
             'specialisation_tennis' => 'required|in:match_outcome,score_prediction,injury_risk,surface_performance,weather_impact',
             'precision_globale' => 'nullable|numeric|min:0|max:100',
             'version' => 'required|numeric|min:0.1',
-            'statut_deploiement' => 'required|in:dev,staging,production,retired'
+            'statut_deploiement' => 'required|in:dev,staging,production,retired',
         ];
     }
 
@@ -1263,21 +1320,25 @@ class AlgorithmeIA extends Model
             }
 
             // Déterminer complexité selon type
-            if (!$algorithme->complexite_niveau) {
+            if (! $algorithme->complexite_niveau) {
                 $complexites = [
                     'neural_network' => 8,
                     'lstm' => 9,
                     'ensemble' => 10,
                     'gradient_boosting' => 7,
                     'random_forest' => 6,
-                    'svm' => 5
+                    'svm' => 5,
                 ];
                 $algorithme->complexite_niveau = $complexites[$algorithme->type_algorithme] ?? 5;
             }
 
             // Valeurs par défaut
-            if ($algorithme->actif === null) $algorithme->actif = true;
-            if (!$algorithme->date_derniere_maj) $algorithme->date_derniere_maj = now();
+            if ($algorithme->actif === null) {
+                $algorithme->actif = true;
+            }
+            if (! $algorithme->date_derniere_maj) {
+                $algorithme->date_derniere_maj = now();
+            }
         });
 
         static::created(function ($algorithme) {

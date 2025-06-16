@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MatchTennis extends Model
@@ -49,7 +49,7 @@ class MatchTennis extends Model
         'source_donnees_id',
         'import_id',
         'notes',
-        'diffuse_tv'
+        'diffuse_tv',
     ];
 
     protected $casts = [
@@ -64,7 +64,7 @@ class MatchTennis extends Model
         'prediction_pre_match' => 'decimal:2',
         'confidence_level' => 'decimal:2',
         'score_detaille' => 'array',
-        'diffuse_tv' => 'boolean'
+        'diffuse_tv' => 'boolean',
     ];
 
     protected $appends = [
@@ -72,7 +72,7 @@ class MatchTennis extends Model
         'duree_formatee',
         'est_termine',
         'probabilite_joueur1',
-        'probabilite_joueur2'
+        'probabilite_joueur2',
     ];
 
     // ===================================================================
@@ -98,6 +98,7 @@ class MatchTennis extends Model
     {
         $perdantId = $this->gagnant_id == $this->joueur1_id ?
             $this->joueur2_id : $this->joueur1_id;
+
         return $this->belongsTo(Joueur::class, 'perdant_id')->where('id', $perdantId);
     }
 
@@ -150,8 +151,8 @@ class MatchTennis extends Model
 
     public function confrontation()
     {
-        return $this->hasOne(Confrontation::class, function($query) {
-            $query->where(function($q) {
+        return $this->hasOne(Confrontation::class, function ($query) {
+            $query->where(function ($q) {
                 $q->where(['joueur1_id' => $this->joueur1_id, 'joueur2_id' => $this->joueur2_id])
                     ->orWhere(['joueur1_id' => $this->joueur2_id, 'joueur2_id' => $this->joueur1_id]);
             });
@@ -164,15 +165,18 @@ class MatchTennis extends Model
 
     public function getNomMatchAttribute()
     {
-        if (!$this->joueur1 || !$this->joueur2) {
+        if (! $this->joueur1 || ! $this->joueur2) {
             return 'Match en cours de définition';
         }
-        return $this->joueur1->nom_complet . ' vs ' . $this->joueur2->nom_complet;
+
+        return $this->joueur1->nom_complet.' vs '.$this->joueur2->nom_complet;
     }
 
     public function getDureeFormateeAttribute()
     {
-        if (!$this->duree_match) return null;
+        if (! $this->duree_match) {
+            return null;
+        }
 
         $heures = floor($this->duree_match / 60);
         $minutes = $this->duree_match % 60;
@@ -184,7 +188,7 @@ class MatchTennis extends Model
 
     public function getEstTermineAttribute()
     {
-        return $this->statut?->code === 'termine' || !empty($this->gagnant_id);
+        return $this->statut?->code === 'termine' || ! empty($this->gagnant_id);
     }
 
     public function getProbabiliteJoueur1Attribute()
@@ -193,6 +197,7 @@ class MatchTennis extends Model
             // Conversion cote décimale en probabilité
             return round((1 / $this->cote_joueur1) * 100, 2);
         }
+
         return $this->prediction_pre_match;
     }
 
@@ -201,12 +206,13 @@ class MatchTennis extends Model
         if ($this->cote_joueur2) {
             return round((1 / $this->cote_joueur2) * 100, 2);
         }
+
         return $this->prediction_pre_match ? 100 - $this->prediction_pre_match : null;
     }
 
     public function getScoreReadableAttribute()
     {
-        if (!$this->score_detaille) {
+        if (! $this->score_detaille) {
             return $this->score_final;
         }
 
@@ -214,7 +220,7 @@ class MatchTennis extends Model
         $scoreFormat = [];
 
         foreach ($sets as $set) {
-            $scoreFormat[] = $set['joueur1'] . '-' . $set['joueur2'];
+            $scoreFormat[] = $set['joueur1'].'-'.$set['joueur2'];
         }
 
         return implode(', ', $scoreFormat);
@@ -237,19 +243,27 @@ class MatchTennis extends Model
 
         if ($this->tournoi) {
             switch ($this->tournoi->categorie?->code) {
-                case 'grand_chelem': $importance *= 4; break;
-                case 'masters_1000': $importance *= 3; break;
-                case 'atp_500': $importance *= 2; break;
-                case 'atp_250': $importance *= 1.5; break;
+                case 'grand_chelem': $importance *= 4;
+                    break;
+                case 'masters_1000': $importance *= 3;
+                    break;
+                case 'atp_500': $importance *= 2;
+                    break;
+                case 'atp_250': $importance *= 1.5;
+                    break;
             }
         }
 
         if ($this->round) {
             switch ($this->round->code) {
-                case 'finale': $importance *= 3; break;
-                case 'demi_finale': $importance *= 2.5; break;
-                case 'quart_finale': $importance *= 2; break;
-                case 'huitieme': $importance *= 1.5; break;
+                case 'finale': $importance *= 3;
+                    break;
+                case 'demi_finale': $importance *= 2.5;
+                    break;
+                case 'quart_finale': $importance *= 2;
+                    break;
+                case 'huitieme': $importance *= 1.5;
+                    break;
             }
         }
 
@@ -262,21 +276,21 @@ class MatchTennis extends Model
 
     public function scopeTermines($query)
     {
-        return $query->whereHas('statut', function($q) {
+        return $query->whereHas('statut', function ($q) {
             $q->where('code', 'termine');
         })->orWhereNotNull('gagnant_id');
     }
 
     public function scopeEnCours($query)
     {
-        return $query->whereHas('statut', function($q) {
+        return $query->whereHas('statut', function ($q) {
             $q->where('code', 'en_cours');
         });
     }
 
     public function scopeProgrammes($query)
     {
-        return $query->whereHas('statut', function($q) {
+        return $query->whereHas('statut', function ($q) {
             $q->where('code', 'programme');
         });
     }
@@ -294,7 +308,7 @@ class MatchTennis extends Model
 
     public function scopeParSurface($query, $surfaceCode)
     {
-        return $query->whereHas('surface', function($q) use ($surfaceCode) {
+        return $query->whereHas('surface', function ($q) use ($surfaceCode) {
             $q->where('code', $surfaceCode);
         });
     }
@@ -316,7 +330,7 @@ class MatchTennis extends Model
 
     public function scopeImportants($query)
     {
-        return $query->whereHas('tournoi.categorie', function($q) {
+        return $query->whereHas('tournoi.categorie', function ($q) {
             $q->whereIn('code', ['grand_chelem', 'masters_1000']);
         });
     }
@@ -330,7 +344,7 @@ class MatchTennis extends Model
      */
     public function determinerGagnant()
     {
-        if (!$this->score_detaille || !is_array($this->score_detaille)) {
+        if (! $this->score_detaille || ! is_array($this->score_detaille)) {
             return null;
         }
 
@@ -362,7 +376,9 @@ class MatchTennis extends Model
      */
     public function calculerDureeEstimee()
     {
-        if (!$this->score_detaille) return null;
+        if (! $this->score_detaille) {
+            return null;
+        }
 
         $nbSets = count($this->score_detaille);
         $totalJeux = 0;
@@ -380,7 +396,7 @@ class MatchTennis extends Model
      */
     public function getHeadToHeadStats()
     {
-        $matchsPrecedents = self::where(function($query) {
+        $matchsPrecedents = self::where(function ($query) {
             $query->where(['joueur1_id' => $this->joueur1_id, 'joueur2_id' => $this->joueur2_id])
                 ->orWhere(['joueur1_id' => $this->joueur2_id, 'joueur2_id' => $this->joueur1_id]);
         })
@@ -395,7 +411,7 @@ class MatchTennis extends Model
             'total_matchs' => $matchsPrecedents->count(),
             'victoires_joueur1' => $victoires1,
             'victoires_joueur2' => $victoires2,
-            'matchs_precedents' => $matchsPrecedents->take(5)
+            'matchs_precedents' => $matchsPrecedents->take(5),
         ];
     }
 
@@ -404,7 +420,7 @@ class MatchTennis extends Model
      */
     public function getPointsGagnes($joueurId)
     {
-        if (!$this->est_termine || $this->gagnant_id != $joueurId) {
+        if (! $this->est_termine || $this->gagnant_id != $joueurId) {
             return 0;
         }
 
@@ -412,13 +428,13 @@ class MatchTennis extends Model
             'grand_chelem' => [
                 'finale' => 2000, 'demi_finale' => 1200, 'quart_finale' => 720,
                 'huitieme' => 360, 'troisieme_tour' => 180, 'deuxieme_tour' => 90,
-                'premier_tour' => 10
+                'premier_tour' => 10,
             ],
             'masters_1000' => [
                 'finale' => 1000, 'demi_finale' => 600, 'quart_finale' => 360,
                 'huitieme' => 180, 'troisieme_tour' => 90, 'deuxieme_tour' => 45,
-                'premier_tour' => 10
-            ]
+                'premier_tour' => 10,
+            ],
             // Ajouter autres catégories...
         ];
 
@@ -438,6 +454,7 @@ class MatchTennis extends Model
         } elseif ($joueurId == $this->joueur2_id && $this->cote_joueur1 && $this->cote_joueur2) {
             return $this->cote_joueur2 < $this->cote_joueur1;
         }
+
         return null;
     }
 
@@ -446,7 +463,7 @@ class MatchTennis extends Model
      */
     public function getFacteurSurprise()
     {
-        if (!$this->est_termine || !$this->cote_joueur1 || !$this->cote_joueur2) {
+        if (! $this->est_termine || ! $this->cote_joueur1 || ! $this->cote_joueur2) {
             return 0;
         }
 
@@ -474,7 +491,7 @@ class MatchTennis extends Model
             'cote_joueur1' => 'nullable|numeric|min:1.01',
             'cote_joueur2' => 'nullable|numeric|min:1.01',
             'temperature' => 'nullable|integer|between:-10,50',
-            'humidite' => 'nullable|integer|between:0,100'
+            'humidite' => 'nullable|integer|between:0,100',
         ];
     }
 
@@ -488,12 +505,12 @@ class MatchTennis extends Model
 
         // Auto-déterminer le gagnant lors de la sauvegarde
         static::saving(function ($match) {
-            if ($match->score_detaille && !$match->gagnant_id) {
+            if ($match->score_detaille && ! $match->gagnant_id) {
                 $match->gagnant_id = $match->determinerGagnant();
             }
 
             // Auto-calculer la durée si pas définie
-            if ($match->score_detaille && !$match->duree_match) {
+            if ($match->score_detaille && ! $match->duree_match) {
                 $match->duree_match = $match->calculerDureeEstimee();
             }
         });

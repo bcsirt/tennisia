@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class EntrainementMatch extends Model
 {
@@ -53,7 +53,7 @@ class EntrainementMatch extends Model
         'progression_detectee',
         'preparation_adversaire_specifique',
         'simulation_conditions_match',
-        'description'
+        'description',
     ];
 
     protected $casts = [
@@ -90,7 +90,7 @@ class EntrainementMatch extends Model
         'auto_evaluation_joueur' => 'array',
         'progression_detectee' => 'array',
         'preparation_adversaire_specifique' => 'boolean',
-        'simulation_conditions_match' => 'boolean'
+        'simulation_conditions_match' => 'boolean',
     ];
 
     protected $appends = [
@@ -99,7 +99,7 @@ class EntrainementMatch extends Model
         'impact_confiance',
         'readiness_score',
         'fatigue_delta',
-        'volume_technique_total'
+        'volume_technique_total',
     ];
 
     // Relations
@@ -122,7 +122,9 @@ class EntrainementMatch extends Model
     public function getChargeEntrainementAttribute()
     {
         // Calcul de la charge d'entraînement (Training Load)
-        if (!$this->duree_minutes || !$this->intensite) return 0;
+        if (! $this->duree_minutes || ! $this->intensite) {
+            return 0;
+        }
 
         $charge_base = $this->duree_minutes * $this->intensite;
 
@@ -136,19 +138,25 @@ class EntrainementMatch extends Model
     public function getEfficaciteSessionAttribute()
     {
         // Efficacité basée sur l'amélioration de confiance et objectifs atteints
-        if (!$this->niveau_confiance_avant || !$this->niveau_confiance_apres) return null;
+        if (! $this->niveau_confiance_avant || ! $this->niveau_confiance_apres) {
+            return null;
+        }
 
         $gain_confiance = $this->niveau_confiance_apres - $this->niveau_confiance_avant;
         $objectifs_score = count($this->objectifs_session ?? []) * 2;
         $progression_score = count($this->progression_detectee ?? []) * 3;
 
         $score_total = $gain_confiance + $objectifs_score + $progression_score;
+
         return round(max(0, min(10, $score_total)), 1);
     }
 
     public function getImpactConfianceAttribute()
     {
-        if (!$this->niveau_confiance_avant || !$this->niveau_confiance_apres) return 0;
+        if (! $this->niveau_confiance_avant || ! $this->niveau_confiance_apres) {
+            return 0;
+        }
+
         return $this->niveau_confiance_apres - $this->niveau_confiance_avant;
     }
 
@@ -184,13 +192,17 @@ class EntrainementMatch extends Model
             $facteurs['simulation'] = 10;
         }
 
-        $score_moyen = !empty($facteurs) ? array_sum($facteurs) / count($facteurs) : 50;
+        $score_moyen = ! empty($facteurs) ? array_sum($facteurs) / count($facteurs) : 50;
+
         return round(min(100, $score_moyen), 1);
     }
 
     public function getFatigueDeltaAttribute()
     {
-        if (!$this->niveau_fatigue_avant || !$this->niveau_fatigue_apres) return 0;
+        if (! $this->niveau_fatigue_avant || ! $this->niveau_fatigue_apres) {
+            return 0;
+        }
+
         return $this->niveau_fatigue_apres - $this->niveau_fatigue_avant;
     }
 
@@ -289,7 +301,7 @@ class EntrainementMatch extends Model
         }
 
         // Blessures signalées
-        if (!empty($this->blessures_signalees)) {
+        if (! empty($this->blessures_signalees)) {
             $signaux[] = 'blessures_actives';
         }
 
@@ -345,7 +357,7 @@ class EntrainementMatch extends Model
 
         return [
             'score' => min(100, $score_preparation),
-            'facteurs_positifs' => $facteurs
+            'facteurs_positifs' => $facteurs,
         ];
     }
 
@@ -398,7 +410,7 @@ class EntrainementMatch extends Model
         }
 
         // Facteurs négatifs
-        if (!empty($this->blessures_signalees)) {
+        if (! empty($this->blessures_signalees)) {
             $ajustements['blessure'] = -0.08;
         }
 
@@ -411,16 +423,25 @@ class EntrainementMatch extends Model
         return [
             'impact_global' => round($impact_final, 3),
             'facteurs_impact' => $ajustements,
-            'niveau_preparation' => $this->categoriserNiveauPreparation($impact_final)
+            'niveau_preparation' => $this->categoriserNiveauPreparation($impact_final),
         ];
     }
 
     private function categoriserNiveauPreparation($impact)
     {
-        if ($impact >= 0.9) return 'optimal';
-        if ($impact >= 0.7) return 'bon';
-        if ($impact >= 0.5) return 'moyen';
-        if ($impact >= 0.3) return 'sous_optimal';
+        if ($impact >= 0.9) {
+            return 'optimal';
+        }
+        if ($impact >= 0.7) {
+            return 'bon';
+        }
+        if ($impact >= 0.5) {
+            return 'moyen';
+        }
+        if ($impact >= 0.3) {
+            return 'sous_optimal';
+        }
+
         return 'problematique';
     }
 
@@ -434,30 +455,30 @@ class EntrainementMatch extends Model
                 'type' => $this->type_entrainement,
                 'duree' => $this->duree_minutes,
                 'intensite' => $this->intensite,
-                'categories' => $this->categoriserSession()
+                'categories' => $this->categoriserSession(),
             ],
             'metriques_cles' => [
                 'charge_entrainement' => $this->charge_entrainement,
                 'efficacite' => $this->efficacite_session,
                 'readiness_score' => $this->readiness_score,
-                'impact_confiance' => $this->impact_confiance
+                'impact_confiance' => $this->impact_confiance,
             ],
             'preparation_match' => [
                 'score_optimalite' => $optimality['score'],
                 'facteurs_positifs' => $optimality['facteurs_positifs'],
                 'impact_predit' => $impact_prediction['impact_global'],
-                'niveau_preparation' => $impact_prediction['niveau_preparation']
+                'niveau_preparation' => $impact_prediction['niveau_preparation'],
             ],
             'alertes' => [
                 'signaux_alarme' => $this->detecterSignauxAlarme(),
-                'recommandations' => $this->recommandationsAmelioration()
+                'recommandations' => $this->recommandationsAmelioration(),
             ],
             'volume_technique' => [
                 'total_coups' => $this->volume_technique_total,
                 'services' => $this->nb_services_pratiques,
                 'retours' => $this->nb_retours_pratiques,
-                'coups_fond' => ($this->nb_coups_droits ?? 0) + ($this->nb_revers ?? 0)
-            ]
+                'coups_fond' => ($this->nb_coups_droits ?? 0) + ($this->nb_revers ?? 0),
+            ],
         ];
     }
 
@@ -473,7 +494,7 @@ class EntrainementMatch extends Model
             'charge_moyenne' => $sessions->avg('charge_entrainement'),
             'intensite_moyenne' => $sessions->avg('intensite'),
             'progression_confiance' => $sessions->avg('impact_confiance'),
-            'readiness_moyenne' => $sessions->avg('readiness_score')
+            'readiness_moyenne' => $sessions->avg('readiness_score'),
         ];
     }
 
@@ -484,7 +505,7 @@ class EntrainementMatch extends Model
         return [
             'volume_entrainement' => 'comparison_data',
             'intensite_moyenne' => 'comparison_data',
-            'efficacite_sessions' => 'comparison_data'
+            'efficacite_sessions' => 'comparison_data',
         ];
     }
 }

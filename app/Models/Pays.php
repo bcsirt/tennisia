@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pays extends Model
@@ -64,7 +64,7 @@ class Pays extends Model
         'echange_international',    // 0-100 : facilité échanges internationaux
 
         // Performance et résultats historiques
-        'nb_joueurs_top_100_actuel',// Joueurs actuellement top 100
+        'nb_joueurs_top_100_actuel', // Joueurs actuellement top 100
         'nb_joueurs_top_100_historique', // Maximum historique top 100
         'nb_titres_grand_chelem',   // Total titres GC tous joueurs
         'nb_titres_masters',        // Total titres Masters/WTA 1000
@@ -118,9 +118,9 @@ class Pays extends Model
 
         // Voyages et logistique
         'accessibilite_aeroports',  // 0-100 : facilité accès transport aérien
-        'qualite_transport_interne',// 0-100 : qualité transports internes
+        'qualite_transport_interne', // 0-100 : qualité transports internes
         'decalage_horaire_impact',  // 0-100 : impact moyen décalages horaires
-        'distance_moyenne_tournois',// km distance moyenne vers tournois
+        'distance_moyenne_tournois', // km distance moyenne vers tournois
         'facilite_visa',            // 0-100 : facilité obtention visas
         'cout_voyages_moyen',       // USD coût moyen voyages/an
         'adaptation_climat',        // 0-100 : capacité adaptation climats
@@ -139,7 +139,7 @@ class Pays extends Model
         'diversite_sociale_tennis', // 0-100 : diversité sociale dans tennis
         'education_priorite',       // 0-100 : priorité éducation vs sport
         'equilibre_vie_sport',      // 0-100 : équilibre vie personnelle/sport
-        'pression_sociale_reussite',// 0-100 : pression sociale réussite
+        'pression_sociale_reussite', // 0-100 : pression sociale réussite
         'acceptation_echec',        // 0-100 : acceptation échecs temporaires
         'culture_travail_dur',      // 0-100 : culture effort et persévérance
 
@@ -147,7 +147,7 @@ class Pays extends Model
         'rivalites_actuelles',      // JSON: pays rivaux actuels
         'alliances_sportives',      // JSON: pays alliés/partenaires
         'echanges_entraineurs',     // 0-100 : facilité échanges entraîneurs
-        'cooperation_internationale',// 0-100 : coopération tennis internationale
+        'cooperation_internationale', // 0-100 : coopération tennis internationale
         'soft_power_tennis',        // 0-100 : influence via tennis
         'diplomatie_sportive',      // 0-100 : utilisation tennis diplomatique
 
@@ -161,7 +161,7 @@ class Pays extends Model
 
         // Métadonnées et tracking
         'derniere_mise_a_jour',
-        'source_donnees_principale',// Source primaire des données
+        'source_donnees_principale', // Source primaire des données
         'fiabilite_donnees',        // 0-100 : fiabilité des données
         'completude_profil',        // 0-100 : complétude du profil
         'derniere_analyse_experte', // Date dernière analyse par expert
@@ -289,7 +289,7 @@ class Pays extends Model
 
         // Dates
         'derniere_mise_a_jour' => 'datetime',
-        'derniere_analyse_experte' => 'date'
+        'derniere_analyse_experte' => 'date',
     ];
 
     protected $appends = [
@@ -300,7 +300,7 @@ class Pays extends Model
         'influence_internationale',
         'niveau_professionnalisme',
         'capacite_adaptation',
-        'facteur_domicile'
+        'facteur_domicile',
     ];
 
     // ===================================================================
@@ -327,7 +327,7 @@ class Pays extends Model
     public function championsTitres()
     {
         return $this->hasMany(Joueur::class)
-            ->whereHas('palmares', function($query) {
+            ->whereHas('palmares', function ($query) {
                 $query->where('niveau_tournoi', 'grand_chelem');
             });
     }
@@ -422,8 +422,11 @@ class Pays extends Model
         $potentiel += $this->innovation_technique * 0.1;
 
         // Évolution récente
-        if ($this->evolution_5_ans === 'progression') $potentiel += 15;
-        elseif ($this->evolution_5_ans === 'stable') $potentiel += 5;
+        if ($this->evolution_5_ans === 'progression') {
+            $potentiel += 15;
+        } elseif ($this->evolution_5_ans === 'stable') {
+            $potentiel += 5;
+        }
 
         return round(min(100, $potentiel), 1);
     }
@@ -433,15 +436,20 @@ class Pays extends Model
         $avantage = 50; // Base neutre
 
         // Climat favorable
-        if ($this->climat_dominant === 'tempere') $avantage += 10;
-        elseif ($this->climat_dominant === 'mediterraneen') $avantage += 15;
+        if ($this->climat_dominant === 'tempere') {
+            $avantage += 10;
+        } elseif ($this->climat_dominant === 'mediterraneen') {
+            $avantage += 15;
+        }
 
         // Adaptation surface préférée
         $surfaces = ['terre_battue', 'dur', 'gazon'];
         foreach ($surfaces as $surface) {
             if ($this->surface_preference === $surface) {
                 $performance = $this->{"performance_{$surface}"};
-                if ($performance > 70) $avantage += 10;
+                if ($performance > 70) {
+                    $avantage += 10;
+                }
             }
         }
 
@@ -511,9 +519,9 @@ class Pays extends Model
 
     public function scopePuissancesTennis($query, $seuilForce = 70)
     {
-        return $query->whereRaw("
+        return $query->whereRaw('
             (nb_joueurs_top_100_actuel * 3 + systeme_formation_score * 0.5 + tradition_tennis_score * 0.3) >= ?
-        ", [$seuilForce]);
+        ', [$seuilForce]);
     }
 
     public function scopeRegionTennis($query, $region)
@@ -529,6 +537,7 @@ class Pays extends Model
     public function scopeSpecialistesSurface($query, $surface)
     {
         $colonne = "performance_{$surface}";
+
         return $query->where($colonne, '>=', 70);
     }
 
@@ -544,19 +553,19 @@ class Pays extends Model
 
     public function scopePaysRivaux($query, $paysId)
     {
-        return $query->whereRaw("JSON_CONTAINS(rivalites_actuelles, ?)", ["\"{$paysId}\""]);
+        return $query->whereRaw('JSON_CONTAINS(rivalites_actuelles, ?)', ["\"{$paysId}\""]);
     }
 
     public function scopeAllies($query, $paysId)
     {
-        return $query->whereRaw("JSON_CONTAINS(alliances_sportives, ?)", ["\"{$paysId}\""]);
+        return $query->whereRaw('JSON_CONTAINS(alliances_sportives, ?)', ["\"{$paysId}\""]);
     }
 
     public function scopeDecalageHoraireProche($query, $fuseauCible, $tolerance = 3)
     {
         return $query->whereBetween('fuseau_horaire', [
             $fuseauCible - $tolerance,
-            $fuseauCible + $tolerance
+            $fuseauCible + $tolerance,
         ]);
     }
 
@@ -576,7 +585,7 @@ class Pays extends Model
             $avantages['domicile'] = [
                 'type' => 'avantage',
                 'valeur' => $this->facteur_domicile,
-                'description' => 'Match à domicile'
+                'description' => 'Match à domicile',
             ];
         }
 
@@ -590,7 +599,7 @@ class Pays extends Model
                 $avantages['surface'] = [
                     'type' => 'avantage',
                     'valeur' => $perfSurface - $perfAdversaire,
-                    'description' => "Spécialiste {$surface}"
+                    'description' => "Spécialiste {$surface}",
                 ];
             }
         }
@@ -601,7 +610,7 @@ class Pays extends Model
             $avantages['decalage'] = [
                 'type' => 'avantage',
                 'valeur' => 10 - $decalage * 3,
-                'description' => 'Décalage horaire favorable'
+                'description' => 'Décalage horaire favorable',
             ];
         }
 
@@ -610,7 +619,7 @@ class Pays extends Model
             $avantages['climat'] = [
                 'type' => 'avantage',
                 'valeur' => $this->adaptation_climat - 50,
-                'description' => 'Bonne adaptation climatique'
+                'description' => 'Bonne adaptation climatique',
             ];
         }
 
@@ -621,7 +630,7 @@ class Pays extends Model
             $avantages['style'] = [
                 'type' => $avantageStyle > 0 ? 'avantage' : 'desavantage',
                 'valeur' => abs($avantageStyle),
-                'description' => "Style {$this->style_jeu_national} vs {$styleAdversaire}"
+                'description' => "Style {$this->style_jeu_national} vs {$styleAdversaire}",
             ];
         }
 
@@ -638,7 +647,7 @@ class Pays extends Model
             'forces' => $this->identifierForces(),
             'faiblesses' => $this->identifierFaiblesses(),
             'opportunites' => $this->opportunites_croissance,
-            'menaces' => $this->menaces_externes
+            'menaces' => $this->menaces_externes,
         ];
 
         // Prédiction nombre joueurs top 100
@@ -672,45 +681,45 @@ class Pays extends Model
                 'pays' => $this->force_tennis_globale,
                 'autre' => $autrePays->force_tennis_globale,
                 'avantage' => $this->force_tennis_globale > $autrePays->force_tennis_globale ? 'pays' : 'autre',
-                'difference' => round($this->force_tennis_globale - $autrePays->force_tennis_globale, 1)
+                'difference' => round($this->force_tennis_globale - $autrePays->force_tennis_globale, 1),
             ],
             'infrastructure' => [
                 'pays' => $this->qualite_infrastructure,
                 'autre' => $autrePays->qualite_infrastructure,
-                'avantage' => $this->qualite_infrastructure > $autrePays->qualite_infrastructure ? 'pays' : 'autre'
+                'avantage' => $this->qualite_infrastructure > $autrePays->qualite_infrastructure ? 'pays' : 'autre',
             ],
             'tradition' => [
                 'pays' => $this->tradition_tennis_score,
                 'autre' => $autrePays->tradition_tennis_score,
-                'avantage' => $this->tradition_tennis_score > $autrePays->tradition_tennis_score ? 'pays' : 'autre'
+                'avantage' => $this->tradition_tennis_score > $autrePays->tradition_tennis_score ? 'pays' : 'autre',
             ],
             'joueurs_actuels' => [
                 'pays' => $this->nb_joueurs_top_100_actuel,
                 'autre' => $autrePays->nb_joueurs_top_100_actuel,
-                'avantage' => $this->nb_joueurs_top_100_actuel > $autrePays->nb_joueurs_top_100_actuel ? 'pays' : 'autre'
+                'avantage' => $this->nb_joueurs_top_100_actuel > $autrePays->nb_joueurs_top_100_actuel ? 'pays' : 'autre',
             ],
             'surfaces' => [
                 'terre_battue' => [
                     'pays' => $this->performance_terre_battue,
                     'autre' => $autrePays->performance_terre_battue,
-                    'avantage' => $this->performance_terre_battue > $autrePays->performance_terre_battue ? 'pays' : 'autre'
+                    'avantage' => $this->performance_terre_battue > $autrePays->performance_terre_battue ? 'pays' : 'autre',
                 ],
                 'dur' => [
                     'pays' => $this->performance_dur,
                     'autre' => $autrePays->performance_dur,
-                    'avantage' => $this->performance_dur > $autrePays->performance_dur ? 'pays' : 'autre'
+                    'avantage' => $this->performance_dur > $autrePays->performance_dur ? 'pays' : 'autre',
                 ],
                 'gazon' => [
                     'pays' => $this->performance_gazon,
                     'autre' => $autrePays->performance_gazon,
-                    'avantage' => $this->performance_gazon > $autrePays->performance_gazon ? 'pays' : 'autre'
-                ]
+                    'avantage' => $this->performance_gazon > $autrePays->performance_gazon ? 'pays' : 'autre',
+                ],
             ],
             'potentiel_futur' => [
                 'pays' => $this->potentiel_futur,
                 'autre' => $autrePays->potentiel_futur,
-                'avantage' => $this->potentiel_futur > $autrePays->potentiel_futur ? 'pays' : 'autre'
-            ]
+                'avantage' => $this->potentiel_futur > $autrePays->potentiel_futur ? 'pays' : 'autre',
+            ],
         ];
     }
 
@@ -727,7 +736,7 @@ class Pays extends Model
             'severite' => $this->determinerSeveriteDecalage($decalage),
             'jours_adaptation' => $this->calculerJoursAdaptation($decalage),
             'impact_performance' => $this->calculerImpactPerformance($decalage),
-            'recommandations' => $this->genererRecommandationsVoyage($decalage)
+            'recommandations' => $this->genererRecommandationsVoyage($decalage),
         ];
 
         return $impact;
@@ -748,7 +757,7 @@ class Pays extends Model
                     $rivaux[] = [
                         'pays' => $rival,
                         'type' => 'historique',
-                        'intensite' => $this->calculerIntensiteRivalite($rival)
+                        'intensite' => $this->calculerIntensiteRivalite($rival),
                     ];
                 }
             }
@@ -759,7 +768,7 @@ class Pays extends Model
             ->where('id', '!=', $this->id)
             ->whereBetween('force_tennis_globale', [
                 $this->force_tennis_globale - 15,
-                $this->force_tennis_globale + 15
+                $this->force_tennis_globale + 15,
             ])
             ->get();
 
@@ -767,7 +776,7 @@ class Pays extends Model
             $rivaux[] = [
                 'pays' => $rival,
                 'type' => 'contemporain',
-                'intensite' => $this->calculerIntensiteRivalite($rival)
+                'intensite' => $this->calculerIntensiteRivalite($rival),
             ];
         }
 
@@ -786,7 +795,7 @@ class Pays extends Model
             'recommandations_strategiques' => $this->genererRecommandationsStrategiques(),
             'investissements_prioritaires' => $this->identifierInvestissementsPrioritaires(),
             'partenariats_strategiques' => $this->identifierPartenairiatsPotentiels(),
-            'timeline_objectifs' => $this->genererTimelineObjectifs()
+            'timeline_objectifs' => $this->genererTimelineObjectifs(),
         ];
     }
 
@@ -800,7 +809,7 @@ class Pays extends Model
             'offensif' => ['defensif' => 10, 'tactique' => -5, 'varie' => 0],
             'defensif' => ['offensif' => -10, 'tactique' => 5, 'varie' => 0],
             'tactique' => ['offensif' => 5, 'defensif' => -5, 'varie' => 0],
-            'varie' => ['offensif' => 0, 'defensif' => 0, 'tactique' => 0]
+            'varie' => ['offensif' => 0, 'defensif' => 0, 'tactique' => 0],
         ];
 
         return $avantages[$style1][$style2] ?? 0;
@@ -810,12 +819,24 @@ class Pays extends Model
     {
         $forces = [];
 
-        if ($this->tradition_tennis_score > 80) $forces[] = 'Tradition tennis exceptionnelle';
-        if ($this->qualite_infrastructure > 85) $forces[] = 'Infrastructure de classe mondiale';
-        if ($this->systeme_formation_score > 80) $forces[] = 'Système de formation excellent';
-        if ($this->nb_joueurs_top_100_actuel >= 5) $forces[] = 'Réservoir de talents important';
-        if ($this->soutien_etatique_score > 75) $forces[] = 'Soutien étatique fort';
-        if ($this->innovation_technique > 80) $forces[] = 'Innovation technique avancée';
+        if ($this->tradition_tennis_score > 80) {
+            $forces[] = 'Tradition tennis exceptionnelle';
+        }
+        if ($this->qualite_infrastructure > 85) {
+            $forces[] = 'Infrastructure de classe mondiale';
+        }
+        if ($this->systeme_formation_score > 80) {
+            $forces[] = 'Système de formation excellent';
+        }
+        if ($this->nb_joueurs_top_100_actuel >= 5) {
+            $forces[] = 'Réservoir de talents important';
+        }
+        if ($this->soutien_etatique_score > 75) {
+            $forces[] = 'Soutien étatique fort';
+        }
+        if ($this->innovation_technique > 80) {
+            $forces[] = 'Innovation technique avancée';
+        }
 
         return $forces;
     }
@@ -824,11 +845,21 @@ class Pays extends Model
     {
         $faiblesses = [];
 
-        if ($this->accessibilite_tennis < 50) $faiblesses[] = 'Accessibilité tennis limitée';
-        if ($this->cout_pratique_tennis > 75) $faiblesses[] = 'Coût de pratique élevé';
-        if ($this->adaptation_voyages < 60) $faiblesses[] = 'Difficultés adaptation voyages';
-        if ($this->polyvalence_joueurs < 65) $faiblesses[] = 'Polyvalence limitée surfaces';
-        if ($this->sponsor_prive_score < 50) $faiblesses[] = 'Sponsoring privé insuffisant';
+        if ($this->accessibilite_tennis < 50) {
+            $faiblesses[] = 'Accessibilité tennis limitée';
+        }
+        if ($this->cout_pratique_tennis > 75) {
+            $faiblesses[] = 'Coût de pratique élevé';
+        }
+        if ($this->adaptation_voyages < 60) {
+            $faiblesses[] = 'Difficultés adaptation voyages';
+        }
+        if ($this->polyvalence_joueurs < 65) {
+            $faiblesses[] = 'Polyvalence limitée surfaces';
+        }
+        if ($this->sponsor_prive_score < 50) {
+            $faiblesses[] = 'Sponsoring privé insuffisant';
+        }
 
         return $faiblesses;
     }
@@ -840,7 +871,7 @@ class Pays extends Model
             'formation' => $this->systeme_formation_score / 100 * 0.25,
             'soutien' => ($this->soutien_etatique_score + $this->sponsor_prive_score) / 200 * 0.2,
             'accessibilite' => $this->accessibilite_tennis / 100 * 0.15,
-            'evolution' => $this->evolution_5_ans === 'progression' ? 0.1 : 0
+            'evolution' => $this->evolution_5_ans === 'progression' ? 0.1 : 0,
         ];
 
         return array_sum($facteurs) * 2; // Croissance annuelle estimée
@@ -850,8 +881,11 @@ class Pays extends Model
     {
         $evolution = 0;
 
-        if ($this->evolution_5_ans === 'progression') $evolution += 2;
-        elseif ($this->evolution_5_ans === 'declin') $evolution -= 2;
+        if ($this->evolution_5_ans === 'progression') {
+            $evolution += 2;
+        } elseif ($this->evolution_5_ans === 'declin') {
+            $evolution -= 2;
+        }
 
         $evolution += ($this->investissements_prevus / 10) * 0.5; // Impact investissements
         $evolution += ($this->potentiel_futur - 50) * 0.1; // Impact potentiel
@@ -861,9 +895,16 @@ class Pays extends Model
 
     private function determinerSeveriteDecalage($decalage)
     {
-        if ($decalage <= 2) return 'faible';
-        if ($decalage <= 5) return 'modere';
-        if ($decalage <= 8) return 'important';
+        if ($decalage <= 2) {
+            return 'faible';
+        }
+        if ($decalage <= 5) {
+            return 'modere';
+        }
+        if ($decalage <= 8) {
+            return 'important';
+        }
+
         return 'severe';
     }
 
@@ -901,7 +942,9 @@ class Pays extends Model
         $intensite += max(0, 20 - $diffNiveau);
 
         // Même région
-        if ($this->region_tennis === $rival->region_tennis) $intensite += 20;
+        if ($this->region_tennis === $rival->region_tennis) {
+            $intensite += 20;
+        }
 
         // Historique confrontations
         if ($this->rivalites_historiques && in_array($rival->id, $this->rivalites_historiques)) {
@@ -922,7 +965,7 @@ class Pays extends Model
         return [
             'force_vs_moyenne' => $this->force_tennis_globale - $moyennes->force_moyenne,
             'formation_vs_moyenne' => $this->systeme_formation_score - $moyennes->formation_moyenne,
-            'infrastructure_vs_moyenne' => $this->qualite_infrastructure - $moyennes->infrastructure_moyenne
+            'infrastructure_vs_moyenne' => $this->qualite_infrastructure - $moyennes->infrastructure_moyenne,
         ];
     }
 
@@ -953,7 +996,7 @@ class Pays extends Model
             'infrastructure' => $this->qualite_infrastructure,
             'formation' => $this->systeme_formation_score,
             'accessibilite' => $this->accessibilite_tennis,
-            'technologie' => $this->utilisation_technologie
+            'technologie' => $this->utilisation_technologie,
         ];
 
         asort($scores); // Trier par score croissant
@@ -963,7 +1006,7 @@ class Pays extends Model
                 $priorites[] = [
                     'domaine' => $domaine,
                     'score_actuel' => $score,
-                    'impact_estime' => 'high'
+                    'impact_estime' => 'high',
                 ];
             }
         }
@@ -990,7 +1033,7 @@ class Pays extends Model
                 $timeline[] = [
                     'annee' => $index + 1,
                     'objectif' => $objectif,
-                    'mesures' => $this->strategies_developpement[$index] ?? 'À définir'
+                    'mesures' => $this->strategies_developpement[$index] ?? 'À définir',
                 ];
             }
         }
@@ -1002,9 +1045,15 @@ class Pays extends Model
     {
         $confiance = 60; // Base
 
-        if ($this->fiabilite_donnees > 80) $confiance += 20;
-        if ($this->completude_profil > 90) $confiance += 15;
-        if ($this->derniere_analyse_experte && $this->derniere_analyse_experte->diffInMonths(now()) < 6) $confiance += 15;
+        if ($this->fiabilite_donnees > 80) {
+            $confiance += 20;
+        }
+        if ($this->completude_profil > 90) {
+            $confiance += 15;
+        }
+        if ($this->derniere_analyse_experte && $this->derniere_analyse_experte->diffInMonths(now()) < 6) {
+            $confiance += 15;
+        }
 
         return min(95, $confiance);
     }
@@ -1030,8 +1079,9 @@ class Pays extends Model
             ->select(['id', 'nom', 'code', 'force_tennis_globale', 'nb_joueurs_top_100_actuel'])
             ->get()
             ->values()
-            ->map(function($pays, $index) {
+            ->map(function ($pays, $index) {
                 $pays->rang_mondial = $index + 1;
+
                 return $pays;
             });
     }
@@ -1052,7 +1102,7 @@ class Pays extends Model
             'joueurs_top_100_total' => self::sum('nb_joueurs_top_100_actuel'),
             'distribution_surfaces' => self::selectRaw('surface_preference, COUNT(*) as count')
                 ->groupBy('surface_preference')
-                ->get()
+                ->get(),
         ];
     }
 
@@ -1081,7 +1131,7 @@ class Pays extends Model
             'region_tennis' => 'required|string',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
-            'fuseau_horaire' => 'required|integer|between:-12,12'
+            'fuseau_horaire' => 'required|integer|between:-12,12',
         ];
     }
 }

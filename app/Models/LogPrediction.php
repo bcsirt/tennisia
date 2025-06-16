@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 
 class LogPrediction extends Model
 {
@@ -217,7 +215,7 @@ class LogPrediction extends Model
         'raison_archivage',         // Raison de l'archivage
         'peut_etre_supprime',       // Boolean peut être supprimé
         'date_suppression_prevue',  // Date suppression prévue
-        'sauvegarde_effectuee'      // Boolean sauvegarde effectuée
+        'sauvegarde_effectuee',      // Boolean sauvegarde effectuée
     ];
 
     protected $casts = [
@@ -338,7 +336,7 @@ class LogPrediction extends Model
         'configuration_systeme' => 'json',
         'trace_execution' => 'json',
         'justifications_decision' => 'json',
-        'tags_prediction' => 'json'
+        'tags_prediction' => 'json',
     ];
 
     protected $appends = [
@@ -351,7 +349,7 @@ class LogPrediction extends Model
         'statut_prediction',
         'insights_amelioration',
         'score_impact_business',
-        'indicateurs_sante'
+        'indicateurs_sante',
     ];
 
     // ===================================================================
@@ -495,7 +493,7 @@ class LogPrediction extends Model
 
     public function scopeParJoueur($query, $joueurId)
     {
-        return $query->where(function($q) use ($joueurId) {
+        return $query->where(function ($q) use ($joueurId) {
             $q->where('joueur1_id', $joueurId)
                 ->orWhere('joueur2_id', $joueurId);
         });
@@ -512,24 +510,33 @@ class LogPrediction extends Model
 
     public function getDureeHumanizedAttribute()
     {
-        if (!$this->duree_calcul_ms) return 'N/A';
+        if (! $this->duree_calcul_ms) {
+            return 'N/A';
+        }
 
         $duree = $this->duree_calcul_ms;
-        if ($duree < 1000) return $duree . 'ms';
-        if ($duree < 60000) return round($duree / 1000, 1) . 's';
-        return round($duree / 60000, 1) . 'min';
+        if ($duree < 1000) {
+            return $duree.'ms';
+        }
+        if ($duree < 60000) {
+            return round($duree / 1000, 1).'s';
+        }
+
+        return round($duree / 60000, 1).'min';
     }
 
     public function getPerformanceGlobaleAttribute()
     {
-        if (!$this->resultat_reel) return null;
+        if (! $this->resultat_reel) {
+            return null;
+        }
 
         $composantes = [
             'precision' => $this->prediction_correcte ? 100 : 0,
             'calibration' => max(0, 100 - (abs($this->erreur_probabiliste ?? 0.5) * 200)),
             'confiance' => $this->confiance_globale ?? 50,
             'stabilite' => $this->stabilite_modele ?? 50,
-            'coherence' => $this->coherence_historique ?? 50
+            'coherence' => $this->coherence_historique ?? 50,
         ];
 
         return round(array_sum($composantes) / count($composantes), 1);
@@ -539,11 +546,22 @@ class LogPrediction extends Model
     {
         $confiance = $this->confiance_globale ?? 50;
 
-        if ($confiance >= 95) return 'Très haute';
-        if ($confiance >= 85) return 'Haute';
-        if ($confiance >= 75) return 'Bonne';
-        if ($confiance >= 65) return 'Moyenne';
-        if ($confiance >= 50) return 'Faible';
+        if ($confiance >= 95) {
+            return 'Très haute';
+        }
+        if ($confiance >= 85) {
+            return 'Haute';
+        }
+        if ($confiance >= 75) {
+            return 'Bonne';
+        }
+        if ($confiance >= 65) {
+            return 'Moyenne';
+        }
+        if ($confiance >= 50) {
+            return 'Faible';
+        }
+
         return 'Très faible';
     }
 
@@ -553,16 +571,27 @@ class LogPrediction extends Model
             'donnees' => $this->qualite_donnees_score ?? 50,
             'modele' => $this->score_sante_modele ?? 50,
             'coherence' => $this->coherence_ensemble ?? 50,
-            'stabilite' => $this->stabilite_modele ?? 50
+            'stabilite' => $this->stabilite_modele ?? 50,
         ];
 
         $score = array_sum($facteurs) / count($facteurs);
 
-        if ($score >= 90) return 'Excellente';
-        if ($score >= 80) return 'Très bonne';
-        if ($score >= 70) return 'Bonne';
-        if ($score >= 60) return 'Acceptable';
-        if ($score >= 50) return 'Médiocre';
+        if ($score >= 90) {
+            return 'Excellente';
+        }
+        if ($score >= 80) {
+            return 'Très bonne';
+        }
+        if ($score >= 70) {
+            return 'Bonne';
+        }
+        if ($score >= 60) {
+            return 'Acceptable';
+        }
+        if ($score >= 50) {
+            return 'Médiocre';
+        }
+
         return 'Mauvaise';
     }
 
@@ -595,34 +624,45 @@ class LogPrediction extends Model
 
     public function getResumePerformanceAttribute()
     {
-        if (!$this->resultat_reel) {
+        if (! $this->resultat_reel) {
             return [
                 'statut' => 'En attente du résultat',
                 'confiance' => $this->niveau_confiance,
                 'qualite' => $this->qualite_prediction,
                 'gagnant_predit' => $this->gagnantPredit?->nom_complet,
-                'probabilite' => max($this->probabilite_joueur1 ?? 0, $this->probabilite_joueur2 ?? 0) . '%'
+                'probabilite' => max($this->probabilite_joueur1 ?? 0, $this->probabilite_joueur2 ?? 0).'%',
             ];
         }
 
         return [
             'statut' => $this->prediction_correcte ? '✅ Correcte' : '❌ Incorrecte',
-            'performance' => $this->performance_globale . '/100',
+            'performance' => $this->performance_globale.'/100',
             'erreur_prob' => round($this->erreur_probabiliste ?? 0, 3),
             'surprise' => round($this->surprise_factor ?? 0, 2),
             'gagnant_predit' => $this->gagnantPredit?->nom_complet,
             'gagnant_reel' => $this->gagnantReel?->nom_complet,
-            'ecart_duree' => abs(($this->duree_match_predite ?? 0) - ($this->duree_reelle_match ?? 0)) . ' min'
+            'ecart_duree' => abs(($this->duree_match_predite ?? 0) - ($this->duree_reelle_match ?? 0)).' min',
         ];
     }
 
     public function getStatutPredictionAttribute()
     {
-        if ($this->archive) return 'Archivée';
-        if ($this->derive_detectee) return 'Dérive détectée';
-        if (!$this->validation_humaine && $this->niveau_automatisation < 80) return 'En attente validation';
-        if (!$this->resultat_reel) return 'En attente résultat';
-        if ($this->prediction_correcte) return 'Réussie';
+        if ($this->archive) {
+            return 'Archivée';
+        }
+        if ($this->derive_detectee) {
+            return 'Dérive détectée';
+        }
+        if (! $this->validation_humaine && $this->niveau_automatisation < 80) {
+            return 'En attente validation';
+        }
+        if (! $this->resultat_reel) {
+            return 'En attente résultat';
+        }
+        if ($this->prediction_correcte) {
+            return 'Réussie';
+        }
+
         return 'Échouée';
     }
 
@@ -631,13 +671,13 @@ class LogPrediction extends Model
         $insights = [];
 
         // Analyse des erreurs
-        if ($this->resultat_reel && !$this->prediction_correcte) {
+        if ($this->resultat_reel && ! $this->prediction_correcte) {
             if (($this->confiance_globale ?? 0) >= 80) {
                 $insights[] = 'Surconfiance détectée - calibrer le modèle';
             }
 
             if (count($this->facteurs_erreur ?? []) > 0) {
-                $insights[] = 'Facteurs d\'erreur identifiés: ' . implode(', ', array_slice($this->facteurs_erreur, 0, 3));
+                $insights[] = 'Facteurs d\'erreur identifiés: '.implode(', ', array_slice($this->facteurs_erreur, 0, 3));
             }
 
             if (($this->surprise_factor ?? 0) >= 2) {
@@ -664,7 +704,7 @@ class LogPrediction extends Model
             'utilite' => $this->score_utilite_utilisateur ?? 50,
             'consultations' => min(100, ($this->nb_consultations ?? 0) * 10),
             'roi' => min(100, max(0, 50 + ($this->roi_estime ?? 0))),
-            'precision' => $this->prediction_correcte ? 100 : 0
+            'precision' => $this->prediction_correcte ? 100 : 0,
         ];
 
         return round(array_sum($facteurs) / count($facteurs), 1);
@@ -679,7 +719,7 @@ class LogPrediction extends Model
             'stabilite' => $this->stabilite_modele ?? 50,
             'coherence' => $this->coherence_ensemble ?? 50,
             'anomalies' => count($this->anomalies_detectees ?? []),
-            'degradation' => count($this->indicateurs_degradation ?? []) > 0
+            'degradation' => count($this->indicateurs_degradation ?? []) > 0,
         ];
     }
 
@@ -711,13 +751,13 @@ class LogPrediction extends Model
             'version_algorithme' => $contexte['version'] ?? '1.0',
             'environnement' => app()->environment(),
             'features_utilisees' => $contexte['features'] ?? [],
-            'explications_principales' => $contexte['explications'] ?? []
+            'explications_principales' => $contexte['explications'] ?? [],
         ]);
 
         $fin = microtime(true);
         $log->update([
             'timestamp_fin' => now(),
-            'duree_calcul_ms' => round(($fin - $debut) * 1000)
+            'duree_calcul_ms' => round(($fin - $debut) * 1000),
         ]);
 
         return $log;
@@ -733,12 +773,12 @@ class LogPrediction extends Model
                 'gagnant_id' => $resultatMatch->gagnant_id,
                 'score' => $resultatMatch->score,
                 'duree_minutes' => $resultatMatch->duree_minutes,
-                'sets' => $resultatMatch->sets_detail
+                'sets' => $resultatMatch->sets_detail,
             ],
             'gagnant_reel_id' => $resultatMatch->gagnant_id,
             'score_reel' => $resultatMatch->score,
             'duree_reelle_match' => $resultatMatch->duree_minutes,
-            'prediction_correcte' => $this->gagnant_predit_id === $resultatMatch->gagnant_id
+            'prediction_correcte' => $this->gagnant_predit_id === $resultatMatch->gagnant_id,
         ]);
 
         $this->calculerMetriquesPerformance();
@@ -753,7 +793,9 @@ class LogPrediction extends Model
      */
     public function calculerMetriquesPerformance()
     {
-        if (!$this->resultat_reel) return $this;
+        if (! $this->resultat_reel) {
+            return $this;
+        }
 
         // Brier Score (erreur probabiliste)
         $probPredite = $this->gagnant_predit_id === $this->joueur1_id ?
@@ -783,7 +825,9 @@ class LogPrediction extends Model
      */
     public function analyserFacteursErreur()
     {
-        if ($this->prediction_correcte) return $this;
+        if ($this->prediction_correcte) {
+            return $this;
+        }
 
         $facteursErreur = [];
 
@@ -798,17 +842,17 @@ class LogPrediction extends Model
 
         // Analyse forme récente
         if (abs($this->forme_joueur1 - $this->forme_joueur2) < 10) {
-            $facteursErreur[] = "Formes très équilibrées non anticipées";
+            $facteursErreur[] = 'Formes très équilibrées non anticipées';
         }
 
         // Analyse conditions
         if ($this->conditions_meteo && isset($this->conditions_meteo['conditions_extremes'])) {
-            $facteursErreur[] = "Conditions météo extrêmes";
+            $facteursErreur[] = 'Conditions météo extrêmes';
         }
 
         // Facteur surprise
         if ($this->surprise_factor >= 3) {
-            $facteursErreur[] = "Résultat très improbable";
+            $facteursErreur[] = 'Résultat très improbable';
         }
 
         $this->update(['facteurs_erreur' => $facteursErreur]);
@@ -823,27 +867,27 @@ class LogPrediction extends Model
     {
         $lecons = [];
 
-        if (!$this->prediction_correcte) {
+        if (! $this->prediction_correcte) {
             // Leçons sur les erreurs
             if (($this->confiance_globale ?? 0) >= 80) {
-                $lecons[] = "Réduire la confiance pour des profils de matchs similaires";
+                $lecons[] = 'Réduire la confiance pour des profils de matchs similaires';
             }
 
             if (count($this->donnees_manquantes ?? []) > 5) {
-                $lecons[] = "Améliorer la collecte de données pour ce type de match";
+                $lecons[] = 'Améliorer la collecte de données pour ce type de match';
             }
 
             if (($this->consensus_modeles ?? 0) < 60) {
-                $lecons[] = "Divergence modèles - investiguer les causes";
+                $lecons[] = 'Divergence modèles - investiguer les causes';
             }
         } else {
             // Leçons sur les succès
             if (($this->confiance_globale ?? 0) >= 90 && $this->prediction_correcte) {
-                $lecons[] = "Excellent modèle pour ce profil de match";
+                $lecons[] = 'Excellent modèle pour ce profil de match';
             }
 
             if (count($this->features_importantes ?? []) >= 15) {
-                $lecons[] = "Features riches donnent de bons résultats";
+                $lecons[] = 'Features riches donnent de bons résultats';
             }
         }
 
@@ -863,7 +907,9 @@ class LogPrediction extends Model
             ->whereNotNull('resultat_reel')
             ->get();
 
-        if ($performances->count() < 10) return false;
+        if ($performances->count() < 10) {
+            return false;
+        }
 
         $tauxSucces = $performances->where('prediction_correcte', true)->count() / $performances->count();
         $brierMoyen = $performances->avg('erreur_probabiliste');
@@ -877,8 +923,8 @@ class LogPrediction extends Model
                 'indicateurs_degradation' => [
                     'taux_succes' => $tauxSucces,
                     'brier_moyen' => $brierMoyen,
-                    'echantillon' => $performances->count()
-                ]
+                    'echantillon' => $performances->count(),
+                ],
             ]);
         }
 
@@ -895,38 +941,38 @@ class LogPrediction extends Model
                 'uuid' => $this->uuid_prediction,
                 'date' => $this->date_prediction,
                 'modele' => $this->modele_principal,
-                'version' => $this->version_algorithme
+                'version' => $this->version_algorithme,
             ],
             'match' => [
                 'joueur1' => $this->joueur1?->nom_complet,
                 'joueur2' => $this->joueur2?->nom_complet,
                 'tournoi' => $this->tournoi?->nom,
-                'surface' => $this->surface_match
+                'surface' => $this->surface_match,
             ],
             'prediction' => [
                 'gagnant_predit' => $this->gagnantPredit?->nom_complet,
                 'probabilites' => [
-                    'joueur1' => $this->probabilite_joueur1 . '%',
-                    'joueur2' => $this->probabilite_joueur2 . '%'
+                    'joueur1' => $this->probabilite_joueur1.'%',
+                    'joueur2' => $this->probabilite_joueur2.'%',
                 ],
                 'confiance' => $this->niveau_confiance,
-                'qualite' => $this->qualite_prediction
+                'qualite' => $this->qualite_prediction,
             ],
             'performance' => $this->resume_performance,
             'technique' => [
                 'features' => count($this->features_utilisees ?? []),
                 'duree_calcul' => $this->duree_humanized,
-                'qualite_donnees' => $this->qualite_donnees_score . '/100',
-                'consensus' => $this->consensus_modeles . '%'
+                'qualite_donnees' => $this->qualite_donnees_score.'/100',
+                'consensus' => $this->consensus_modeles.'%',
             ],
             'business' => [
                 'consultations' => $this->nb_consultations,
                 'impact_score' => $this->score_impact_business,
-                'roi' => $this->roi_estime
+                'roi' => $this->roi_estime,
             ],
             'sante_modele' => $this->indicateurs_sante,
             'ameliorations' => $this->insights_amelioration,
-            'facteurs_cles' => $this->facteurs_cles_succes
+            'facteurs_cles' => $this->facteurs_cles_succes,
         ];
     }
 
@@ -944,7 +990,9 @@ class LogPrediction extends Model
             ->whereNotNull('resultat_reel')
             ->get();
 
-        if ($logs->isEmpty()) return null;
+        if ($logs->isEmpty()) {
+            return null;
+        }
 
         return [
             'nb_predictions' => $logs->count(),
@@ -953,12 +1001,12 @@ class LogPrediction extends Model
             'confiance_moyenne' => round($logs->avg('confiance_globale'), 1),
             'surprise_factor_moyen' => round($logs->avg('surprise_factor'), 2),
             'derive_detectee' => $logs->where('derive_detectee', true)->count() > 0,
-            'performance_par_surface' => $logs->groupBy('surface_match')->map(function($group) {
+            'performance_par_surface' => $logs->groupBy('surface_match')->map(function ($group) {
                 return [
                     'count' => $group->count(),
-                    'taux_succes' => round($group->where('prediction_correcte', true)->count() / $group->count() * 100, 2)
+                    'taux_succes' => round($group->where('prediction_correcte', true)->count() / $group->count() * 100, 2),
                 ];
-            })
+            }),
         ];
     }
 
@@ -997,7 +1045,7 @@ class LogPrediction extends Model
             'modele_principal' => 'required|string|max:100',
             'probabilite_joueur1' => 'required|numeric|between:0,100',
             'probabilite_joueur2' => 'required|numeric|between:0,100',
-            'confiance_globale' => 'required|numeric|between:0,100'
+            'confiance_globale' => 'required|numeric|between:0,100',
         ];
     }
 

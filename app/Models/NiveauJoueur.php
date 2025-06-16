@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class NiveauJoueur extends Model
 {
@@ -223,7 +222,7 @@ class NiveauJoueur extends Model
         'ordre_affichage',        // Ordre affichage
         'popularite',             // Popularité 1-10
         'prestige',               // Prestige 1-10
-        'actif'
+        'actif',
     ];
 
     protected $casts = [
@@ -365,7 +364,7 @@ class NiveauJoueur extends Model
         // Dates
         'date_creation_niveau' => 'date',
         'derniere_revision' => 'date',
-        'prochaine_revision' => 'date'
+        'prochaine_revision' => 'date',
     ];
 
     protected $appends = [
@@ -376,7 +375,7 @@ class NiveauJoueur extends Model
         'challenges_principaux',
         'trajectoire_carriere',
         'support_ecosystem',
-        'requirements_summary'
+        'requirements_summary',
     ];
 
     // ===================================================================
@@ -436,15 +435,24 @@ class NiveauJoueur extends Model
             $this->niveau_mental ?? 5,
             $this->niveau_tactique ?? 5,
             $this->concurrence_niveau ?? 5,
-            $this->pression_resultats ?? 5
+            $this->pression_resultats ?? 5,
         ];
 
         $moyenne = array_sum($composantes) / count($composantes);
 
-        if ($moyenne >= 9) return 'Extrême';
-        if ($moyenne >= 7) return 'Très élevé';
-        if ($moyenne >= 5) return 'Élevé';
-        if ($moyenne >= 3) return 'Modéré';
+        if ($moyenne >= 9) {
+            return 'Extrême';
+        }
+        if ($moyenne >= 7) {
+            return 'Très élevé';
+        }
+        if ($moyenne >= 5) {
+            return 'Élevé';
+        }
+        if ($moyenne >= 3) {
+            return 'Modéré';
+        }
+
         return 'Accessible';
     }
 
@@ -456,7 +464,7 @@ class NiveauJoueur extends Model
             'equilibre_vie' => ($this->equilibre_vie_privee ?? 5) * 1.5,
             'opportunites' => count($this->opportunites_carriere ?? []) * 2,
             'support' => ($this->support_medical ?? 5) * 1.2,
-            'visibilite' => ($this->visibilite_media ?? 5) * 1.3
+            'visibilite' => ($this->visibilite_media ?? 5) * 1.3,
         ];
 
         return round(array_sum($facteurs) / 6, 1);
@@ -468,7 +476,7 @@ class NiveauJoueur extends Model
 
         // Âge
         if ($this->age_optimal) {
-            $profil['age_optimal'] = $this->age_optimal . ' ans';
+            $profil['age_optimal'] = $this->age_optimal.' ans';
         }
 
         // Niveau technique
@@ -478,7 +486,7 @@ class NiveauJoueur extends Model
 
         // Expérience
         if ($this->experience_requise) {
-            $profil['experience'] = $this->experience_requise . ' ans minimum';
+            $profil['experience'] = $this->experience_requise.' ans minimum';
         }
 
         // Classification
@@ -558,15 +566,15 @@ class NiveauJoueur extends Model
         }
 
         $trajectoire['actuel'] = $this->nom;
-        $trajectoire['duree_typique'] = ($this->duree_typique ?? 12) . ' mois';
+        $trajectoire['duree_typique'] = ($this->duree_typique ?? 12).' mois';
 
         if ($this->niveauSuivant) {
             $trajectoire['progression_vers'] = $this->niveauSuivant->nom;
-            $trajectoire['taux_progression'] = ($this->taux_progression ?? 0) . '%';
+            $trajectoire['taux_progression'] = ($this->taux_progression ?? 0).'%';
         }
 
         if ($this->pic_carriere_age) {
-            $trajectoire['pic_carriere'] = $this->pic_carriere_age . ' ans';
+            $trajectoire['pic_carriere'] = $this->pic_carriere_age.' ans';
         }
 
         return $trajectoire;
@@ -603,14 +611,14 @@ class NiveauJoueur extends Model
     {
         return [
             'classement' => $this->classement_min ?
-                "Top {$this->classement_min}" . ($this->classement_max ? " - {$this->classement_max}" : '') :
+                "Top {$this->classement_min}".($this->classement_max ? " - {$this->classement_max}" : '') :
                 'Non défini',
-            'age' => ($this->age_min ?? 'N/A') . ' - ' . ($this->age_max ?? 'N/A') . ' ans',
-            'experience' => ($this->experience_requise ?? 0) . ' ans minimum',
-            'niveau_physique' => ($this->niveau_physique ?? 0) . '/10',
-            'niveau_technique' => ($this->niveau_technique ?? 0) . '/10',
-            'matchs_saison' => ($this->matchs_min_saison ?? 0) . '+ matchs/an',
-            'investissement' => number_format($this->investissement_requis ?? 0, 0, ',', ' ') . '€'
+            'age' => ($this->age_min ?? 'N/A').' - '.($this->age_max ?? 'N/A').' ans',
+            'experience' => ($this->experience_requise ?? 0).' ans minimum',
+            'niveau_physique' => ($this->niveau_physique ?? 0).'/10',
+            'niveau_technique' => ($this->niveau_technique ?? 0).'/10',
+            'matchs_saison' => ($this->matchs_min_saison ?? 0).'+ matchs/an',
+            'investissement' => number_format($this->investissement_requis ?? 0, 0, ',', ' ').'€',
         ];
     }
 
@@ -658,14 +666,14 @@ class NiveauJoueur extends Model
         $q = $query;
 
         if ($age) {
-            $q->where(function($subQuery) use ($age) {
+            $q->where(function ($subQuery) use ($age) {
                 $subQuery->where('age_min', '<=', $age)
                     ->where('age_max', '>=', $age);
             });
         }
 
         if ($classement) {
-            $q->where(function($subQuery) use ($classement) {
+            $q->where(function ($subQuery) use ($classement) {
                 $subQuery->whereNull('classement_min')
                     ->orWhere('classement_min', '>=', $classement);
             });
@@ -700,7 +708,7 @@ class NiveauJoueur extends Model
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('code', 'LIKE', "%{$terme}%")
                 ->orWhere('categorie_principale', 'LIKE', "%{$terme}%")
@@ -741,7 +749,7 @@ class NiveauJoueur extends Model
                 'concurrence_niveau' => 10,
                 'support_medical' => 10,
                 'entraineur_requis' => true,
-                'nb_joueurs_mondial' => 10
+                'nb_joueurs_mondial' => 10,
             ],
             [
                 'nom' => 'ATP Top 50',
@@ -766,7 +774,7 @@ class NiveauJoueur extends Model
                 'concurrence_niveau' => 9,
                 'support_medical' => 9,
                 'entraineur_requis' => true,
-                'nb_joueurs_mondial' => 40
+                'nb_joueurs_mondial' => 40,
             ],
             [
                 'nom' => 'ATP Top 100',
@@ -791,7 +799,7 @@ class NiveauJoueur extends Model
                 'concurrence_niveau' => 8,
                 'support_medical' => 8,
                 'entraineur_requis' => true,
-                'nb_joueurs_mondial' => 50
+                'nb_joueurs_mondial' => 50,
             ],
             [
                 'nom' => 'ATP Professional',
@@ -816,7 +824,7 @@ class NiveauJoueur extends Model
                 'concurrence_niveau' => 7,
                 'support_medical' => 7,
                 'entraineur_requis' => true,
-                'nb_joueurs_mondial' => 200
+                'nb_joueurs_mondial' => 200,
             ],
             [
                 'nom' => 'Challengers',
@@ -841,7 +849,7 @@ class NiveauJoueur extends Model
                 'concurrence_niveau' => 6,
                 'support_medical' => 6,
                 'entraineur_requis' => true,
-                'nb_joueurs_mondial' => 500
+                'nb_joueurs_mondial' => 500,
             ],
             [
                 'nom' => 'ITF Futures',
@@ -866,7 +874,7 @@ class NiveauJoueur extends Model
                 'concurrence_niveau' => 5,
                 'support_medical' => 4,
                 'entraineur_requis' => false,
-                'nb_joueurs_mondial' => 1200
+                'nb_joueurs_mondial' => 1200,
             ],
             [
                 'nom' => 'National Elite',
@@ -889,7 +897,7 @@ class NiveauJoueur extends Model
                 'concurrence_niveau' => 4,
                 'support_medical' => 3,
                 'federation_support' => true,
-                'nb_joueurs_mondial' => 3000
+                'nb_joueurs_mondial' => 3000,
             ],
             [
                 'nom' => 'Regional Advanced',
@@ -910,7 +918,7 @@ class NiveauJoueur extends Model
                 'pression_resultats' => 3,
                 'concurrence_niveau' => 3,
                 'support_medical' => 2,
-                'nb_joueurs_mondial' => 10000
+                'nb_joueurs_mondial' => 10000,
             ],
             [
                 'nom' => 'Junior Elite',
@@ -933,7 +941,7 @@ class NiveauJoueur extends Model
                 'concurrence_niveau' => 4,
                 'support_medical' => 3,
                 'formation_continue' => true,
-                'nb_joueurs_mondial' => 5000
+                'nb_joueurs_mondial' => 5000,
             ],
             [
                 'nom' => 'Club Advanced',
@@ -954,8 +962,8 @@ class NiveauJoueur extends Model
                 'concurrence_niveau' => 2,
                 'support_medical' => 1,
                 'equilibre_vie_privee' => 8,
-                'nb_joueurs_mondial' => 50000
-            ]
+                'nb_joueurs_mondial' => 50000,
+            ],
         ];
 
         foreach ($niveaux as $index => $niveau) {
@@ -990,12 +998,12 @@ class NiveauJoueur extends Model
         return self::actifs()
             ->ordonnes()
             ->get()
-            ->mapWithKeys(function($niveau) {
+            ->mapWithKeys(function ($niveau) {
                 return [$niveau->code => [
                     'nom' => $niveau->nom,
                     'hierarchie' => $niveau->hierarchie_niveau,
                     'prestige' => $niveau->prestige,
-                    'categorie' => $niveau->categorie_principale
+                    'categorie' => $niveau->categorie_principale,
                 ]];
             });
     }
@@ -1016,7 +1024,7 @@ class NiveauJoueur extends Model
             'joueurs_total' => Joueur::count(),
             'repartition_categories' => self::selectRaw('categorie_principale, COUNT(*) as nb')
                 ->groupBy('categorie_principale')
-                ->pluck('nb', 'categorie_principale')
+                ->pluck('nb', 'categorie_principale'),
         ];
     }
 
@@ -1064,7 +1072,7 @@ class NiveauJoueur extends Model
             'peut_acceder' => $respecte,
             'criteres_non_respectes' => $criteres,
             'pourcentage_adequation' => $this->calculerAdequation($joueur),
-            'recommendations' => $this->getRecommandationsAcces($joueur)
+            'recommendations' => $this->getRecommandationsAcces($joueur),
         ];
     }
 
@@ -1079,7 +1087,7 @@ class NiveauJoueur extends Model
             'cout_equipe_support' => $this->calculerCoutEquipe($dureeAnnees),
             'cout_voyages' => $this->calculerCoutVoyages($dureeAnnees),
             'total_estime' => $this->calculerCoutTotalEstime($dureeAnnees),
-            'retour_investissement' => $this->calculerROI($dureeAnnees)
+            'retour_investissement' => $this->calculerROI($dureeAnnees),
         ];
     }
 
@@ -1096,7 +1104,7 @@ class NiveauJoueur extends Model
             'academie_creation' => $this->niveau_technique >= 8,
             'consulting' => $this->experience_requise >= 10,
             'federation_roles' => $this->prestige >= 8,
-            'opportunites_specifiques' => $this->opportunites_carriere ?? []
+            'opportunites_specifiques' => $this->opportunites_carriere ?? [],
         ];
     }
 
@@ -1115,9 +1123,9 @@ class NiveauJoueur extends Model
             if ($niveau) {
                 $etapes[] = [
                     'niveau' => $niveau->nom,
-                    'duree_estimee' => $niveau->duree_typique . ' mois',
+                    'duree_estimee' => $niveau->duree_typique.' mois',
                     'objectifs_cles' => $this->getObjectifsNiveau($niveau),
-                    'taux_reussite' => $niveau->taux_progression . '%'
+                    'taux_reussite' => $niveau->taux_progression.'%',
                 ];
             }
         }
@@ -1130,7 +1138,7 @@ class NiveauJoueur extends Model
             'investissement_total' => $this->calculerInvestissementTotal($etapes),
             'probabilite_succes' => $this->calculerProbabiliteSucces($joueurActuel),
             'facteurs_critiques' => $this->getFacteursCritiques(),
-            'recommandations' => $this->getRecommandationsProgression($joueurActuel)
+            'recommandations' => $this->getRecommandationsProgression($joueurActuel),
         ];
     }
 
@@ -1143,26 +1151,26 @@ class NiveauJoueur extends Model
             'prestige' => [
                 'actuel' => $this->prestige,
                 'compare' => $autreNiveau->prestige,
-                'difference' => $this->prestige - $autreNiveau->prestige
+                'difference' => $this->prestige - $autreNiveau->prestige,
             ],
             'difficulte' => [
                 'actuel' => $this->niveau_difficulte_global,
-                'compare' => $autreNiveau->niveau_difficulte_global
+                'compare' => $autreNiveau->niveau_difficulte_global,
             ],
             'revenus' => [
                 'actuel' => $this->prize_money_moyen,
                 'compare' => $autreNiveau->prize_money_moyen,
                 'ratio' => $autreNiveau->prize_money_moyen > 0 ?
-                    round($this->prize_money_moyen / $autreNiveau->prize_money_moyen, 2) : 0
+                    round($this->prize_money_moyen / $autreNiveau->prize_money_moyen, 2) : 0,
             ],
             'support' => [
                 'actuel' => $this->support_medical,
-                'compare' => $autreNiveau->support_medical
+                'compare' => $autreNiveau->support_medical,
             ],
             'attractivite' => [
                 'actuel' => $this->score_attractivite,
-                'compare' => $autreNiveau->score_attractivite
-            ]
+                'compare' => $autreNiveau->score_attractivite,
+            ],
         ];
     }
 
@@ -1218,9 +1226,15 @@ class NiveauJoueur extends Model
     {
         $coutBase = 0;
 
-        if ($this->entraineur_requis) $coutBase += 50000 * $duree;
-        if ($this->support_medical >= 7) $coutBase += 30000 * $duree;
-        if ($this->niveau_physique >= 8) $coutBase += 20000 * $duree; // Préparateur physique
+        if ($this->entraineur_requis) {
+            $coutBase += 50000 * $duree;
+        }
+        if ($this->support_medical >= 7) {
+            $coutBase += 30000 * $duree;
+        }
+        if ($this->niveau_physique >= 8) {
+            $coutBase += 20000 * $duree;
+        } // Préparateur physique
 
         return $coutBase;
     }
@@ -1249,10 +1263,10 @@ class NiveauJoueur extends Model
     private function getObjectifsNiveau($niveau)
     {
         return [
-            'Classement cible: ' . ($niveau->classement_min ?? 'N/A'),
-            'Points minimum: ' . number_format($niveau->points_min ?? 0),
-            'Niveau technique: ' . ($niveau->niveau_technique ?? 0) . '/10',
-            'Matchs par saison: ' . ($niveau->matchs_min_saison ?? 0)
+            'Classement cible: '.($niveau->classement_min ?? 'N/A'),
+            'Points minimum: '.number_format($niveau->points_min ?? 0),
+            'Niveau technique: '.($niveau->niveau_technique ?? 0).'/10',
+            'Matchs par saison: '.($niveau->matchs_min_saison ?? 0),
         ];
     }
 
@@ -1262,7 +1276,8 @@ class NiveauJoueur extends Model
         foreach ($etapes as $etape) {
             $total += (int) str_replace(' mois', '', $etape['duree_estimee']);
         }
-        return $total . ' mois';
+
+        return $total.' mois';
     }
 
     private function calculerInvestissementTotal($etapes)
@@ -1277,7 +1292,7 @@ class NiveauJoueur extends Model
             'age' => $joueur->age <= ($this->age_optimal ?? 25) ? 1 : 0.7,
             'forme' => ($joueur->forme_actuelle ?? 5) / 10,
             'classement' => $joueur->classement_atp_wta ?
-                min(1, 1000 / $joueur->classement_atp_wta) : 0.5
+                min(1, 1000 / $joueur->classement_atp_wta) : 0.5,
         ];
 
         return round(array_product($facteurs) * 100, 1);
@@ -1287,9 +1302,15 @@ class NiveauJoueur extends Model
     {
         $facteurs = [];
 
-        if ($this->niveau_mental >= 8) $facteurs[] = 'Mental très important';
-        if ($this->pression_resultats >= 8) $facteurs[] = 'Gestion pression cruciale';
-        if ($this->concurrence_niveau >= 8) $facteurs[] = 'Concurrence intense';
+        if ($this->niveau_mental >= 8) {
+            $facteurs[] = 'Mental très important';
+        }
+        if ($this->pression_resultats >= 8) {
+            $facteurs[] = 'Gestion pression cruciale';
+        }
+        if ($this->concurrence_niveau >= 8) {
+            $facteurs[] = 'Concurrence intense';
+        }
 
         return $facteurs;
     }
@@ -1325,7 +1346,7 @@ class NiveauJoueur extends Model
             'age_min' => 'nullable|integer|min:10|max:50',
             'age_max' => 'nullable|integer|min:10|max:50',
             'niveau_technique' => 'nullable|integer|min:1|max:10',
-            'prestige' => 'nullable|integer|min:1|max:10'
+            'prestige' => 'nullable|integer|min:1|max:10',
         ];
     }
 
@@ -1339,18 +1360,22 @@ class NiveauJoueur extends Model
 
         static::saving(function ($niveau) {
             // Auto-calculs
-            if (!$niveau->ordre_affichage) {
+            if (! $niveau->ordre_affichage) {
                 $niveau->ordre_affichage = $niveau->hierarchie_niveau ?? 1;
             }
 
             // Calculer score attractivité si manquant
-            if (!$niveau->score_attractivite) {
+            if (! $niveau->score_attractivite) {
                 $niveau->score_attractivite = $niveau->getScoreAttractiviteAttribute();
             }
 
             // Valeurs par défaut
-            if ($niveau->actif === null) $niveau->actif = true;
-            if (!$niveau->date_creation_niveau) $niveau->date_creation_niveau = now();
+            if ($niveau->actif === null) {
+                $niveau->actif = true;
+            }
+            if (! $niveau->date_creation_niveau) {
+                $niveau->date_creation_niveau = now();
+            }
         });
 
         static::created(function ($niveau) {

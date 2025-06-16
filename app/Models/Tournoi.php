@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tournoi extends Model
@@ -61,7 +61,7 @@ class Tournoi extends Model
 
         // Données techniques
         'source_donnees_id',
-        'derniere_maj'
+        'derniere_maj',
     ];
 
     protected $casts = [
@@ -77,7 +77,7 @@ class Tournoi extends Model
         'points_atp_wta_gagnant' => 'integer',
         'edition_numero' => 'integer',
         'annee_creation' => 'integer',
-        'altitude' => 'integer'
+        'altitude' => 'integer',
     ];
 
     protected $appends = [
@@ -87,7 +87,7 @@ class Tournoi extends Model
         'est_grand_chelem',
         'est_masters',
         'phase_actuelle',
-        'pourcentage_completion'
+        'pourcentage_completion',
     ];
 
     // ===================================================================
@@ -133,7 +133,7 @@ class Tournoi extends Model
     public function matchsTermines()
     {
         return $this->hasMany(MatchTennis::class)
-            ->whereHas('statut', function($q) {
+            ->whereHas('statut', function ($q) {
                 $q->where('code', 'termine');
             });
     }
@@ -141,7 +141,7 @@ class Tournoi extends Model
     public function matchsProgrammes()
     {
         return $this->hasMany(MatchTennis::class)
-            ->whereHas('statut', function($q) {
+            ->whereHas('statut', function ($q) {
                 $q->where('code', 'programme');
             });
     }
@@ -149,7 +149,7 @@ class Tournoi extends Model
     public function matchsEnCours()
     {
         return $this->hasMany(MatchTennis::class)
-            ->whereHas('statut', function($q) {
+            ->whereHas('statut', function ($q) {
                 $q->where('code', 'en_cours');
             });
     }
@@ -158,7 +158,7 @@ class Tournoi extends Model
     public function premiersToursMatchs()
     {
         return $this->hasMany(MatchTennis::class)
-            ->whereHas('round', function($q) {
+            ->whereHas('round', function ($q) {
                 $q->where('code', 'premier_tour');
             });
     }
@@ -166,7 +166,7 @@ class Tournoi extends Model
     public function finale()
     {
         return $this->hasOne(MatchTennis::class)
-            ->whereHas('round', function($q) {
+            ->whereHas('round', function ($q) {
                 $q->where('code', 'finale');
             });
     }
@@ -174,7 +174,7 @@ class Tournoi extends Model
     public function demiFinales()
     {
         return $this->hasMany(MatchTennis::class)
-            ->whereHas('round', function($q) {
+            ->whereHas('round', function ($q) {
                 $q->where('code', 'demi_finale');
             });
     }
@@ -196,7 +196,7 @@ class Tournoi extends Model
             'id',
             'id',
             'gagnant_id'
-        )->whereHas('matchTennis.round', function($q) {
+        )->whereHas('matchTennis.round', function ($q) {
             $q->where('code', 'finale');
         });
     }
@@ -204,7 +204,9 @@ class Tournoi extends Model
     public function finaliste()
     {
         $finale = $this->finale;
-        if (!$finale || !$finale->gagnant_id) return null;
+        if (! $finale || ! $finale->gagnant_id) {
+            return null;
+        }
 
         $perdantId = $finale->gagnant_id == $finale->joueur1_id ?
             $finale->joueur2_id : $finale->joueur1_id;
@@ -218,7 +220,10 @@ class Tournoi extends Model
 
     public function getDureeAttribute()
     {
-        if (!$this->date_debut || !$this->date_fin) return null;
+        if (! $this->date_debut || ! $this->date_fin) {
+            return null;
+        }
+
         return $this->date_debut->diffInDays($this->date_fin) + 1;
     }
 
@@ -246,12 +251,16 @@ class Tournoi extends Model
 
     public function getPhaseActuelleAttribute()
     {
-        if ($this->est_termine) return 'Terminé';
-        if (!$this->est_en_cours) return 'À venir';
+        if ($this->est_termine) {
+            return 'Terminé';
+        }
+        if (! $this->est_en_cours) {
+            return 'À venir';
+        }
 
         // Déterminer la phase basée sur les matchs en cours/récents
         $derniersMatchs = $this->matchs()
-            ->whereHas('statut', function($q) {
+            ->whereHas('statut', function ($q) {
                 $q->whereIn('code', ['en_cours', 'termine']);
             })
             ->with('round')
@@ -259,12 +268,14 @@ class Tournoi extends Model
             ->limit(5)
             ->get();
 
-        if ($derniersMatchs->isEmpty()) return 'Premier tour';
+        if ($derniersMatchs->isEmpty()) {
+            return 'Premier tour';
+        }
 
         $phases = ['finale', 'demi_finale', 'quart_finale', 'huitieme', 'deuxieme_tour', 'premier_tour'];
 
         foreach ($phases as $phase) {
-            if ($derniersMatchs->contains(function($match) use ($phase) {
+            if ($derniersMatchs->contains(function ($match) use ($phase) {
                 return $match->round?->code === $phase;
             })) {
                 return ucfirst(str_replace('_', ' ', $phase));
@@ -277,9 +288,12 @@ class Tournoi extends Model
     public function getPourcentageCompletionAttribute()
     {
         $totalMatchs = $this->matchs()->count();
-        if ($totalMatchs === 0) return 0;
+        if ($totalMatchs === 0) {
+            return 0;
+        }
 
         $matchsTermines = $this->matchsTermines()->count();
+
         return round(($matchsTermines / $totalMatchs) * 100, 1);
     }
 
@@ -295,19 +309,30 @@ class Tournoi extends Model
             $suffixes[] = $this->saison->annee;
         }
 
-        return $this->nom . (empty($suffixes) ? '' : ' (' . implode(' - ', $suffixes) . ')');
+        return $this->nom.(empty($suffixes) ? '' : ' ('.implode(' - ', $suffixes).')');
     }
 
     public function getPrizeMoneyCategoryAttribute()
     {
-        if (!$this->prize_money_total) return 'Non défini';
+        if (! $this->prize_money_total) {
+            return 'Non défini';
+        }
 
         $amount = $this->prize_money_total;
 
-        if ($amount >= 50000000) return 'Premium'; // 50M+
-        if ($amount >= 10000000) return 'Elite';   // 10M+
-        if ($amount >= 5000000) return 'Major';    // 5M+
-        if ($amount >= 1000000) return 'Standard'; // 1M+
+        if ($amount >= 50000000) {
+            return 'Premium';
+        } // 50M+
+        if ($amount >= 10000000) {
+            return 'Elite';
+        }   // 10M+
+        if ($amount >= 5000000) {
+            return 'Major';
+        }    // 5M+
+        if ($amount >= 1000000) {
+            return 'Standard';
+        } // 1M+
+
         return 'Challenger';
     }
 
@@ -318,7 +343,7 @@ class Tournoi extends Model
     public function scopeEnCours($query)
     {
         return $query->where('statut', 'en_cours')
-            ->orWhere(function($q) {
+            ->orWhere(function ($q) {
                 $q->whereBetween(now(), ['date_debut', 'date_fin'])
                     ->where('statut', '!=', 'termine');
             });
@@ -337,28 +362,28 @@ class Tournoi extends Model
 
     public function scopeParCategorie($query, $categorieCode)
     {
-        return $query->whereHas('categorie', function($q) use ($categorieCode) {
+        return $query->whereHas('categorie', function ($q) use ($categorieCode) {
             $q->where('code', $categorieCode);
         });
     }
 
     public function scopeParSurface($query, $surfaceCode)
     {
-        return $query->whereHas('surface', function($q) use ($surfaceCode) {
+        return $query->whereHas('surface', function ($q) use ($surfaceCode) {
             $q->where('code', $surfaceCode);
         });
     }
 
     public function scopeParPays($query, $paysCode)
     {
-        return $query->whereHas('pays', function($q) use ($paysCode) {
+        return $query->whereHas('pays', function ($q) use ($paysCode) {
             $q->where('code_iso', $paysCode);
         });
     }
 
     public function scopeParSaison($query, $annee)
     {
-        return $query->whereHas('saison', function($q) use ($annee) {
+        return $query->whereHas('saison', function ($q) use ($annee) {
             $q->where('annee', $annee);
         });
     }
@@ -386,7 +411,7 @@ class Tournoi extends Model
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('nom_court', 'LIKE', "%{$terme}%")
                 ->orWhere('ville', 'LIKE', "%{$terme}%");
@@ -427,7 +452,9 @@ class Tournoi extends Model
     {
         $basePoints = $this->points_atp_wta_gagnant;
 
-        if (!$basePoints) return [];
+        if (! $basePoints) {
+            return [];
+        }
 
         // Points standard par round (% du total)
         $distribution = [
@@ -437,12 +464,12 @@ class Tournoi extends Model
             'huitieme' => 0.18,
             'troisieme_tour' => 0.09,
             'deuxieme_tour' => 0.045,
-            'premier_tour' => 0.01
+            'premier_tour' => 0.01,
         ];
 
         $points = [];
         foreach ($distribution as $round => $ratio) {
-            $points[$round] = (int)($basePoints * $ratio);
+            $points[$round] = (int) ($basePoints * $ratio);
         }
 
         return $points;
@@ -464,7 +491,7 @@ class Tournoi extends Model
             'surface_dominante' => $this->surface?->nom,
             'temperature_moyenne' => $this->matchs()
                 ->whereNotNull('temperature')
-                ->avg('temperature')
+                ->avg('temperature'),
         ];
 
         return $stats;
@@ -479,7 +506,7 @@ class Tournoi extends Model
             ->whereNotNull('cote_joueur1')
             ->whereNotNull('cote_joueur2')
             ->get()
-            ->filter(function($match) {
+            ->filter(function ($match) {
                 // Upset si le joueur avec la plus haute cote a gagné
                 $coteFavorite = min($match->cote_joueur1, $match->cote_joueur2);
                 $gagnantCote = $match->gagnant_id == $match->joueur1_id ?
@@ -520,7 +547,9 @@ class Tournoi extends Model
     {
         $nbJoueurs = $this->nb_joueurs_tableau_principal;
 
-        if (!$nbJoueurs) return 0;
+        if (! $nbJoueurs) {
+            return 0;
+        }
 
         // Formule: n-1 matchs pour éliminer n-1 joueurs
         return $nbJoueurs - 1;
@@ -532,10 +561,10 @@ class Tournoi extends Model
     public function getProchainMatchImportant()
     {
         return $this->matchs()
-            ->whereHas('statut', function($q) {
+            ->whereHas('statut', function ($q) {
                 $q->where('code', 'programme');
             })
-            ->whereHas('round', function($q) {
+            ->whereHas('round', function ($q) {
                 $q->whereIn('code', ['finale', 'demi_finale', 'quart_finale']);
             })
             ->orderBy('date_match')
@@ -557,7 +586,7 @@ class Tournoi extends Model
             'date_fin' => 'required|date|after_or_equal:date_debut',
             'nb_joueurs_tableau_principal' => 'required|integer|min:8|max:256',
             'prize_money_total' => 'nullable|numeric|min:0',
-            'statut' => 'required|in:programme,en_cours,termine,annule'
+            'statut' => 'required|in:programme,en_cours,termine,annule',
         ];
     }
 

@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class Joueur extends Model
 {
@@ -208,7 +207,7 @@ class Joueur extends Model
         'derniere_maj_classement',
         'source_donnees_principal', // Source des données
         'fiabilite_donnees',      // 1-10
-        'actif'
+        'actif',
     ];
 
     protected $casts = [
@@ -303,7 +302,7 @@ class Joueur extends Model
         'langues_parlees' => 'json',
         'pays_fan_base' => 'json',
         'photos_galerie' => 'json',
-        'videos_highlights' => 'json'
+        'videos_highlights' => 'json',
     ];
 
     protected $appends = [
@@ -319,7 +318,7 @@ class Joueur extends Model
         'potentiel_progression',
         'facteur_ajustement_ia',
         'profil_style_complet',
-        'indicateurs_cles'
+        'indicateurs_cles',
     ];
 
     // ===================================================================
@@ -401,10 +400,10 @@ class Joueur extends Model
 
     public function matchsParSurface($surface)
     {
-        return MatchTennis::where(function($query) {
+        return MatchTennis::where(function ($query) {
             $query->where('joueur1_id', $this->id)
                 ->orWhere('joueur2_id', $this->id);
-        })->whereHas('tournoi.surface', function($q) use ($surface) {
+        })->whereHas('tournoi.surface', function ($q) use ($surface) {
             $q->where('code', $surface);
         });
     }
@@ -426,7 +425,7 @@ class Joueur extends Model
 
     public function getNomCompletAttribute()
     {
-        return $this->nom_complet_display ?: $this->prenom . ' ' . $this->nom;
+        return $this->nom_complet_display ?: $this->prenom.' '.$this->nom;
     }
 
     public function getAgeAttribute()
@@ -437,27 +436,38 @@ class Joueur extends Model
     public function getPourcentageVictoiresSaisonAttribute()
     {
         $total = $this->victoires_saison + $this->defaites_saison;
+
         return $total > 0 ? round(($this->victoires_saison / $total) * 100, 2) : 0;
     }
 
     public function getPourcentageVictoiresCarriereAttribute()
     {
         $total = $this->victoires_carriere + $this->defaites_carriere;
+
         return $total > 0 ? round(($this->victoires_carriere / $total) * 100, 2) : 0;
     }
 
     public function getClassementEvolutionAttribute()
     {
-        if (!$this->classement_precedent || !$this->classement_atp_wta) {
+        if (! $this->classement_precedent || ! $this->classement_atp_wta) {
             return 'stable';
         }
 
         $evolution = $this->classement_precedent - $this->classement_atp_wta;
 
-        if ($evolution > 5) return 'forte_hausse';
-        if ($evolution > 0) return 'hausse';
-        if ($evolution < -5) return 'forte_baisse';
-        if ($evolution < 0) return 'baisse';
+        if ($evolution > 5) {
+            return 'forte_hausse';
+        }
+        if ($evolution > 0) {
+            return 'hausse';
+        }
+        if ($evolution < -5) {
+            return 'forte_baisse';
+        }
+        if ($evolution < 0) {
+            return 'baisse';
+        }
+
         return 'stable';
     }
 
@@ -472,7 +482,7 @@ class Joueur extends Model
             'dur' => $this->performance_dur ?? 50,
             'terre' => $this->performance_terre ?? 50,
             'gazon' => $this->performance_gazon ?? 50,
-            'indoor' => $this->performance_indoor ?? 50
+            'indoor' => $this->performance_indoor ?? 50,
         ];
 
         return array_keys($performances, max($performances))[0];
@@ -485,7 +495,7 @@ class Joueur extends Model
             $this->confiance_niveau ?? 5,
             $this->motivation_niveau ?? 5,
             (10 - ($this->fatigue_niveau ?? 5)), // Inverser fatigue
-            (10 - ($this->stress_niveau ?? 5))   // Inverser stress
+            (10 - ($this->stress_niveau ?? 5)),   // Inverser stress
         ];
 
         return round(array_sum($facteurs) / count($facteurs), 1);
@@ -499,7 +509,7 @@ class Joueur extends Model
             'surfaces' => $this->calculerScoreSurfaces(),
             'experience' => $this->calculerScoreExperience(),
             'mentale' => ($this->force_mentale ?? 5) * 10,
-            'physique' => $this->calculerScorePhysique()
+            'physique' => $this->calculerScorePhysique(),
         ];
 
         return round(array_sum($composantes) / count($composantes), 1);
@@ -512,17 +522,28 @@ class Joueur extends Model
         $potentiel = $this->potentiel_estime ?? 50;
 
         // Potentiel selon l'âge
-        if ($age < 20) $facteurAge = 1.2;
-        elseif ($age < 25) $facteurAge = 1.1;
-        elseif ($age < 30) $facteurAge = 1.0;
-        elseif ($age < 33) $facteurAge = 0.9;
-        else $facteurAge = 0.7;
+        if ($age < 20) {
+            $facteurAge = 1.2;
+        } elseif ($age < 25) {
+            $facteurAge = 1.1;
+        } elseif ($age < 30) {
+            $facteurAge = 1.0;
+        } elseif ($age < 33) {
+            $facteurAge = 0.9;
+        } else {
+            $facteurAge = 0.7;
+        }
 
         // Potentiel selon classement actuel
-        if ($classement > 500) $facteurClassement = 1.3;
-        elseif ($classement > 200) $facteurClassement = 1.1;
-        elseif ($classement > 100) $facteurClassement = 1.0;
-        else $facteurClassement = 0.8;
+        if ($classement > 500) {
+            $facteurClassement = 1.3;
+        } elseif ($classement > 200) {
+            $facteurClassement = 1.1;
+        } elseif ($classement > 100) {
+            $facteurClassement = 1.0;
+        } else {
+            $facteurClassement = 0.8;
+        }
 
         return round($potentiel * $facteurAge * $facteurClassement, 1);
     }
@@ -535,7 +556,7 @@ class Joueur extends Model
             'blessure' => $this->estBlesse() ? -0.3 : 0,
             'surface' => $this->getAjustementSurface(),
             'conditions' => $this->getAjustementConditions(),
-            'mental' => (($this->force_mentale ?? 5) - 5) / 5
+            'mental' => (($this->force_mentale ?? 5) - 5) / 5,
         ];
 
         return max(-1, min(1, array_sum($composantes) / count($composantes)));
@@ -550,21 +571,21 @@ class Joueur extends Model
             'position_favorite' => $this->position_court_favorite,
             'surface_dominante' => $this->surface_dominante,
             'points_forts' => $this->getPointsForts(),
-            'points_faibles' => $this->getPointsFaibles()
+            'points_faibles' => $this->getPointsFaibles(),
         ];
     }
 
     public function getIndicateursClesAttribute()
     {
         return [
-            'forme' => $this->forme_recente_score . '/10',
-            'performance' => $this->indice_performance_global . '/100',
+            'forme' => $this->forme_recente_score.'/10',
+            'performance' => $this->indice_performance_global.'/100',
             'evolution' => $this->classement_evolution,
             'surface_dominante' => ucfirst($this->surface_dominante),
-            'potentiel' => $this->potentiel_progression . '/100',
-            'experience' => $this->annees_experience . ' ans',
+            'potentiel' => $this->potentiel_progression.'/100',
+            'experience' => $this->annees_experience.' ans',
             'titre_saison' => $this->titres_saison,
-            'prize_money' => number_format($this->prize_money_saison, 0, ',', ' ') . '€'
+            'prize_money' => number_format($this->prize_money_saison, 0, ',', ' ').'€',
         ];
     }
 
@@ -654,7 +675,7 @@ class Joueur extends Model
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('prenom', 'LIKE', "%{$terme}%")
                 ->orWhere('surnom', 'LIKE', "%{$terme}%");
@@ -672,6 +693,7 @@ class Joueur extends Model
     {
         if ($surface) {
             $champElo = "elo_{$surface}";
+
             return $this->$champElo ?? 1500;
         }
 
@@ -683,11 +705,11 @@ class Joueur extends Model
      */
     public function getFormeRecente($nbMatchs = 5)
     {
-        $matchsRecents = MatchTennis::where(function($query) {
+        $matchsRecents = MatchTennis::where(function ($query) {
             $query->where('joueur1_id', $this->id)
                 ->orWhere('joueur2_id', $this->id);
         })
-            ->whereHas('statut', function($q) {
+            ->whereHas('statut', function ($q) {
                 $q->where('code', 'termine');
             })
             ->orderBy('date_match', 'desc')
@@ -703,7 +725,7 @@ class Joueur extends Model
             'total' => $total,
             'pourcentage' => $total > 0 ? round(($victoires / $total) * 100, 2) : 0,
             'serie' => $this->getSerieActuelle($matchsRecents),
-            'qualite_adversaires' => $this->getQualiteAdversairesRecents($matchsRecents)
+            'qualite_adversaires' => $this->getQualiteAdversairesRecents($matchsRecents),
         ];
     }
 
@@ -712,19 +734,19 @@ class Joueur extends Model
      */
     public function getHeadToHead($adversaireId)
     {
-        $confrontation = Confrontation::where(function($query) use ($adversaireId) {
+        $confrontation = Confrontation::where(function ($query) use ($adversaireId) {
             $query->where(['joueur1_id' => $this->id, 'joueur2_id' => $adversaireId])
                 ->orWhere(['joueur1_id' => $adversaireId, 'joueur2_id' => $this->id]);
         })->first();
 
-        if (!$confrontation) {
+        if (! $confrontation) {
             return [
                 'victoires' => 0,
                 'defaites' => 0,
                 'total' => 0,
                 'pourcentage' => 0,
                 'dernier_match' => null,
-                'serie_actuelle' => 0
+                'serie_actuelle' => 0,
             ];
         }
 
@@ -741,7 +763,7 @@ class Joueur extends Model
             'pourcentage' => $confrontation->confrontations_totales > 0 ?
                 round(($victoires / $confrontation->confrontations_totales) * 100, 2) : 0,
             'dernier_match' => $confrontation->derniere_confrontation,
-            'serie_actuelle' => $confrontation->serie_actuelle ?? 0
+            'serie_actuelle' => $confrontation->serie_actuelle ?? 0,
         ];
     }
 
@@ -761,14 +783,14 @@ class Joueur extends Model
         return $this->blessuresActives()
             ->with('typeBlessure')
             ->get()
-            ->map(function($blessure) {
+            ->map(function ($blessure) {
                 return [
                     'type' => $blessure->typeBlessure->nom,
                     'zone' => $blessure->typeBlessure->zone_corporelle,
                     'gravite' => $blessure->gravite,
                     'impact_performance' => $blessure->typeBlessure->facteur_ajustement_ia,
                     'date_debut' => $blessure->date_debut,
-                    'duree_estimee' => $blessure->duree_estimee_guerison
+                    'duree_estimee' => $blessure->duree_estimee_guerison,
                 ];
             });
     }
@@ -783,20 +805,20 @@ class Joueur extends Model
                 'performance' => $this->performance_dur,
                 'elo' => $this->elo_dur,
                 'matchs_saison' => $this->matchsParSurface('hard')->count(),
-                'pourcentage_victoires' => $this->getPourcentageVictoiresSurface('hard')
+                'pourcentage_victoires' => $this->getPourcentageVictoiresSurface('hard'),
             ],
             'terre' => [
                 'performance' => $this->performance_terre,
                 'elo' => $this->elo_terre,
                 'matchs_saison' => $this->matchsParSurface('clay')->count(),
-                'pourcentage_victoires' => $this->getPourcentageVictoiresSurface('clay')
+                'pourcentage_victoires' => $this->getPourcentageVictoiresSurface('clay'),
             ],
             'gazon' => [
                 'performance' => $this->performance_gazon,
                 'elo' => $this->elo_gazon,
                 'matchs_saison' => $this->matchsParSurface('grass')->count(),
-                'pourcentage_victoires' => $this->getPourcentageVictoiresSurface('grass')
-            ]
+                'pourcentage_victoires' => $this->getPourcentageVictoiresSurface('grass'),
+            ],
         ];
     }
 
@@ -816,7 +838,7 @@ class Joueur extends Model
             'surface' => $this->getAvantageSurface($surface) - $adversaire->getAvantageSurface($surface),
             'h2h' => $this->getFacteurH2H($adversaire->id),
             'conditions' => $conditions ? $this->getAdaptationConditions($conditions) : 0,
-            'blessures' => $this->getImpactBlessures()
+            'blessures' => $this->getImpactBlessures(),
         ];
 
         $ajustementTotal = array_sum($ajustements) / 10; // Normaliser
@@ -835,14 +857,14 @@ class Joueur extends Model
                 'nom' => $this->nom_complet,
                 'age' => $this->age,
                 'nationalite' => $this->pays->nom,
-                'classement' => $this->classement_atp_wta
+                'classement' => $this->classement_atp_wta,
             ],
             'forme_actuelle' => [
                 'score_forme' => $this->forme_recente_score,
                 'confiance' => $this->confiance_niveau,
                 'motivation' => $this->motivation_niveau,
                 'fatigue' => $this->fatigue_niveau,
-                'evolution_classement' => $this->classement_evolution
+                'evolution_classement' => $this->classement_evolution,
             ],
             'style_jeu' => $this->profil_style_complet,
             'surfaces' => $this->getAnalyseSurfaces(),
@@ -852,10 +874,10 @@ class Joueur extends Model
             'objectifs' => [
                 'classement_vise' => $this->objectif_classement,
                 'tournois_vises' => $this->objectif_tournois,
-                'potentiel' => $this->potentiel_progression
+                'potentiel' => $this->potentiel_progression,
             ],
             'facteur_ia' => $this->facteur_ajustement_ia,
-            'indicateurs' => $this->indicateurs_cles
+            'indicateurs' => $this->indicateurs_cles,
         ];
     }
 
@@ -865,14 +887,27 @@ class Joueur extends Model
 
     private function calculerScoreClassement()
     {
-        if (!$this->classement_atp_wta) return 50;
+        if (! $this->classement_atp_wta) {
+            return 50;
+        }
 
         // Score inversement proportionnel au classement
-        if ($this->classement_atp_wta <= 10) return 95;
-        if ($this->classement_atp_wta <= 50) return 85;
-        if ($this->classement_atp_wta <= 100) return 70;
-        if ($this->classement_atp_wta <= 300) return 55;
-        if ($this->classement_atp_wta <= 500) return 40;
+        if ($this->classement_atp_wta <= 10) {
+            return 95;
+        }
+        if ($this->classement_atp_wta <= 50) {
+            return 85;
+        }
+        if ($this->classement_atp_wta <= 100) {
+            return 70;
+        }
+        if ($this->classement_atp_wta <= 300) {
+            return 55;
+        }
+        if ($this->classement_atp_wta <= 500) {
+            return 40;
+        }
+
         return 25;
     }
 
@@ -882,7 +917,7 @@ class Joueur extends Model
             $this->performance_dur ?? 50,
             $this->performance_terre ?? 50,
             $this->performance_gazon ?? 50,
-            $this->performance_indoor ?? 50
+            $this->performance_indoor ?? 50,
         ];
 
         return array_sum($performances) / count($performances);
@@ -892,10 +927,19 @@ class Joueur extends Model
     {
         $experience = $this->annees_experience ?? 0;
 
-        if ($experience >= 15) return 90;
-        if ($experience >= 10) return 80;
-        if ($experience >= 5) return 70;
-        if ($experience >= 2) return 60;
+        if ($experience >= 15) {
+            return 90;
+        }
+        if ($experience >= 10) {
+            return 80;
+        }
+        if ($experience >= 5) {
+            return 70;
+        }
+        if ($experience >= 2) {
+            return 60;
+        }
+
         return 50;
     }
 
@@ -905,7 +949,7 @@ class Joueur extends Model
             $this->vitesse_deplacement ?? 5,
             $this->endurance_niveau ?? 5,
             (10 - ($this->fatigue_niveau ?? 5)), // Inverser fatigue
-            $this->estBlesse() ? 3 : 8 // Pénalité blessure
+            $this->estBlesse() ? 3 : 8, // Pénalité blessure
         ];
 
         return (array_sum($composantes) / count($composantes)) * 10;
@@ -915,12 +959,24 @@ class Joueur extends Model
     {
         $forts = [];
 
-        if ($this->vitesse_service_max > 200) $forts[] = 'Service puissant';
-        if ($this->precision_service > 65) $forts[] = 'Service précis';
-        if ($this->endurance_niveau >= 8) $forts[] = 'Endurance excellente';
-        if ($this->force_mentale >= 8) $forts[] = 'Mental solide';
-        if ($this->jeu_filet >= 7) $forts[] = 'Jeu au filet';
-        if ($this->reactivite >= 8) $forts[] = 'Réactivité';
+        if ($this->vitesse_service_max > 200) {
+            $forts[] = 'Service puissant';
+        }
+        if ($this->precision_service > 65) {
+            $forts[] = 'Service précis';
+        }
+        if ($this->endurance_niveau >= 8) {
+            $forts[] = 'Endurance excellente';
+        }
+        if ($this->force_mentale >= 8) {
+            $forts[] = 'Mental solide';
+        }
+        if ($this->jeu_filet >= 7) {
+            $forts[] = 'Jeu au filet';
+        }
+        if ($this->reactivite >= 8) {
+            $forts[] = 'Réactivité';
+        }
 
         return $forts;
     }
@@ -929,25 +985,61 @@ class Joueur extends Model
     {
         $faibles = [];
 
-        if ($this->vitesse_service_max < 160) $faibles[] = 'Service manque puissance';
-        if ($this->endurance_niveau <= 4) $faibles[] = 'Endurance limitée';
-        if ($this->force_mentale <= 4) $faibles[] = 'Fragilité mentale';
-        if ($this->jeu_filet <= 4) $faibles[] = 'Jeu au filet faible';
-        if ($this->gestion_pression <= 4) $faibles[] = 'Gestion pression';
+        if ($this->vitesse_service_max < 160) {
+            $faibles[] = 'Service manque puissance';
+        }
+        if ($this->endurance_niveau <= 4) {
+            $faibles[] = 'Endurance limitée';
+        }
+        if ($this->force_mentale <= 4) {
+            $faibles[] = 'Fragilité mentale';
+        }
+        if ($this->jeu_filet <= 4) {
+            $faibles[] = 'Jeu au filet faible';
+        }
+        if ($this->gestion_pression <= 4) {
+            $faibles[] = 'Gestion pression';
+        }
 
         return $faibles;
     }
 
     // Autres méthodes privées helper...
-    private function getSerieActuelle($matchs) { /* ... */ return 0; }
-    private function getQualiteAdversairesRecents($matchs) { /* ... */ return 'moyenne'; }
-    private function getPourcentageVictoiresSurface($surface) { /* ... */ return 50; }
-    private function getAvantageSurface($surface) { /* ... */ return 0; }
-    private function getFacteurH2H($adversaireId) { /* ... */ return 0; }
-    private function getAdaptationConditions($conditions) { /* ... */ return 0; }
-    private function getImpactBlessures() { /* ... */ return 0; }
-    private function getAjustementSurface() { /* ... */ return 0; }
-    private function getAjustementConditions() { /* ... */ return 0; }
+    private function getSerieActuelle($matchs)
+    { /* ... */ return 0;
+    }
+
+    private function getQualiteAdversairesRecents($matchs)
+    { /* ... */ return 'moyenne';
+    }
+
+    private function getPourcentageVictoiresSurface($surface)
+    { /* ... */ return 50;
+    }
+
+    private function getAvantageSurface($surface)
+    { /* ... */ return 0;
+    }
+
+    private function getFacteurH2H($adversaireId)
+    { /* ... */ return 0;
+    }
+
+    private function getAdaptationConditions($conditions)
+    { /* ... */ return 0;
+    }
+
+    private function getImpactBlessures()
+    { /* ... */ return 0;
+    }
+
+    private function getAjustementSurface()
+    { /* ... */ return 0;
+    }
+
+    private function getAjustementConditions()
+    { /* ... */ return 0;
+    }
 
     // ===================================================================
     // VALIDATION RULES
@@ -967,7 +1059,7 @@ class Joueur extends Model
             'poids' => 'required|integer|between:50,150',
             'classement_atp_wta' => 'nullable|integer|min:1',
             'statut' => 'required|in:actif,inactif,retraite,suspendu',
-            'style_jeu_principal' => 'nullable|in:baseline,serve_volley,all_court,counterpuncher'
+            'style_jeu_principal' => 'nullable|in:baseline,serve_volley,all_court,counterpuncher',
         ];
     }
 
@@ -991,15 +1083,24 @@ class Joueur extends Model
 
             // Déterminer phase carrière
             if ($joueur->age) {
-                if ($joueur->age < 25) $joueur->phase_carriere = 'montee';
-                elseif ($joueur->age < 30) $joueur->phase_carriere = 'pic';
-                elseif ($joueur->age < 33) $joueur->phase_carriere = 'plateau';
-                else $joueur->phase_carriere = 'declin';
+                if ($joueur->age < 25) {
+                    $joueur->phase_carriere = 'montee';
+                } elseif ($joueur->age < 30) {
+                    $joueur->phase_carriere = 'pic';
+                } elseif ($joueur->age < 33) {
+                    $joueur->phase_carriere = 'plateau';
+                } else {
+                    $joueur->phase_carriere = 'declin';
+                }
             }
 
             // Valeurs par défaut
-            if ($joueur->actif === null) $joueur->actif = true;
-            if (!$joueur->elo_rating_global) $joueur->elo_rating_global = 1500;
+            if ($joueur->actif === null) {
+                $joueur->actif = true;
+            }
+            if (! $joueur->elo_rating_global) {
+                $joueur->elo_rating_global = 1500;
+            }
         });
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StatistiqueJoueur extends Model
@@ -103,7 +103,7 @@ class StatistiqueJoueur extends Model
         // Métadonnées
         'derniere_mise_a_jour',
         'fiabilite_donnees', // 0-100%
-        'nombre_matchs_echantillon'
+        'nombre_matchs_echantillon',
     ];
 
     protected $casts = [
@@ -137,7 +137,7 @@ class StatistiqueJoueur extends Model
         'forme_recente_20_matchs' => 'float',
 
         // Dates
-        'derniere_mise_a_jour' => 'datetime'
+        'derniere_mise_a_jour' => 'datetime',
     ];
 
     protected $appends = [
@@ -149,7 +149,7 @@ class StatistiqueJoueur extends Model
         'pourcentage_break_points_sauves',
         'efficacite_retour',
         'niveau_performance',
-        'tendance_elo'
+        'tendance_elo',
     ];
 
     // ===================================================================
@@ -189,6 +189,7 @@ class StatistiqueJoueur extends Model
     public function getRatioVictoiresAttribute()
     {
         $total = $this->victoires + $this->defaites;
+
         return $total > 0 ? round($this->victoires / $total, 4) : 0;
     }
 
@@ -256,21 +257,37 @@ class StatistiqueJoueur extends Model
 
     public function getTendanceEloAttribute()
     {
-        if (!$this->elo_evolution) return 'stable';
+        if (! $this->elo_evolution) {
+            return 'stable';
+        }
 
-        if ($this->elo_evolution > 50) return 'forte_hausse';
-        if ($this->elo_evolution > 20) return 'hausse';
-        if ($this->elo_evolution > 5) return 'legere_hausse';
-        if ($this->elo_evolution < -50) return 'forte_baisse';
-        if ($this->elo_evolution < -20) return 'baisse';
-        if ($this->elo_evolution < -5) return 'legere_baisse';
+        if ($this->elo_evolution > 50) {
+            return 'forte_hausse';
+        }
+        if ($this->elo_evolution > 20) {
+            return 'hausse';
+        }
+        if ($this->elo_evolution > 5) {
+            return 'legere_hausse';
+        }
+        if ($this->elo_evolution < -50) {
+            return 'forte_baisse';
+        }
+        if ($this->elo_evolution < -20) {
+            return 'baisse';
+        }
+        if ($this->elo_evolution < -5) {
+            return 'legere_baisse';
+        }
 
         return 'stable';
     }
 
     public function getDureeFormateeAttribute()
     {
-        if (!$this->duree_moyenne_match) return null;
+        if (! $this->duree_moyenne_match) {
+            return null;
+        }
 
         $heures = floor($this->duree_moyenne_match / 60);
         $minutes = $this->duree_moyenne_match % 60;
@@ -310,21 +327,21 @@ class StatistiqueJoueur extends Model
 
     public function scopeParSurface($query, $surfaceCode)
     {
-        return $query->whereHas('surface', function($q) use ($surfaceCode) {
+        return $query->whereHas('surface', function ($q) use ($surfaceCode) {
             $q->where('code', $surfaceCode);
         });
     }
 
     public function scopeParSaison($query, $annee)
     {
-        return $query->whereHas('saison', function($q) use ($annee) {
+        return $query->whereHas('saison', function ($q) use ($annee) {
             $q->where('annee', $annee);
         });
     }
 
     public function scopeParCategorie($query, $categorieCode)
     {
-        return $query->whereHas('categorieTournoi', function($q) use ($categorieCode) {
+        return $query->whereHas('categorieTournoi', function ($q) use ($categorieCode) {
             $q->where('code', $categorieCode);
         });
     }
@@ -374,23 +391,23 @@ class StatistiqueJoueur extends Model
             'ratio_victoires' => [
                 'joueur' => $this->ratio_victoires,
                 'autre' => $autre->ratio_victoires,
-                'avantage' => $this->ratio_victoires > $autre->ratio_victoires ? 'joueur' : 'autre'
+                'avantage' => $this->ratio_victoires > $autre->ratio_victoires ? 'joueur' : 'autre',
             ],
             'elo_rating' => [
                 'joueur' => $this->elo_rating,
                 'autre' => $autre->elo_rating,
-                'difference' => $this->elo_rating - $autre->elo_rating
+                'difference' => $this->elo_rating - $autre->elo_rating,
             ],
             'service' => [
                 'joueur' => $this->force_service,
                 'autre' => $autre->force_service,
-                'avantage' => $this->force_service > $autre->force_service ? 'joueur' : 'autre'
+                'avantage' => $this->force_service > $autre->force_service ? 'joueur' : 'autre',
             ],
             'retour' => [
                 'joueur' => $this->force_retour,
                 'autre' => $autre->force_retour,
-                'avantage' => $this->force_retour > $autre->force_retour ? 'joueur' : 'autre'
-            ]
+                'avantage' => $this->force_retour > $autre->force_retour ? 'joueur' : 'autre',
+            ],
         ];
     }
 
@@ -400,6 +417,7 @@ class StatistiqueJoueur extends Model
     public function calculerProbabiliteVictoire($eloAdversaire)
     {
         $difference = $this->elo_rating - $eloAdversaire;
+
         return 1 / (1 + pow(10, -$difference / 400));
     }
 
@@ -472,7 +490,9 @@ class StatistiqueJoueur extends Model
      */
     public function predireEvoElo($matchsAVenir = 5)
     {
-        if (!$this->elo_evolution) return $this->elo_rating;
+        if (! $this->elo_evolution) {
+            return $this->elo_rating;
+        }
 
         // Prédiction simple basée sur la tendance actuelle avec amortissement
         $facteurAmortissement = 0.8; // La tendance s'amortit avec le temps
@@ -500,16 +520,28 @@ class StatistiqueJoueur extends Model
      */
     public function getNiveauDominanceSurface()
     {
-        if (!$this->surface) return 'indéterminé';
+        if (! $this->surface) {
+            return 'indéterminé';
+        }
 
         $ratioVictoires = $this->ratio_victoires;
         $eloRating = $this->elo_rating;
 
-        if ($ratioVictoires >= 0.85 && $eloRating >= 2400) return 'dominant';
-        if ($ratioVictoires >= 0.75 && $eloRating >= 2200) return 'très_fort';
-        if ($ratioVictoires >= 0.65 && $eloRating >= 2000) return 'fort';
-        if ($ratioVictoires >= 0.55 && $eloRating >= 1800) return 'solide';
-        if ($ratioVictoires >= 0.45) return 'moyen';
+        if ($ratioVictoires >= 0.85 && $eloRating >= 2400) {
+            return 'dominant';
+        }
+        if ($ratioVictoires >= 0.75 && $eloRating >= 2200) {
+            return 'très_fort';
+        }
+        if ($ratioVictoires >= 0.65 && $eloRating >= 2000) {
+            return 'fort';
+        }
+        if ($ratioVictoires >= 0.55 && $eloRating >= 1800) {
+            return 'solide';
+        }
+        if ($ratioVictoires >= 0.45) {
+            return 'moyen';
+        }
 
         return 'faible';
     }
@@ -529,7 +561,7 @@ class StatistiqueJoueur extends Model
             'aces' => 'required|integer|min:0',
             'double_fautes' => 'required|integer|min:0',
             'elo_rating' => 'nullable|numeric|between:800,3000',
-            'fiabilite_donnees' => 'required|numeric|between:0,100'
+            'fiabilite_donnees' => 'required|numeric|between:0,100',
         ];
     }
 

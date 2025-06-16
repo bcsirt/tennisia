@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class Saison extends Model
 {
@@ -44,7 +44,7 @@ class Saison extends Model
         'notes',
         'version',                // Version du calendrier (parfois révisé)
         'source_donnees_id',
-        'derniere_maj'
+        'derniere_maj',
     ];
 
     protected $casts = [
@@ -61,7 +61,7 @@ class Saison extends Model
         'nb_tournois_prevu' => 'integer',
         'prize_money_total' => 'decimal:2',
         'derniere_maj' => 'datetime',
-        'version' => 'float'
+        'version' => 'float',
     ];
 
     protected $appends = [
@@ -71,7 +71,7 @@ class Saison extends Model
         'surface_dominante_actuelle',
         'semaine_calendrier_actuelle',
         'pourcentage_completion',
-        'prochains_evenements_majeurs'
+        'prochains_evenements_majeurs',
     ];
 
     // ===================================================================
@@ -115,7 +115,7 @@ class Saison extends Model
     public function grandsChelem()
     {
         return $this->tournois()
-            ->whereHas('categorie', function($q) {
+            ->whereHas('categorie', function ($q) {
                 $q->where('code', 'grand_chelem');
             })
             ->orderBy('date_debut');
@@ -124,7 +124,7 @@ class Saison extends Model
     public function masters1000()
     {
         return $this->tournois()
-            ->whereHas('categorie', function($q) {
+            ->whereHas('categorie', function ($q) {
                 $q->where('code', 'masters_1000');
             });
     }
@@ -132,7 +132,7 @@ class Saison extends Model
     public function tournoiParSurface($surface)
     {
         return $this->tournois()
-            ->whereHas('surface', function($q) use ($surface) {
+            ->whereHas('surface', function ($q) use ($surface) {
                 $q->where('code', $surface);
             });
     }
@@ -144,6 +144,7 @@ class Saison extends Model
     public function getEstEnCoursAttribute()
     {
         $maintenant = now();
+
         return $this->date_debut <= $maintenant &&
             $maintenant <= $this->date_fin &&
             $this->statut === 'en_cours';
@@ -156,7 +157,7 @@ class Saison extends Model
 
     public function getPhaseActuelleAttribute()
     {
-        if (!$this->est_en_cours) {
+        if (! $this->est_en_cours) {
             return $this->est_terminee ? 'Terminée' : 'À venir';
         }
 
@@ -182,7 +183,7 @@ class Saison extends Model
             'Saison gazon' => 'grass',
             'Saison terre battue' => 'clay',
             'Fin de saison (dur)' => 'hard',
-            'Début de saison (dur)' => 'hard'
+            'Début de saison (dur)' => 'hard',
         ];
 
         return $surfaces[$phase] ?? 'hard';
@@ -190,15 +191,21 @@ class Saison extends Model
 
     public function getSemaineCalendrierActuelleAttribute()
     {
-        if (!$this->est_en_cours) return null;
+        if (! $this->est_en_cours) {
+            return null;
+        }
 
         return $this->date_debut->diffInWeeks(now()) + 1;
     }
 
     public function getPourcentageCompletionAttribute()
     {
-        if ($this->statut === 'planifiee') return 0;
-        if ($this->statut === 'terminee') return 100;
+        if ($this->statut === 'planifiee') {
+            return 0;
+        }
+        if ($this->statut === 'terminee') {
+            return 100;
+        }
 
         $totalJours = $this->date_debut->diffInDays($this->date_fin);
         $joursEcoules = $this->date_debut->diffInDays(now());
@@ -208,7 +215,9 @@ class Saison extends Model
 
     public function getProchainEvenementsMajeursAttribute()
     {
-        if (!$this->est_en_cours) return [];
+        if (! $this->est_en_cours) {
+            return [];
+        }
 
         $evenements = [];
         $maintenant = now();
@@ -223,7 +232,7 @@ class Saison extends Model
                 'type' => 'Grand Chelem',
                 'nom' => $prochainGS->nom,
                 'date' => $prochainGS->date_debut,
-                'jours_restants' => $maintenant->diffInDays($prochainGS->date_debut)
+                'jours_restants' => $maintenant->diffInDays($prochainGS->date_debut),
             ];
         }
 
@@ -232,13 +241,17 @@ class Saison extends Model
 
     public function getDureeAttribute()
     {
-        if (!$this->date_debut || !$this->date_fin) return null;
+        if (! $this->date_debut || ! $this->date_fin) {
+            return null;
+        }
+
         return $this->date_debut->diffInDays($this->date_fin) + 1;
     }
 
     public function getNomCompletAttribute()
     {
         $circuit = strtoupper($this->circuit ?? 'ATP/WTA');
+
         return "Saison {$circuit} {$this->annee}";
     }
 
@@ -299,7 +312,7 @@ class Saison extends Model
 
     public function scopeRecherche(Builder $query, string $terme): Builder
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('annee', 'LIKE', "%{$terme}%")
                 ->orWhere('notes', 'LIKE', "%{$terme}%");
@@ -318,14 +331,14 @@ class Saison extends Model
         return static::firstOrCreate(
             ['annee' => now()->year],
             [
-                'nom' => 'Saison ATP/WTA ' . now()->year,
+                'nom' => 'Saison ATP/WTA '.now()->year,
                 'nom_court' => (string) now()->year,
                 'date_debut' => Carbon::create(now()->year, 1, 1),
                 'date_fin' => Carbon::create(now()->year, 11, 30),
                 'est_active' => true,
                 'statut' => 'en_cours',
                 'circuit' => 'mixte',
-                'nb_semaines_calendrier' => 52
+                'nb_semaines_calendrier' => 52,
             ]
         );
     }
@@ -337,7 +350,7 @@ class Saison extends Model
     {
         return static::create([
             'annee' => $annee,
-            'nom' => "Saison " . strtoupper($circuit) . " {$annee}",
+            'nom' => 'Saison '.strtoupper($circuit)." {$annee}",
             'nom_court' => (string) $annee,
             'circuit' => $circuit,
             'date_debut' => Carbon::create($annee, 1, 1),
@@ -352,7 +365,7 @@ class Saison extends Model
             'nb_semaines_calendaire' => 52,
             'statut' => $annee == now()->year ? 'en_cours' :
                 ($annee > now()->year ? 'planifiee' : 'terminee'),
-            'est_active' => true
+            'est_active' => true,
         ]);
     }
 
@@ -375,7 +388,7 @@ class Saison extends Model
             'top_joueurs_points' => $this->getTopJoueursPoints(10),
             'tournoi_le_plus_dote' => $this->getTournoiLePlusDote(),
             'duree_moyenne_tournoi' => $this->getDureeMoyenneTournoi(),
-            'nb_upsets_majeurs' => $this->getNombreUpsetsMajeurs()
+            'nb_upsets_majeurs' => $this->getNombreUpsetsMajeurs(),
         ]);
     }
 
@@ -388,7 +401,7 @@ class Saison extends Model
             'nb_tournois' => $this->tournois()->count(),
             'nb_matchs' => $this->matchs()->count(),
             'nb_joueurs' => $this->statistiquesJoueurs()->distinct('joueur_id')->count(),
-            'tournois_termines' => $this->tournois()->where('statut', 'termine')->count()
+            'tournois_termines' => $this->tournois()->where('statut', 'termine')->count(),
         ];
     }
 
@@ -432,13 +445,13 @@ class Saison extends Model
             ->orderBy('points_total', 'desc')
             ->limit($limite)
             ->get()
-            ->map(function($stat) {
+            ->map(function ($stat) {
                 return [
                     'joueur' => $stat->joueur->nom_complet,
                     'points' => $stat->points_total,
                     'classement' => $stat->classement_final,
                     'victoires' => $stat->victoires,
-                    'defaites' => $stat->defaites
+                    'defaites' => $stat->defaites,
                 ];
             })
             ->toArray();
@@ -463,7 +476,7 @@ class Saison extends Model
             ->whereNotNull('date_debut')
             ->whereNotNull('date_fin')
             ->get()
-            ->avg(function($tournoi) {
+            ->avg(function ($tournoi) {
                 return $tournoi->duree;
             }) ?? 0;
     }
@@ -474,7 +487,7 @@ class Saison extends Model
     public function getNombreUpsetsMajeurs(): int
     {
         return $this->matchs()
-            ->whereHas('tournoi.categorie', function($q) {
+            ->whereHas('tournoi.categorie', function ($q) {
                 $q->whereIn('code', ['grand_chelem', 'masters_1000']);
             })
             ->whereRaw('ABS(classement_joueur1 - classement_joueur2) >= 50')
@@ -489,23 +502,23 @@ class Saison extends Model
         return $this->tournois()
             ->with(['categorie', 'surface', 'pays'])
             ->get()
-            ->groupBy(function($tournoi) {
+            ->groupBy(function ($tournoi) {
                 return $tournoi->date_debut->format('Y-m');
             })
-            ->map(function($tournois, $mois) {
+            ->map(function ($tournois, $mois) {
                 return [
                     'mois' => Carbon::createFromFormat('Y-m', $mois)->translatedFormat('F Y'),
                     'nb_tournois' => $tournois->count(),
-                    'tournois' => $tournois->map(function($t) {
+                    'tournois' => $tournois->map(function ($t) {
                         return [
                             'nom' => $t->nom,
                             'categorie' => $t->categorie->nom,
                             'surface' => $t->surface->nom,
                             'pays' => $t->pays->nom,
                             'date_debut' => $t->date_debut,
-                            'date_fin' => $t->date_fin
+                            'date_fin' => $t->date_fin,
                         ];
-                    })
+                    }),
                 ];
             })
             ->toArray();
@@ -552,7 +565,7 @@ class Saison extends Model
             'circuit' => 'required|in:atp,wta,mixte',
             'statut' => 'required|in:planifiee,en_cours,terminee',
             'nb_tournois_prevu' => 'nullable|integer|min:0|max:200',
-            'prize_money_total' => 'nullable|numeric|min:0'
+            'prize_money_total' => 'nullable|numeric|min:0',
         ];
     }
 
@@ -579,12 +592,12 @@ class Saison extends Model
             }
 
             // Générer le nom si manquant
-            if (!$saison->nom) {
+            if (! $saison->nom) {
                 $circuit = strtoupper($saison->circuit ?? 'ATP/WTA');
                 $saison->nom = "Saison {$circuit} {$saison->annee}";
             }
 
-            if (!$saison->nom_court) {
+            if (! $saison->nom_court) {
                 $saison->nom_court = (string) $saison->annee;
             }
         });

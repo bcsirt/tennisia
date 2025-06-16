@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -124,7 +123,7 @@ class SourceDonnees extends Model
         'annees_historique',      // Combien d'années d'historique
         'langue_donnees',
         'notes_techniques',
-        'changelog_api'           // JSON des changements d'API
+        'changelog_api',           // JSON des changements d'API
     ];
 
     protected $casts = [
@@ -183,7 +182,7 @@ class SourceDonnees extends Model
         // Décimaux
         'cout_par_requete' => 'decimal:4',
         'cout_mensuel_estime' => 'decimal:2',
-        'budget_mensuel_limite' => 'decimal:2'
+        'budget_mensuel_limite' => 'decimal:2',
     ];
 
     protected $appends = [
@@ -195,7 +194,7 @@ class SourceDonnees extends Model
         'prochaine_sync_humanized',
         'performance_score',
         'est_operationnelle',
-        'categories_supportees'
+        'categories_supportees',
     ];
 
     // ===================================================================
@@ -266,7 +265,7 @@ class SourceDonnees extends Model
     public function scopeNecessitantSync($query)
     {
         return $query->where('actif', true)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('prochaine_synchronisation')
                     ->orWhere('prochaine_synchronisation', '<=', now());
             });
@@ -303,11 +302,22 @@ class SourceDonnees extends Model
 
     public function getStatutGlobalAttribute()
     {
-        if (!$this->actif) return 'inactif';
-        if ($this->en_maintenance) return 'maintenance';
-        if ($this->statut_connexion === 'quota_depasse') return 'quota_depasse';
-        if ($this->nb_erreurs_consecutives >= $this->seuil_alerte_erreurs) return 'alerte';
-        if ($this->statut_connexion === 'ok') return 'operationnel';
+        if (! $this->actif) {
+            return 'inactif';
+        }
+        if ($this->en_maintenance) {
+            return 'maintenance';
+        }
+        if ($this->statut_connexion === 'quota_depasse') {
+            return 'quota_depasse';
+        }
+        if ($this->nb_erreurs_consecutives >= $this->seuil_alerte_erreurs) {
+            return 'alerte';
+        }
+        if ($this->statut_connexion === 'ok') {
+            return 'operationnel';
+        }
+
         return 'erreur';
     }
 
@@ -315,16 +325,27 @@ class SourceDonnees extends Model
     {
         $score = $this->fiabilite_score ?? 50;
 
-        if ($score >= 90) return 'excellent';
-        if ($score >= 80) return 'bon';
-        if ($score >= 60) return 'moyen';
-        if ($score >= 40) return 'faible';
+        if ($score >= 90) {
+            return 'excellent';
+        }
+        if ($score >= 80) {
+            return 'bon';
+        }
+        if ($score >= 60) {
+            return 'moyen';
+        }
+        if ($score >= 40) {
+            return 'faible';
+        }
+
         return 'tres_faible';
     }
 
     public function getTauxSuccesAttribute()
     {
-        if ($this->nb_requetes_total === 0) return 100;
+        if ($this->nb_requetes_total === 0) {
+            return 100;
+        }
 
         return round(($this->nb_requetes_succes / $this->nb_requetes_total) * 100, 2);
     }
@@ -342,7 +363,9 @@ class SourceDonnees extends Model
 
     public function getQuotaUtiliseJourAttribute()
     {
-        if (!$this->limite_requetes_jour) return 0;
+        if (! $this->limite_requetes_jour) {
+            return 0;
+        }
 
         $requetesAujourdhui = $this->imports()
             ->whereDate('created_at', today())
@@ -362,7 +385,7 @@ class SourceDonnees extends Model
             'fiabilite' => $this->fiabilite_score ?? 50,
             'taux_succes' => $this->taux_succes,
             'temps_reponse' => $this->calculerScoreTempsReponse(),
-            'disponibilite' => $this->calculerScoreDisponibilite()
+            'disponibilite' => $this->calculerScoreDisponibilite(),
         ];
 
         return round(array_sum($composantes) / count($composantes), 1);
@@ -372,7 +395,7 @@ class SourceDonnees extends Model
     {
         return $this->actif &&
             $this->statut_connexion === 'ok' &&
-            !$this->en_maintenance &&
+            ! $this->en_maintenance &&
             $this->nb_erreurs_consecutives < $this->seuil_alerte_erreurs;
     }
 
@@ -406,21 +429,23 @@ class SourceDonnees extends Model
                     'derniere_reponse_ok' => now(),
                     'temps_reponse_moyen' => $this->calculerTempsReponseMoyen($tempsReponse),
                     'nb_erreurs_consecutives' => 0,
-                    'message_erreur' => null
+                    'message_erreur' => null,
                 ]);
 
                 return [
                     'succes' => true,
                     'temps_reponse' => $tempsReponse,
-                    'taille_reponse' => strlen($response->body())
+                    'taille_reponse' => strlen($response->body()),
                 ];
             } else {
                 $this->enregistrerErreur($response->status(), $response->body());
-                return ['succes' => false, 'erreur' => 'HTTP ' . $response->status()];
+
+                return ['succes' => false, 'erreur' => 'HTTP '.$response->status()];
             }
 
         } catch (\Exception $e) {
             $this->enregistrerErreur(0, $e->getMessage());
+
             return ['succes' => false, 'erreur' => $e->getMessage()];
         }
     }
@@ -430,12 +455,12 @@ class SourceDonnees extends Model
      */
     public function effectuerRequete($endpoint, $params = [])
     {
-        if (!$this->est_operationnelle) {
+        if (! $this->est_operationnelle) {
             throw new \Exception("Source non opérationnelle: {$this->statut_global}");
         }
 
         // Vérifier quotas
-        if (!$this->verifierQuotas()) {
+        if (! $this->verifierQuotas()) {
             throw new \Exception("Quota dépassé pour la source {$this->nom}");
         }
 
@@ -443,7 +468,7 @@ class SourceDonnees extends Model
         $this->respecterRateLimit();
 
         try {
-            $url = rtrim($this->url_base, '/') . '/' . ltrim($endpoint, '/');
+            $url = rtrim($this->url_base, '/').'/'.ltrim($endpoint, '/');
             $parametres = array_merge($this->params_defaut ?? [], $params);
 
             $response = Http::timeout($this->timeout_requete ?? 30)
@@ -476,23 +501,25 @@ class SourceDonnees extends Model
         foreach ($categories as $categorie) {
             try {
                 $endpoint = $this->getEndpointPourCategorie($categorie);
-                if (!$endpoint) continue;
+                if (! $endpoint) {
+                    continue;
+                }
 
                 $donnees = $this->effectuerRequete($endpoint);
                 $importees = $this->importerDonnees($categorie, $donnees);
 
                 $resultats[$categorie] = [
                     'succes' => true,
-                    'nb_importees' => $importees
+                    'nb_importees' => $importees,
                 ];
 
             } catch (\Exception $e) {
                 $resultats[$categorie] = [
                     'succes' => false,
-                    'erreur' => $e->getMessage()
+                    'erreur' => $e->getMessage(),
                 ];
 
-                Log::error("Erreur sync {$this->nom} - {$categorie}: " . $e->getMessage());
+                Log::error("Erreur sync {$this->nom} - {$categorie}: ".$e->getMessage());
             }
         }
 
@@ -510,7 +537,7 @@ class SourceDonnees extends Model
             'taux_succes' => $this->taux_succes,
             'stabilite' => $this->calculerStabilite(),
             'fraicheur' => $this->calculerFraicheur(),
-            'completude' => $this->calculerCompletude()
+            'completude' => $this->calculerCompletude(),
         ];
 
         $score = array_sum($composantes) / count($composantes);
@@ -537,7 +564,7 @@ class SourceDonnees extends Model
             'categories' => $this->categories_donnees,
             'couverture_geo' => $this->pays_couverture,
             'surfaces' => $this->surfaces_couverture,
-            'actif' => $this->est_operationnelle
+            'actif' => $this->est_operationnelle,
         ];
     }
 
@@ -554,10 +581,10 @@ class SourceDonnees extends Model
                 $headers['X-API-Key'] = $this->cle_api;
                 break;
             case 'bearer':
-                $headers['Authorization'] = 'Bearer ' . $this->token_access;
+                $headers['Authorization'] = 'Bearer '.$this->token_access;
                 break;
             case 'basic':
-                $headers['Authorization'] = 'Basic ' . base64_encode($this->cle_api . ':' . $this->secret_api);
+                $headers['Authorization'] = 'Basic '.base64_encode($this->cle_api.':'.$this->secret_api);
                 break;
         }
 
@@ -570,6 +597,7 @@ class SourceDonnees extends Model
             $requetesAujourdhui = $this->imports()->whereDate('created_at', today())->count();
             if ($requetesAujourdhui >= $this->limite_requetes_jour) {
                 $this->update(['statut_connexion' => 'quota_depasse']);
+
                 return false;
             }
         }
@@ -623,7 +651,7 @@ class SourceDonnees extends Model
             'derniere_erreur' => now(),
             'code_erreur_http' => $codeHttp,
             'message_erreur' => $message,
-            'statut_connexion' => $codeHttp === 0 ? 'timeout' : 'erreur'
+            'statut_connexion' => $codeHttp === 0 ? 'timeout' : 'erreur',
         ]);
     }
 
@@ -647,7 +675,7 @@ class SourceDonnees extends Model
             'statistiques' => $this->endpoint_statistiques,
             'cotes' => $this->endpoint_cotes,
             'meteo' => $this->endpoint_meteo,
-            'blessures' => $this->endpoint_blessures
+            'blessures' => $this->endpoint_blessures,
         ];
 
         return $mapping[$categorie] ?? null;
@@ -687,13 +715,40 @@ class SourceDonnees extends Model
     }
 
     // Méthodes de calcul des scores (à implémenter selon les besoins)
-    private function calculerScoreTempsReponse() { return 80; }
-    private function calculerScoreDisponibilite() { return 90; }
-    private function calculerTempsReponseMoyen($nouveau) { return $nouveau; }
-    private function calculerStabilite() { return 85; }
-    private function calculerFraicheur() { return 90; }
-    private function calculerCompletude() { return 95; }
-    private function appliquerTransformations($donnees) { return $donnees; }
+    private function calculerScoreTempsReponse()
+    {
+        return 80;
+    }
+
+    private function calculerScoreDisponibilite()
+    {
+        return 90;
+    }
+
+    private function calculerTempsReponseMoyen($nouveau)
+    {
+        return $nouveau;
+    }
+
+    private function calculerStabilite()
+    {
+        return 85;
+    }
+
+    private function calculerFraicheur()
+    {
+        return 90;
+    }
+
+    private function calculerCompletude()
+    {
+        return 95;
+    }
+
+    private function appliquerTransformations($donnees)
+    {
+        return $donnees;
+    }
 
     // ===================================================================
     // VALIDATION RULES
@@ -709,7 +764,7 @@ class SourceDonnees extends Model
             'frequence_maj' => 'required|in:temps_reel,horaire,quotidien,hebdomadaire,manuel',
             'priorite' => 'required|integer|between:1,10',
             'timeout_requete' => 'required|integer|min:5|max:300',
-            'actif' => 'boolean'
+            'actif' => 'boolean',
         ];
     }
 
@@ -733,7 +788,7 @@ class SourceDonnees extends Model
         });
 
         static::saved(function ($source) {
-            if ($source->actif && !$source->prochaine_synchronisation) {
+            if ($source->actif && ! $source->prochaine_synchronisation) {
                 $source->calculerProchaineSynchronisation();
             }
         });

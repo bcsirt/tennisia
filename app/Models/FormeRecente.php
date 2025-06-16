@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FormeRecente extends Model
@@ -53,7 +53,7 @@ class FormeRecente extends Model
         // Contexte des matchs récents
         'matchs_domicile',          // Dans son pays
         'victoires_domicile',
-        'matchs_deplacements_longs',// Voyages +8h de décalage
+        'matchs_deplacements_longs', // Voyages +8h de décalage
         'victoires_deplacements',
         'matchs_altitude',          // >1000m altitude
         'victoires_altitude',
@@ -107,7 +107,7 @@ class FormeRecente extends Model
         'nombre_matchs_echantillon',
         'periode_analysee_debut',
         'periode_analysee_fin',
-        'source_donnees_id'
+        'source_donnees_id',
     ];
 
     protected $casts = [
@@ -179,7 +179,7 @@ class FormeRecente extends Model
         'date_mise_a_jour' => 'date',
         'derniere_analyse' => 'datetime',
         'periode_analysee_debut' => 'date',
-        'periode_analysee_fin' => 'date'
+        'periode_analysee_fin' => 'date',
     ];
 
     protected $appends = [
@@ -191,7 +191,7 @@ class FormeRecente extends Model
         'endurance_mentale',
         'adaptabilite_conditions',
         'niveau_forme_textuel',
-        'facteur_confiance'
+        'facteur_confiance',
     ];
 
     // ===================================================================
@@ -221,7 +221,7 @@ class FormeRecente extends Model
     // Relations calculées vers matchs récents
     public function matchsRecents($limite = 5)
     {
-        return MatchTennis::where(function($query) {
+        return MatchTennis::where(function ($query) {
             $query->where('joueur1_id', $this->joueur_id)
                 ->orWhere('joueur2_id', $this->joueur_id);
         })
@@ -237,29 +237,44 @@ class FormeRecente extends Model
     public function getRatio5MatchsAttribute()
     {
         $total = $this->victoires_5 + $this->defaites_5;
+
         return $total > 0 ? round($this->victoires_5 / $total, 3) : 0;
     }
 
     public function getRatio10MatchsAttribute()
     {
         $total = $this->victoires_10 + $this->defaites_10;
+
         return $total > 0 ? round($this->victoires_10 / $total, 3) : 0;
     }
 
     public function getRatio20MatchsAttribute()
     {
         $total = $this->victoires_20 + $this->defaites_20;
+
         return $total > 0 ? round($this->victoires_20 / $total, 3) : 0;
     }
 
     public function getMomentumTextuelAttribute()
     {
-        if ($this->serie_victoires_actuelle >= 5) return 'momentum_excellent';
-        if ($this->serie_victoires_actuelle >= 3) return 'momentum_bon';
-        if ($this->serie_victoires_actuelle >= 1) return 'momentum_positif';
-        if ($this->serie_defaites_actuelle >= 5) return 'momentum_tres_negatif';
-        if ($this->serie_defaites_actuelle >= 3) return 'momentum_negatif';
-        if ($this->serie_defaites_actuelle >= 1) return 'momentum_legrement_negatif';
+        if ($this->serie_victoires_actuelle >= 5) {
+            return 'momentum_excellent';
+        }
+        if ($this->serie_victoires_actuelle >= 3) {
+            return 'momentum_bon';
+        }
+        if ($this->serie_victoires_actuelle >= 1) {
+            return 'momentum_positif';
+        }
+        if ($this->serie_defaites_actuelle >= 5) {
+            return 'momentum_tres_negatif';
+        }
+        if ($this->serie_defaites_actuelle >= 3) {
+            return 'momentum_negatif';
+        }
+        if ($this->serie_defaites_actuelle >= 1) {
+            return 'momentum_legrement_negatif';
+        }
 
         return 'momentum_neutre';
     }
@@ -267,7 +282,9 @@ class FormeRecente extends Model
     public function getQualiteVictoiresAttribute()
     {
         $totalVictoires = $this->victoires_20;
-        if ($totalVictoires === 0) return 0;
+        if ($totalVictoires === 0) {
+            return 0;
+        }
 
         $score = 0;
         $score += ($this->victoires_top_10 * 10);      // Top 10 = 10 points
@@ -346,12 +363,25 @@ class FormeRecente extends Model
     {
         $index = $this->forme_index;
 
-        if ($index >= 90) return 'forme_exceptionnelle';
-        if ($index >= 80) return 'excellent_forme';
-        if ($index >= 70) return 'bonne_forme';
-        if ($index >= 60) return 'forme_correcte';
-        if ($index >= 50) return 'forme_moyenne';
-        if ($index >= 40) return 'forme_difficile';
+        if ($index >= 90) {
+            return 'forme_exceptionnelle';
+        }
+        if ($index >= 80) {
+            return 'excellent_forme';
+        }
+        if ($index >= 70) {
+            return 'bonne_forme';
+        }
+        if ($index >= 60) {
+            return 'forme_correcte';
+        }
+        if ($index >= 50) {
+            return 'forme_moyenne';
+        }
+        if ($index >= 40) {
+            return 'forme_difficile';
+        }
+
         return 'forme_preoccupante';
     }
 
@@ -386,7 +416,9 @@ class FormeRecente extends Model
 
     public function getDureeFormateeAttribute()
     {
-        if (!$this->duree_moyenne_match) return null;
+        if (! $this->duree_moyenne_match) {
+            return null;
+        }
 
         $heures = floor($this->duree_moyenne_match / 60);
         $minutes = $this->duree_moyenne_match % 60;
@@ -400,7 +432,7 @@ class FormeRecente extends Model
 
     public function scopeParSurface($query, $surfaceCode)
     {
-        return $query->whereHas('surface', function($q) use ($surfaceCode) {
+        return $query->whereHas('surface', function ($q) use ($surfaceCode) {
             $q->where('code', $surfaceCode);
         });
     }
@@ -481,6 +513,7 @@ class FormeRecente extends Model
         $score += ($this->endurance_mentale / 100) * 5;
 
         $this->forme_index = max(0, min(100, round($score, 1)));
+
         return $this->forme_index;
     }
 
@@ -530,8 +563,8 @@ class FormeRecente extends Model
             'facteurs_evolution' => [
                 'momentum' => $this->momentum_textuel,
                 'evolution_elo' => $this->elo_evolution,
-                'stabilite' => $this->changements_momentum <= 3
-            ]
+                'stabilite' => $this->changements_momentum <= 3,
+            ],
         ];
     }
 
@@ -545,29 +578,29 @@ class FormeRecente extends Model
                 'joueur' => $this->forme_index,
                 'autre' => $autre->forme_index,
                 'avantage' => $this->forme_index > $autre->forme_index ? 'joueur' : 'autre',
-                'difference' => round($this->forme_index - $autre->forme_index, 1)
+                'difference' => round($this->forme_index - $autre->forme_index, 1),
             ],
             'momentum' => [
                 'joueur' => $this->momentum_textuel,
                 'autre' => $autre->momentum_textuel,
                 'serie_joueur' => $this->serie_victoires_actuelle - $this->serie_defaites_actuelle,
-                'serie_autre' => $autre->serie_victoires_actuelle - $autre->serie_defaites_actuelle
+                'serie_autre' => $autre->serie_victoires_actuelle - $autre->serie_defaites_actuelle,
             ],
             'qualite_victoires' => [
                 'joueur' => $this->qualite_victoires,
                 'autre' => $autre->qualite_victoires,
-                'avantage' => $this->qualite_victoires > $autre->qualite_victoires ? 'joueur' : 'autre'
+                'avantage' => $this->qualite_victoires > $autre->qualite_victoires ? 'joueur' : 'autre',
             ],
             'endurance' => [
                 'joueur' => $this->endurance_mentale,
                 'autre' => $autre->endurance_mentale,
-                'avantage' => $this->endurance_mentale > $autre->endurance_mentale ? 'joueur' : 'autre'
+                'avantage' => $this->endurance_mentale > $autre->endurance_mentale ? 'joueur' : 'autre',
             ],
             'adaptabilite' => [
                 'joueur' => $this->adaptabilite_conditions,
                 'autre' => $autre->adaptabilite_conditions,
-                'avantage' => $this->adaptabilite_conditions > $autre->adaptabilite_conditions ? 'joueur' : 'autre'
-            ]
+                'avantage' => $this->adaptabilite_conditions > $autre->adaptabilite_conditions ? 'joueur' : 'autre',
+            ],
         ];
     }
 
@@ -583,7 +616,7 @@ class FormeRecente extends Model
             $patterns[] = [
                 'type' => 'hot_streak',
                 'description' => "Série de {$this->serie_victoires_actuelle} victoires",
-                'impact_prediction' => 'positif_fort'
+                'impact_prediction' => 'positif_fort',
             ];
         }
 
@@ -591,8 +624,8 @@ class FormeRecente extends Model
         if ($this->victoires_top_10 >= 2) {
             $patterns[] = [
                 'type' => 'giant_killer',
-                'description' => "Excellente performance contre le top 10",
-                'impact_prediction' => 'positif_fort'
+                'description' => 'Excellente performance contre le top 10',
+                'impact_prediction' => 'positif_fort',
             ];
         }
 
@@ -600,8 +633,8 @@ class FormeRecente extends Model
         if ($this->victoires_marathon >= 2) {
             $patterns[] = [
                 'type' => 'endurance_master',
-                'description' => "Solide dans les matchs longs",
-                'impact_prediction' => 'positif_modere'
+                'description' => 'Solide dans les matchs longs',
+                'impact_prediction' => 'positif_modere',
             ];
         }
 
@@ -609,8 +642,8 @@ class FormeRecente extends Model
         if ($this->defaites_vs_inferieurs >= 2) {
             $patterns[] = [
                 'type' => 'consistency_issues',
-                'description' => "Défaites problématiques contre inférieurs",
-                'impact_prediction' => 'negatif_modere'
+                'description' => 'Défaites problématiques contre inférieurs',
+                'impact_prediction' => 'negatif_modere',
             ];
         }
 
@@ -618,8 +651,8 @@ class FormeRecente extends Model
         if ($this->abandons_recents >= 2) {
             $patterns[] = [
                 'type' => 'injury_concern',
-                'description' => "Abandons récents inquiétants",
-                'impact_prediction' => 'negatif_fort'
+                'description' => 'Abandons récents inquiétants',
+                'impact_prediction' => 'negatif_fort',
             ];
         }
 
@@ -638,7 +671,7 @@ class FormeRecente extends Model
             $recommandations[] = [
                 'type' => 'forme_excellente',
                 'message' => 'Joueur en excellente forme, favori probable',
-                'coefficient_confiance' => 1.2
+                'coefficient_confiance' => 1.2,
             ];
         }
 
@@ -647,7 +680,7 @@ class FormeRecente extends Model
             $recommandations[] = [
                 'type' => 'momentum_positif',
                 'message' => 'Momentum très positif, augmenter probabilités',
-                'coefficient_confiance' => 1.15
+                'coefficient_confiance' => 1.15,
             ];
         }
 
@@ -656,7 +689,7 @@ class FormeRecente extends Model
             $recommandations[] = [
                 'type' => 'forme_preoccupante',
                 'message' => 'Forme préoccupante, diminuer probabilités',
-                'coefficient_confiance' => 0.8
+                'coefficient_confiance' => 0.8,
             ];
         }
 
@@ -665,7 +698,7 @@ class FormeRecente extends Model
             $recommandations[] = [
                 'type' => 'qualite_elevee',
                 'message' => 'Excellente qualité des victoires récentes',
-                'coefficient_confiance' => 1.1
+                'coefficient_confiance' => 1.1,
             ];
         }
 
@@ -729,7 +762,7 @@ class FormeRecente extends Model
         if ($total5 > 5) {
             // Logic pour retirer le plus ancien (simplifiée ici)
             $ratio = 5 / $total5;
-            $this->victoires_5 = (int)($this->victoires_5 * $ratio);
+            $this->victoires_5 = (int) ($this->victoires_5 * $ratio);
             $this->defaites_5 = 5 - $this->victoires_5;
         }
 
@@ -745,16 +778,20 @@ class FormeRecente extends Model
         $classementAdversaire = $adversaire->classement_atp_wta;
 
         if ($estVictoire && $classementAdversaire) {
-            if ($classementAdversaire <= 10) $this->victoires_top_10++;
-            elseif ($classementAdversaire <= 50) $this->victoires_top_50++;
-            elseif ($classementAdversaire <= 100) $this->victoires_top_100++;
+            if ($classementAdversaire <= 10) {
+                $this->victoires_top_10++;
+            } elseif ($classementAdversaire <= 50) {
+                $this->victoires_top_50++;
+            } elseif ($classementAdversaire <= 100) {
+                $this->victoires_top_100++;
+            }
 
             // Upset causé ?
             $monClassement = $this->joueur->classement_atp_wta;
             if ($monClassement && $classementAdversaire < $monClassement) {
                 $this->upsets_causes++;
             }
-        } elseif (!$estVictoire && $classementAdversaire) {
+        } elseif (! $estVictoire && $classementAdversaire) {
             // Défaite contre inférieur ?
             $monClassement = $this->joueur->classement_atp_wta;
             if ($monClassement && $classementAdversaire > $monClassement) {
@@ -769,11 +806,13 @@ class FormeRecente extends Model
         // Analyser contexte du match
         if ($match->duree_match && $match->duree_match > 180) { // Plus de 3h
             $this->matchs_marathon++;
-            if ($estVictoire) $this->victoires_marathon++;
+            if ($estVictoire) {
+                $this->victoires_marathon++;
+            }
         }
 
         // Abandon ?
-        if ($match->raison_fin === 'abandon' && !$estVictoire) {
+        if ($match->raison_fin === 'abandon' && ! $estVictoire) {
             $this->abandons_recents++;
         }
     }
@@ -815,7 +854,7 @@ class FormeRecente extends Model
             'forme_par_surface' => self::selectRaw('surface_id, AVG(forme_index) as moyenne')
                 ->groupBy('surface_id')
                 ->with('surface')
-                ->get()
+                ->get(),
         ];
     }
 
@@ -832,7 +871,7 @@ class FormeRecente extends Model
             'victoires_10' => 'required|integer|min:0|max:10',
             'defaites_10' => 'required|integer|min:0|max:10',
             'forme_index' => 'required|numeric|between:0,100',
-            'fiabilite_donnees' => 'required|numeric|between:0,100'
+            'fiabilite_donnees' => 'required|numeric|between:0,100',
         ];
     }
 
@@ -847,7 +886,7 @@ class FormeRecente extends Model
         // Auto-calculs lors de la sauvegarde
         static::saving(function ($forme) {
             // Calculer forme_index si pas défini
-            if (!$forme->forme_index) {
+            if (! $forme->forme_index) {
                 $forme->calculerIndiceForme();
             }
 
@@ -857,7 +896,7 @@ class FormeRecente extends Model
             // Cohérence des données
             $total5 = $forme->victoires_5 + $forme->defaites_5;
             if ($total5 > 5) {
-                throw new \InvalidArgumentException("Total des 5 derniers matchs ne peut dépasser 5");
+                throw new \InvalidArgumentException('Total des 5 derniers matchs ne peut dépasser 5');
             }
 
             // Mise à jour automatique des totaux

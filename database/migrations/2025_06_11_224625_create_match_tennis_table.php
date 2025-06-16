@@ -36,7 +36,7 @@ return new class extends Migration
             $table->enum('importance_match', [
                 'finale', 'demi_finale', 'quart_finale', 'huitieme_finale',
                 'troisieme_tour', 'deuxieme_tour', 'premier_tour',
-                'qualifications', 'exhibition'
+                'qualifications', 'exhibition',
             ])->nullable();
             $table->unsignedTinyInteger('numero_tour')->nullable()->comment('Numéro du tour');
             $table->boolean('match_titre')->default(false)->comment('Match pour un titre');
@@ -86,7 +86,7 @@ return new class extends Migration
             $table->enum('direction_vent', ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'])->nullable();
             $table->enum('conditions_meteo', [
                 'ensoleille', 'nuageux', 'couvert', 'pluie_legere',
-                'pluie_forte', 'orage', 'brouillard', 'vent_fort'
+                'pluie_forte', 'orage', 'brouillard', 'vent_fort',
             ])->nullable();
             $table->boolean('interruption_pluie')->default(false);
             $table->unsignedSmallInteger('duree_interruption_min')->nullable();
@@ -126,11 +126,11 @@ return new class extends Migration
 
             $table->enum('statut_match', [
                 'programme', 'en_cours', 'termine', 'suspendu',
-                'reporte', 'annule', 'forfait', 'walkover'
+                'reporte', 'annule', 'forfait', 'walkover',
             ])->default('programme');
             $table->enum('type_victoire', [
                 'normale', 'forfait', 'walkover', 'disqualification',
-                'abandon_blessure', 'abandon_autre'
+                'abandon_blessure', 'abandon_autre',
             ])->nullable();
             $table->string('raison_arret', 200)->nullable();
             $table->boolean('match_officiel')->default(true);
@@ -364,15 +364,15 @@ return new class extends Migration
 
             // Index composites complexes pour requêtes IA fréquentes
             $table->index([
-                'surface', 'importance_match', 'joueur1_id', 'joueur2_id', 'date_match'
+                'surface', 'importance_match', 'joueur1_id', 'joueur2_id', 'date_match',
             ], 'idx_ia_prediction_context');
 
             $table->index([
-                'statut_match', 'donnees_validees', 'surface', 'date_match'
+                'statut_match', 'donnees_validees', 'surface', 'date_match',
             ], 'idx_ia_training_data');
 
             $table->index([
-                'gagnant_id', 'surface', 'importance_match', 'date_match'
+                'gagnant_id', 'surface', 'importance_match', 'date_match',
             ], 'idx_ia_player_performance');
         });
     }

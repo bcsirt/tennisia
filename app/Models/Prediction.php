@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Prediction extends Model
@@ -79,7 +79,7 @@ class Prediction extends Model
         'contribue_entrainement',   // Si utilisé pour réentraîner
         'flagged_for_review',       // Flaggé pour review
         'outlier_detected',         // Détection d'anomalie
-        'model_drift_indicator'     // Indicateur de dérive du modèle
+        'model_drift_indicator',     // Indicateur de dérive du modèle
     ];
 
     protected $casts = [
@@ -133,7 +133,7 @@ class Prediction extends Model
         'model_drift_indicator' => 'boolean',
 
         // Dates
-        'created_at_match_time' => 'datetime'
+        'created_at_match_time' => 'datetime',
     ];
 
     protected $appends = [
@@ -143,7 +143,7 @@ class Prediction extends Model
         'facteur_dominant',
         'precision_relative',
         'surprise_niveau',
-        'apprentissage_value'
+        'apprentissage_value',
     ];
 
     // ===================================================================
@@ -173,22 +173,26 @@ class Prediction extends Model
     // Relations vers données utilisées
     public function confrontation()
     {
-        if (!$this->match) return null;
+        if (! $this->match) {
+            return null;
+        }
 
-        return Confrontation::where(function($query) {
+        return Confrontation::where(function ($query) {
             $query->where([
                 'joueur1_id' => $this->match->joueur1_id,
-                'joueur2_id' => $this->match->joueur2_id
+                'joueur2_id' => $this->match->joueur2_id,
             ])->orWhere([
                 'joueur1_id' => $this->match->joueur2_id,
-                'joueur2_id' => $this->match->joueur1_id
+                'joueur2_id' => $this->match->joueur1_id,
             ]);
         })->first();
     }
 
     public function statistiquesJ1()
     {
-        if (!$this->match) return null;
+        if (! $this->match) {
+            return null;
+        }
 
         return StatistiqueJoueur::where('joueur_id', $this->match->joueur1_id)
             ->where('surface_id', $this->match->surface_id)
@@ -198,7 +202,9 @@ class Prediction extends Model
 
     public function statistiquesJ2()
     {
-        if (!$this->match) return null;
+        if (! $this->match) {
+            return null;
+        }
 
         return StatistiqueJoueur::where('joueur_id', $this->match->joueur2_id)
             ->where('surface_id', $this->match->surface_id)
@@ -212,15 +218,28 @@ class Prediction extends Model
 
     public function getQualitePredictionAttribute()
     {
-        if (!$this->accuracy_globale) return 'non_evaluee';
+        if (! $this->accuracy_globale) {
+            return 'non_evaluee';
+        }
 
         $accuracy = $this->accuracy_globale;
 
-        if ($accuracy >= 90) return 'excellente';
-        if ($accuracy >= 80) return 'tres_bonne';
-        if ($accuracy >= 70) return 'bonne';
-        if ($accuracy >= 60) return 'moyenne';
-        if ($accuracy >= 50) return 'faible';
+        if ($accuracy >= 90) {
+            return 'excellente';
+        }
+        if ($accuracy >= 80) {
+            return 'tres_bonne';
+        }
+        if ($accuracy >= 70) {
+            return 'bonne';
+        }
+        if ($accuracy >= 60) {
+            return 'moyenne';
+        }
+        if ($accuracy >= 50) {
+            return 'faible';
+        }
+
         return 'tres_faible';
     }
 
@@ -228,17 +247,30 @@ class Prediction extends Model
     {
         $confiance = $this->confiance_globale;
 
-        if ($confiance >= 95) return 'confiance_absolue';
-        if ($confiance >= 85) return 'tres_confiant';
-        if ($confiance >= 75) return 'confiant';
-        if ($confiance >= 65) return 'moderement_confiant';
-        if ($confiance >= 50) return 'peu_confiant';
+        if ($confiance >= 95) {
+            return 'confiance_absolue';
+        }
+        if ($confiance >= 85) {
+            return 'tres_confiant';
+        }
+        if ($confiance >= 75) {
+            return 'confiant';
+        }
+        if ($confiance >= 65) {
+            return 'moderement_confiant';
+        }
+        if ($confiance >= 50) {
+            return 'peu_confiant';
+        }
+
         return 'tres_incertain';
     }
 
     public function getJoueurFavoriAttribute()
     {
-        if (!$this->match) return null;
+        if (! $this->match) {
+            return null;
+        }
 
         return $this->probabilite_joueur1 > $this->probabilite_joueur2 ?
             $this->match->joueur1_id : $this->match->joueur2_id;
@@ -254,7 +286,7 @@ class Prediction extends Model
             'fatigue' => $this->facteur_fatigue,
             'meteo' => $this->facteur_meteo,
             'psychologique' => $this->facteur_psychologique,
-            'physique' => $this->facteur_physique
+            'physique' => $this->facteur_physique,
         ];
 
         return array_search(max($facteurs), $facteurs);
@@ -262,7 +294,9 @@ class Prediction extends Model
 
     public function getPrecisionRelativeAttribute()
     {
-        if (!$this->accuracy_globale || !$this->confiance_globale) return null;
+        if (! $this->accuracy_globale || ! $this->confiance_globale) {
+            return null;
+        }
 
         // Ratio entre accuracy réelle et confiance prédite
         return round($this->accuracy_globale / $this->confiance_globale, 3);
@@ -270,14 +304,25 @@ class Prediction extends Model
 
     public function getSurpriseNiveauAttribute()
     {
-        if (!$this->facteur_surprise) return 'normal';
+        if (! $this->facteur_surprise) {
+            return 'normal';
+        }
 
         $surprise = $this->facteur_surprise;
 
-        if ($surprise >= 8) return 'upset_majeur';
-        if ($surprise >= 6) return 'upset_notable';
-        if ($surprise >= 4) return 'surprise_moderee';
-        if ($surprise >= 2) return 'legere_surprise';
+        if ($surprise >= 8) {
+            return 'upset_majeur';
+        }
+        if ($surprise >= 6) {
+            return 'upset_notable';
+        }
+        if ($surprise >= 4) {
+            return 'surprise_moderee';
+        }
+        if ($surprise >= 2) {
+            return 'legere_surprise';
+        }
+
         return 'normal';
     }
 
@@ -291,10 +336,14 @@ class Prediction extends Model
         }
 
         // Outliers sont précieux
-        if ($this->outlier_detected) $value += 20;
+        if ($this->outlier_detected) {
+            $value += 20;
+        }
 
         // Upsets majeurs = apprentissage important
-        if ($this->facteur_surprise >= 6) $value += 25;
+        if ($this->facteur_surprise >= 6) {
+            $value += 25;
+        }
 
         // Prédictions difficiles bien réussies
         if ($this->niveau_difficulte >= 8 && $this->accuracy_globale >= 80) {
@@ -306,7 +355,9 @@ class Prediction extends Model
 
     public function getDureeFormateeAttribute()
     {
-        if (!$this->duree_predite) return null;
+        if (! $this->duree_predite) {
+            return null;
+        }
 
         $heures = floor($this->duree_predite / 60);
         $minutes = $this->duree_predite % 60;
@@ -387,7 +438,7 @@ class Prediction extends Model
      */
     public static function genererPredictionComplete(MatchTennis $match, $algorithmeIA = null)
     {
-        $prediction = new self();
+        $prediction = new self;
         $prediction->match_tennis_id = $match->id;
         $prediction->algorithme_ia_id = $algorithmeIA?->id ?? AlgorithmeIA::getDefault()->id;
         $prediction->type_prediction_id = TypePrediction::where('code', 'gagnant')->first()->id;
@@ -429,10 +480,11 @@ class Prediction extends Model
             'probabilite_victoire' => max($prediction->probabilite_joueur1, $prediction->probabilite_joueur2),
             'score_predit' => $prediction->score_predit_exact,
             'confiance' => $prediction->confiance_globale,
-            'facteur_cle' => $prediction->facteur_dominant
+            'facteur_cle' => $prediction->facteur_dominant,
         ];
 
         $prediction->save();
+
         return $prediction;
     }
 
@@ -448,11 +500,11 @@ class Prediction extends Model
                 ->get();
 
             if ($sanctionsRecentes->isNotEmpty()) {
-                $impactMoyen = $sanctionsRecentes->avg(function($sanction) {
+                $impactMoyen = $sanctionsRecentes->avg(function ($sanction) {
                     return $sanction->impactSurMatch()['probabilite_victoire_reduite'];
                 });
 
-                $facteurs['joueur' . ($index + 1)] -= $impactMoyen;
+                $facteurs['joueur'.($index + 1)] -= $impactMoyen;
             }
         }
 
@@ -571,7 +623,7 @@ class Prediction extends Model
 
         return [
             'joueur1' => round($probJ1, 2),
-            'joueur2' => round($probJ2, 2)
+            'joueur2' => round($probJ2, 2),
         ];
     }
 
@@ -619,7 +671,9 @@ class Prediction extends Model
 
         // Prédiction nombre de sets
         $sets = 2; // Par défaut
-        if ($probMax < 60) $sets = 3; // Match serré = plus long
+        if ($probMax < 60) {
+            $sets = 3;
+        } // Match serré = plus long
         if ($match->tournoi?->categorie?->code === 'grand_chelem') {
             $sets = $probMax > 80 ? 3 : 4; // Hommes Grand Chelem
         }
@@ -631,7 +685,7 @@ class Prediction extends Model
         // Prédiction durée
         $dureeBase = $sets * 45; // 45min par set en moyenne
         $facteurVariation = $probMax > 75 ? 0.8 : 1.2; // Match déséquilibré = plus rapide
-        $duree = (int)($dureeBase * $facteurVariation);
+        $duree = (int) ($dureeBase * $facteurVariation);
 
         // Prédiction aces (basé sur statistiques joueurs)
         $acesPredit = $this->predireAces($match);
@@ -644,7 +698,7 @@ class Prediction extends Model
             'sets' => $sets,
             'duree' => $duree,
             'aces' => $acesPredit,
-            'tie_breaks' => $tieBreaks
+            'tie_breaks' => $tieBreaks,
         ];
     }
 
@@ -656,7 +710,7 @@ class Prediction extends Model
         $confiance = 50; // Base
 
         // Plus de données = plus de confiance
-        $nbFeatures = count(array_filter($features, fn($v) => $v !== null));
+        $nbFeatures = count(array_filter($features, fn ($v) => $v !== null));
         $confiance += min($nbFeatures * 2, 30);
 
         // H2H riche = plus de confiance
@@ -671,7 +725,9 @@ class Prediction extends Model
 
         // Facteurs cohérents = plus de confiance
         $facteursMoyens = array_sum($facteurs) / count($facteurs);
-        if ($facteursMoyens > 70) $confiance += 10;
+        if ($facteursMoyens > 70) {
+            $confiance += 10;
+        }
 
         return min(95, max(30, round($confiance, 1)));
     }
@@ -689,8 +745,11 @@ class Prediction extends Model
 
         if ($j1->classement_atp_wta && $j2->classement_atp_wta) {
             $diffClassement = abs($j1->classement_atp_wta - $j2->classement_atp_wta);
-            if ($diffClassement < 10) $difficulte += 3;
-            elseif ($diffClassement < 50) $difficulte += 1;
+            if ($diffClassement < 10) {
+                $difficulte += 3;
+            } elseif ($diffClassement < 50) {
+                $difficulte += 1;
+            }
         }
 
         // H2H équilibré = plus difficile
@@ -700,7 +759,7 @@ class Prediction extends Model
         }
 
         // Premier match entre joueurs = plus difficile
-        if (!$h2h || $h2h->total_matchs === 0) {
+        if (! $h2h || $h2h->total_matchs === 0) {
             $difficulte += 2;
         }
 
@@ -712,14 +771,16 @@ class Prediction extends Model
      */
     public function evaluerApresMatch(MatchTennis $match)
     {
-        if (!$match->est_termine || !$match->gagnant_id) return;
+        if (! $match->est_termine || ! $match->gagnant_id) {
+            return;
+        }
 
         // Stocker résultat réel
         $this->resultat_reel = [
             'gagnant_reel_id' => $match->gagnant_id,
             'score_reel' => $match->score_final,
             'duree_reelle' => $match->duree_match,
-            'sets_reels' => count($match->score_detaille ?? [])
+            'sets_reels' => count($match->score_detaille ?? []),
         ];
 
         // Calculer accuracy
@@ -793,9 +854,15 @@ class Prediction extends Model
         if ($this->duree_predite && $match->duree_match) {
             $totalPoints += 15;
             $erreurDuree = abs($this->duree_predite - $match->duree_match) / $match->duree_match;
-            if ($erreurDuree <= 0.1) $score += 15;      // ±10%
-            elseif ($erreurDuree <= 0.2) $score += 10;  // ±20%
-            elseif ($erreurDuree <= 0.3) $score += 5;   // ±30%
+            if ($erreurDuree <= 0.1) {
+                $score += 15;
+            }      // ±10%
+            elseif ($erreurDuree <= 0.2) {
+                $score += 10;
+            }  // ±20%
+            elseif ($erreurDuree <= 0.3) {
+                $score += 5;
+            }   // ±30%
         }
 
         return $totalPoints > 0 ? round(($score / $totalPoints) * 100, 2) : 0;
@@ -847,6 +914,7 @@ class Prediction extends Model
                 ($probabilite > 55 ? ['6-4, 6-3', '7-5, 6-4', '6-3, 7-5'] :
                     ['7-6, 6-4', '6-4, 7-6', '7-5, 7-6']);
         }
+
         // Logic for 3+ sets...
         return ['6-4, 3-6, 6-3'];
     }
@@ -858,19 +926,19 @@ class Prediction extends Model
         $matchsJ1 = $this->statistiquesJ1()?->matchsJoues() ?? 1;
         $matchsJ2 = $this->statistiquesJ2()?->matchsJoues() ?? 1;
 
-        return (int)(($acesJ1 / $matchsJ1) + ($acesJ2 / $matchsJ2));
+        return (int) (($acesJ1 / $matchsJ1) + ($acesJ2 / $matchsJ2));
     }
 
     private function inventorierDonnees(MatchTennis $match)
     {
         return [
             'joueurs' => true,
-            'classements' => (bool)($match->joueur1->classement_atp_wta && $match->joueur2->classement_atp_wta),
-            'h2h' => (bool)$this->confrontation(),
-            'statistiques_surface' => (bool)($this->statistiquesJ1() && $this->statistiquesJ2()),
-            'meteo' => (bool)$match->temperature,
-            'tournoi' => (bool)$match->tournoi,
-            'surface' => (bool)$match->surface
+            'classements' => (bool) ($match->joueur1->classement_atp_wta && $match->joueur2->classement_atp_wta),
+            'h2h' => (bool) $this->confrontation(),
+            'statistiques_surface' => (bool) ($this->statistiquesJ1() && $this->statistiquesJ2()),
+            'meteo' => (bool) $match->temperature,
+            'tournoi' => (bool) $match->tournoi,
+            'surface' => (bool) $match->surface,
         ];
     }
 
@@ -880,7 +948,7 @@ class Prediction extends Model
             'gagnant' => $this->joueur_favori == $match->gagnant_id ? 100 : 0,
             'sets' => $this->sets_predit == count($match->score_detaille ?? []) ? 100 : 0,
             'duree' => $this->duree_predite && $match->duree_match ?
-                100 - (abs($this->duree_predite - $match->duree_match) / $match->duree_match * 100) : 0
+                100 - (abs($this->duree_predite - $match->duree_match) / $match->duree_match * 100) : 0,
         ];
     }
 
@@ -897,7 +965,7 @@ class Prediction extends Model
             'probabilite_joueur1' => 'required|numeric|between:0,100',
             'probabilite_joueur2' => 'required|numeric|between:0,100',
             'confiance_globale' => 'required|numeric|between:0,100',
-            'niveau_difficulte' => 'required|integer|between:1,10'
+            'niveau_difficulte' => 'required|integer|between:1,10',
         ];
     }
 
@@ -931,7 +999,7 @@ class Prediction extends Model
             'derive_detectee' => $derive > 5, // Baisse de 5% = dérive
             'accuracy_historique' => round($accuracyHistorique, 2),
             'accuracy_recente' => round($accuracyRecente, 2),
-            'derive_points' => round($derive, 2)
+            'derive_points' => round($derive, 2),
         ];
     }
 }

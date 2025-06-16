@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class PariMatch extends Model
 {
@@ -25,7 +25,7 @@ class PariMatch extends Model
         'bookmaker_source',
         'timestamp_maj',
         'pourcentage_paris_j1',
-        'pourcentage_paris_j2'
+        'pourcentage_paris_j2',
     ];
 
     protected $casts = [
@@ -40,7 +40,7 @@ class PariMatch extends Model
         'timestamp_maj' => 'datetime',
         'pourcentage_paris_j1' => 'decimal:1',
         'pourcentage_paris_j2' => 'decimal:1',
-        'details_anomalie' => 'array'
+        'details_anomalie' => 'array',
     ];
 
     protected $appends = [
@@ -48,7 +48,7 @@ class PariMatch extends Model
         'probabilite_implicite_j2',
         'marge_bookmaker',
         'variation_cote_j1',
-        'variation_cote_j2'
+        'variation_cote_j2',
     ];
 
     // Relations
@@ -70,22 +70,29 @@ class PariMatch extends Model
 
     public function getMargeBookmakerAttribute()
     {
-        if (!$this->cote_j1_live || !$this->cote_j2_live) return null;
+        if (! $this->cote_j1_live || ! $this->cote_j2_live) {
+            return null;
+        }
 
         $prob_totale = (1 / $this->cote_j1_live) + (1 / $this->cote_j2_live);
+
         return round(($prob_totale - 1) * 100, 2);
     }
 
     public function getVariationCoteJ1Attribute()
     {
-        if (!$this->cote_j1_ouverture || !$this->cote_j1_live) return null;
+        if (! $this->cote_j1_ouverture || ! $this->cote_j1_live) {
+            return null;
+        }
 
         return round((($this->cote_j1_live - $this->cote_j1_ouverture) / $this->cote_j1_ouverture) * 100, 2);
     }
 
     public function getVariationCoteJ2Attribute()
     {
-        if (!$this->cote_j2_ouverture || !$this->cote_j2_live) return null;
+        if (! $this->cote_j2_ouverture || ! $this->cote_j2_live) {
+            return null;
+        }
 
         return round((($this->cote_j2_live - $this->cote_j2_ouverture) / $this->cote_j2_ouverture) * 100, 2);
     }
@@ -98,9 +105,9 @@ class PariMatch extends Model
 
     public function scopeMouvementSignificatif($query, $seuil = 10)
     {
-        return $query->where(function($q) use ($seuil) {
-            $q->whereRaw("ABS(((cote_j1_live - cote_j1_ouverture) / cote_j1_ouverture) * 100) >= ?", [$seuil])
-                ->orWhereRaw("ABS(((cote_j2_live - cote_j2_ouverture) / cote_j2_ouverture) * 100) >= ?", [$seuil]);
+        return $query->where(function ($q) use ($seuil) {
+            $q->whereRaw('ABS(((cote_j1_live - cote_j1_ouverture) / cote_j1_ouverture) * 100) >= ?', [$seuil])
+                ->orWhereRaw('ABS(((cote_j2_live - cote_j2_ouverture) / cote_j2_ouverture) * 100) >= ?', [$seuil]);
         });
     }
 
@@ -134,11 +141,11 @@ class PariMatch extends Model
             $anomalies[] = 'marge_faible';
         }
 
-        if (!empty($anomalies)) {
+        if (! empty($anomalies)) {
             $this->update([
                 'anomalie_detectee' => true,
                 'type_anomalie' => implode(',', $anomalies),
-                'details_anomalie' => $anomalies
+                'details_anomalie' => $anomalies,
             ]);
         }
 

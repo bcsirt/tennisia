@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class Equipe extends Model
 {
@@ -45,7 +45,7 @@ class Equipe extends Model
         'historique_confrontations',
         'statistiques_surfaces',
         'notes_coach',
-        'analyse_video_disponible'
+        'analyse_video_disponible',
     ];
 
     protected $casts = [
@@ -77,7 +77,7 @@ class Equipe extends Model
         'historique_confrontations' => 'array',
         'statistiques_surfaces' => 'array',
         'notes_coach' => 'array',
-        'analyse_video_disponible' => 'boolean'
+        'analyse_video_disponible' => 'boolean',
     ];
 
     protected $appends = [
@@ -86,7 +86,7 @@ class Equipe extends Model
         'indice_chimie',
         'niveau_experience',
         'score_forme_equipe',
-        'potentiel_equipe'
+        'potentiel_equipe',
     ];
 
     // Relations
@@ -114,7 +114,10 @@ class Equipe extends Model
     // Accessors pour les métriques calculées
     public function getPourcentageVictoiresAttribute()
     {
-        if ($this->nb_matchs_ensemble == 0) return 0;
+        if ($this->nb_matchs_ensemble == 0) {
+            return 0;
+        }
+
         return round(($this->nb_victoires_ensemble / $this->nb_matchs_ensemble) * 100, 1);
     }
 
@@ -135,7 +138,7 @@ class Equipe extends Model
             'compatibilite' => $this->compatibilite_score * 0.3,
             'complementarite' => $this->complementarite_styles * 0.25,
             'communication' => $this->niveau_communication * 0.25,
-            'coordination' => $this->niveau_coordination * 0.2
+            'coordination' => $this->niveau_coordination * 0.2,
         ];
 
         return round(array_sum($facteurs), 1);
@@ -159,7 +162,7 @@ class Equipe extends Model
         // Ajustements
         $ajustements = 0;
 
-        if (!empty($this->blessures_actives)) {
+        if (! empty($this->blessures_actives)) {
             $ajustements -= count($this->blessures_actives) * 1.5;
         }
 
@@ -257,10 +260,10 @@ class Equipe extends Model
             'gaucher-droitier' => 7,
             'droitier-gaucher' => 7,
             'attaquant-attaquant' => 6,
-            'defenseur-defenseur' => 5
+            'defenseur-defenseur' => 5,
         ];
 
-        $combinaison = $j1_style . '-' . $j2_style;
+        $combinaison = $j1_style.'-'.$j2_style;
 
         return $complementarites[$combinaison] ?? 6;
     }
@@ -316,7 +319,7 @@ class Equipe extends Model
         }
 
         // Points forts déclarés
-        if (!empty($this->points_forts_equipe)) {
+        if (! empty($this->points_forts_equipe)) {
             $points_forts = array_merge($points_forts, $this->points_forts_equipe);
         }
 
@@ -336,7 +339,7 @@ class Equipe extends Model
             $points_faibles[] = 'manque_experience_commune';
         }
 
-        if (!empty($this->blessures_actives)) {
+        if (! empty($this->blessures_actives)) {
             $points_faibles[] = 'blessures_handicapantes';
         }
 
@@ -349,7 +352,7 @@ class Equipe extends Model
         }
 
         // Points faibles déclarés
-        if (!empty($this->points_faibles_equipe)) {
+        if (! empty($this->points_faibles_equipe)) {
             $points_faibles = array_merge($points_faibles, $this->points_faibles_equipe);
         }
 
@@ -395,7 +398,7 @@ class Equipe extends Model
 
         return [
             'avantage_total' => round(array_sum($avantages), 2),
-            'details' => $avantages
+            'details' => $avantages,
         ];
     }
 
@@ -436,40 +439,40 @@ class Equipe extends Model
                 'nom' => $this->nom,
                 'formation' => $this->date_formation,
                 'statut' => $this->statut_equipe,
-                'style_jeu' => $this->style_jeu_equipe
+                'style_jeu' => $this->style_jeu_equipe,
             ],
             'classement' => [
                 'ranking_atp' => $this->ranking_double_atp,
                 'ranking_wta' => $this->ranking_double_wta,
                 'ranking_combine' => $this->ranking_combine,
-                'points' => $this->points_ranking
+                'points' => $this->points_ranking,
             ],
             'performance' => [
                 'matchs_total' => $this->nb_matchs_ensemble,
                 'victoires' => $this->nb_victoires_ensemble,
                 'pourcentage_victoires' => $this->pourcentage_victoires,
-                'titres' => $this->nb_titres_ensemble
+                'titres' => $this->nb_titres_ensemble,
             ],
             'dynamique_equipe' => [
                 'indice_chimie' => $this->indice_chimie,
                 'compatibilite' => $this->compatibilite_score,
                 'complementarite' => $this->complementarite_styles,
                 'communication' => $this->niveau_communication,
-                'coordination' => $this->niveau_coordination
+                'coordination' => $this->niveau_coordination,
             ],
             'forme_actuelle' => [
                 'score_forme' => $this->score_forme_equipe,
                 'motivation' => $this->motivation_niveau,
                 'blessures' => $this->blessures_actives,
-                'conflits' => $this->conflits_internes
+                'conflits' => $this->conflits_internes,
             ],
             'analyse' => [
                 'potentiel' => $this->potentiel_equipe,
                 'experience' => $this->niveau_experience,
                 'points_forts' => $this->detecterPointsForts(),
                 'points_faibles' => $this->detecterPointsFaibles(),
-                'recommandations' => $this->recommandationsAmelioration()
-            ]
+                'recommandations' => $this->recommandationsAmelioration(),
+            ],
         ];
     }
 
@@ -501,7 +504,7 @@ class Equipe extends Model
             'nb_equipes_actives' => self::where('statut_equipe', 'active')->count(),
             'niveau_moyen' => self::avg('potentiel_equipe'),
             'chimie_moyenne' => self::avg('indice_chimie'),
-            'experience_moyenne' => self::avg('niveau_experience')
+            'experience_moyenne' => self::avg('niveau_experience'),
         ];
     }
 }

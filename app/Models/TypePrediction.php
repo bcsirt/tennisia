@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class TypePrediction extends Model
 {
@@ -227,7 +226,7 @@ class TypePrediction extends Model
 
         'ordre_affichage',        // Ordre affichage
         'priorite',               // Priorité 1-10
-        'actif'
+        'actif',
     ];
 
     protected $casts = [
@@ -363,7 +362,7 @@ class TypePrediction extends Model
 
         // Dates
         'date_creation_type' => 'date',
-        'obsolescence_prevue' => 'date'
+        'obsolescence_prevue' => 'date',
     ];
 
     protected $appends = [
@@ -374,7 +373,7 @@ class TypePrediction extends Model
         'recommandations_usage',
         'metriques_performance_globales',
         'score_maturite',
-        'niveau_adoption'
+        'niveau_adoption',
     ];
 
     // ===================================================================
@@ -434,15 +433,24 @@ class TypePrediction extends Model
             $this->niveau_difficulte ?? 5,
             $this->complexite_calcul ?? 5,
             $this->incertitude_intrinseque ?? 5,
-            $this->dependance_contexte ?? 5
+            $this->dependance_contexte ?? 5,
         ];
 
         $moyenne = array_sum($composantes) / count($composantes);
 
-        if ($moyenne >= 8) return 'Très complexe';
-        if ($moyenne >= 6) return 'Complexe';
-        if ($moyenne >= 4) return 'Modéré';
-        if ($moyenne >= 2) return 'Simple';
+        if ($moyenne >= 8) {
+            return 'Très complexe';
+        }
+        if ($moyenne >= 6) {
+            return 'Complexe';
+        }
+        if ($moyenne >= 4) {
+            return 'Modéré';
+        }
+        if ($moyenne >= 2) {
+            return 'Simple';
+        }
+
         return 'Très simple';
     }
 
@@ -453,7 +461,7 @@ class TypePrediction extends Model
             'stabilite' => ($this->maturite_niveau ?? 5) / 10,
             'calibration' => $this->calibration_score ?? 0.5,
             'monitoring' => $this->monitoring_actif ? 1 : 0.5,
-            'validation' => $this->validation_croisee ? 1 : 0.5
+            'validation' => $this->validation_croisee ? 1 : 0.5,
         ];
 
         return round(array_sum($composantes) / count($composantes) * 100, 1);
@@ -465,12 +473,22 @@ class TypePrediction extends Model
 
         // Surfaces optimales
         $surfaces = [];
-        if (($this->precision_dur ?? 0) >= 75) $surfaces[] = 'Dur';
-        if (($this->precision_terre ?? 0) >= 75) $surfaces[] = 'Terre battue';
-        if (($this->precision_gazon ?? 0) >= 75) $surfaces[] = 'Gazon';
-        if (($this->precision_indoor ?? 0) >= 75) $surfaces[] = 'Indoor';
+        if (($this->precision_dur ?? 0) >= 75) {
+            $surfaces[] = 'Dur';
+        }
+        if (($this->precision_terre ?? 0) >= 75) {
+            $surfaces[] = 'Terre battue';
+        }
+        if (($this->precision_gazon ?? 0) >= 75) {
+            $surfaces[] = 'Gazon';
+        }
+        if (($this->precision_indoor ?? 0) >= 75) {
+            $surfaces[] = 'Indoor';
+        }
 
-        if (!empty($surfaces)) $contextes['surfaces'] = $surfaces;
+        if (! empty($surfaces)) {
+            $contextes['surfaces'] = $surfaces;
+        }
 
         // Niveaux de compétition
         if (($this->precision_top_100 ?? 0) >= 75) {
@@ -492,14 +510,30 @@ class TypePrediction extends Model
     {
         $facteurs = [];
 
-        if ($this->sensible_surface) $facteurs[] = 'Surface';
-        if ($this->sensible_meteo) $facteurs[] = 'Météo';
-        if ($this->sensible_forme) $facteurs[] = 'Forme joueur';
-        if ($this->sensible_fatigue) $facteurs[] = 'Fatigue';
-        if ($this->sensible_pression) $facteurs[] = 'Pression psychologique';
-        if ($this->sensible_historique) $facteurs[] = 'Historique H2H';
-        if ($this->sensible_classement) $facteurs[] = 'Classements';
-        if ($this->sensible_age) $facteurs[] = 'Âge joueurs';
+        if ($this->sensible_surface) {
+            $facteurs[] = 'Surface';
+        }
+        if ($this->sensible_meteo) {
+            $facteurs[] = 'Météo';
+        }
+        if ($this->sensible_forme) {
+            $facteurs[] = 'Forme joueur';
+        }
+        if ($this->sensible_fatigue) {
+            $facteurs[] = 'Fatigue';
+        }
+        if ($this->sensible_pression) {
+            $facteurs[] = 'Pression psychologique';
+        }
+        if ($this->sensible_historique) {
+            $facteurs[] = 'Historique H2H';
+        }
+        if ($this->sensible_classement) {
+            $facteurs[] = 'Classements';
+        }
+        if ($this->sensible_age) {
+            $facteurs[] = 'Âge joueurs';
+        }
 
         return $facteurs;
     }
@@ -539,14 +573,14 @@ class TypePrediction extends Model
     public function getMetriquesPerformanceGlobalesAttribute()
     {
         return [
-            'precision_moyenne' => ($this->precision_actuelle ?? 0) . '%',
-            'confiance_moyenne' => round(($this->confiance_moyenne ?? 0) * 100, 1) . '%',
-            'calibration' => round(($this->calibration_score ?? 0) * 100, 1) . '%',
-            'fiabilite' => $this->score_fiabilite . '%',
+            'precision_moyenne' => ($this->precision_actuelle ?? 0).'%',
+            'confiance_moyenne' => round(($this->confiance_moyenne ?? 0) * 100, 1).'%',
+            'calibration' => round(($this->calibration_score ?? 0) * 100, 1).'%',
+            'fiabilite' => $this->score_fiabilite.'%',
             'predictions_total' => $this->predictions()->count(),
-            'taux_succes' => $this->getTauxSucces() . '%',
-            'temps_calcul' => ($this->temps_calcul_moyen ?? 0) . 'ms',
-            'adoption' => ($this->adoption_rate ?? 0) . '%'
+            'taux_succes' => $this->getTauxSucces().'%',
+            'temps_calcul' => ($this->temps_calcul_moyen ?? 0).'ms',
+            'adoption' => ($this->adoption_rate ?? 0).'%',
         ];
     }
 
@@ -558,7 +592,7 @@ class TypePrediction extends Model
             'documentation' => $this->documentation_url ? 10 : 5,
             'tests' => $this->tests_disponibles ? 10 : 5,
             'support' => $this->support_technique ? 10 : 5,
-            'adoption' => ($this->adoption_rate ?? 0) / 10
+            'adoption' => ($this->adoption_rate ?? 0) / 10,
         ];
 
         return round(array_sum($facteurs) / count($facteurs), 1);
@@ -569,10 +603,19 @@ class TypePrediction extends Model
         $adoption = $this->adoption_rate ?? 0;
         $usage = $this->predictions()->count();
 
-        if ($adoption >= 80 && $usage >= 1000) return 'Très élevé';
-        if ($adoption >= 60 && $usage >= 500) return 'Élevé';
-        if ($adoption >= 40 && $usage >= 100) return 'Modéré';
-        if ($adoption >= 20 && $usage >= 50) return 'Faible';
+        if ($adoption >= 80 && $usage >= 1000) {
+            return 'Très élevé';
+        }
+        if ($adoption >= 60 && $usage >= 500) {
+            return 'Élevé';
+        }
+        if ($adoption >= 40 && $usage >= 100) {
+            return 'Modéré';
+        }
+        if ($adoption >= 20 && $usage >= 50) {
+            return 'Faible';
+        }
+
         return 'Très faible';
     }
 
@@ -664,7 +707,7 @@ class TypePrediction extends Model
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('code', 'LIKE', "%{$terme}%")
                 ->orWhere('categorie_principale', 'LIKE', "%{$terme}%")
@@ -705,7 +748,7 @@ class TypePrediction extends Model
                 'audience_cible' => 'public',
                 'valeur_business' => 9,
                 'popularite_score' => 10,
-                'maturite_niveau' => 9
+                'maturite_niveau' => 9,
             ],
             [
                 'nom' => 'Score Exact',
@@ -728,7 +771,7 @@ class TypePrediction extends Model
                 'valeur_business' => 8,
                 'criticite_erreur' => 6,
                 'popularite_score' => 7,
-                'maturite_niveau' => 7
+                'maturite_niveau' => 7,
             ],
             [
                 'nom' => 'Durée Match',
@@ -750,7 +793,7 @@ class TypePrediction extends Model
                 'audience_cible' => 'professionnel',
                 'valeur_business' => 6,
                 'popularite_score' => 6,
-                'maturite_niveau' => 6
+                'maturite_niveau' => 6,
             ],
             [
                 'nom' => 'Risque Blessure',
@@ -773,7 +816,7 @@ class TypePrediction extends Model
                 'criticite_erreur' => 9,
                 'interpretabilite_requise' => true,
                 'popularite_score' => 8,
-                'maturite_niveau' => 8
+                'maturite_niveau' => 8,
             ],
             [
                 'nom' => 'Performance Surface',
@@ -796,7 +839,7 @@ class TypePrediction extends Model
                 'audience_cible' => 'expert',
                 'valeur_business' => 7,
                 'popularite_score' => 7,
-                'maturite_niveau' => 8
+                'maturite_niveau' => 8,
             ],
             [
                 'nom' => 'Upset Probability',
@@ -817,7 +860,7 @@ class TypePrediction extends Model
                 'audience_cible' => 'expert',
                 'valeur_business' => 8,
                 'popularite_score' => 6,
-                'maturite_niveau' => 6
+                'maturite_niveau' => 6,
             ],
             [
                 'nom' => 'Impact Météo',
@@ -838,7 +881,7 @@ class TypePrediction extends Model
                 'valeur_business' => 6,
                 'combinable' => true,
                 'popularite_score' => 5,
-                'maturite_niveau' => 7
+                'maturite_niveau' => 7,
             ],
             [
                 'nom' => 'Évolution Classement',
@@ -861,8 +904,8 @@ class TypePrediction extends Model
                 'valeur_business' => 7,
                 'interpretabilite_requise' => true,
                 'popularite_score' => 5,
-                'maturite_niveau' => 5
-            ]
+                'maturite_niveau' => 5,
+            ],
         ];
 
         foreach ($types as $type) {
@@ -911,7 +954,7 @@ class TypePrediction extends Model
             'adoption_moyenne' => self::avg('adoption_rate'),
             'type_plus_populaire' => self::orderBy('popularite_score', 'desc')->first(),
             'type_plus_performant' => self::ordonnesParPerformance()->first(),
-            'nb_predictions_total' => Prediction::count()
+            'nb_predictions_total' => Prediction::count(),
         ];
     }
 
@@ -941,16 +984,17 @@ class TypePrediction extends Model
 
         // Performance par algorithme
         $performanceAlgos = $predictions->groupBy('algorithme_ia_id')
-            ->map(function($preds) {
+            ->map(function ($preds) {
                 $correct = $preds->where('est_correcte', true)->count();
+
                 return [
                     'precision' => round(($correct / $preds->count()) * 100, 2),
-                    'confiance_moyenne' => $preds->avg('confiance')
+                    'confiance_moyenne' => $preds->avg('confiance'),
                 ];
             });
 
         return [
-            'periode' => $periodeDays . ' jours',
+            'periode' => $periodeDays.' jours',
             'total_predictions' => $totalPredictions,
             'precision_periode' => $precision,
             'evolution_vs_cible' => $precision - $this->precision_cible,
@@ -958,7 +1002,7 @@ class TypePrediction extends Model
             'ecart_type' => $ecartType,
             'performance_algorithmes' => $performanceAlgos,
             'calibration' => $this->calculerCalibration($predictions),
-            'recommandations' => $this->genererRecommandationsPerformance($precision)
+            'recommandations' => $this->genererRecommandationsPerformance($precision),
         ];
     }
 
@@ -1010,7 +1054,7 @@ class TypePrediction extends Model
             'niveau' => $this->getNiveauAdequation($score),
             'facteurs_decisifs' => $facteurs,
             'recommandation' => $this->getRecommandationAdequation($score),
-            'confiance_contexte' => $this->calculerConfianceContexte($contexte)
+            'confiance_contexte' => $this->calculerConfianceContexte($contexte),
         ];
     }
 
@@ -1019,7 +1063,7 @@ class TypePrediction extends Model
      */
     public function optimiserParametres()
     {
-        if (!$this->auto_tuning) {
+        if (! $this->auto_tuning) {
             return ['erreur' => 'Auto-tuning non activé'];
         }
 
@@ -1032,7 +1076,7 @@ class TypePrediction extends Model
                 'parametre' => 'seuil_confiance_min',
                 'ancienne_valeur' => $this->seuil_confiance_min,
                 'nouvelle_valeur' => $nouveauSeuil,
-                'gain_estime' => $this->calculerGainSeuil($nouveauSeuil)
+                'gain_estime' => $this->calculerGainSeuil($nouveauSeuil),
             ];
         }
 
@@ -1043,14 +1087,14 @@ class TypePrediction extends Model
                 'parametre' => 'frequence_maj',
                 'ancienne_valeur' => $this->frequence_maj,
                 'nouvelle_valeur' => $nouvelleFrequence,
-                'impact_ressources' => $this->calculerImpactRessources($nouvelleFrequence)
+                'impact_ressources' => $this->calculerImpactRessources($nouvelleFrequence),
             ];
         }
 
         return [
             'optimisations_proposees' => $optimisations,
             'gain_global_estime' => $this->calculerGainGlobal($optimisations),
-            'impact_utilisateurs' => $this->evaluerImpactUtilisateurs($optimisations)
+            'impact_utilisateurs' => $this->evaluerImpactUtilisateurs($optimisations),
         ];
     }
 
@@ -1063,8 +1107,8 @@ class TypePrediction extends Model
 
         // Performance
         if ($this->precision_actuelle < $this->precision_cible) {
-            $recommandations['performance'][] = 'Améliorer la précision (actuel: ' .
-                $this->precision_actuelle . '%, cible: ' . $this->precision_cible . '%)';
+            $recommandations['performance'][] = 'Améliorer la précision (actuel: '.
+                $this->precision_actuelle.'%, cible: '.$this->precision_cible.'%)';
         }
 
         // Données
@@ -1078,12 +1122,12 @@ class TypePrediction extends Model
         }
 
         // Monitoring
-        if (!$this->monitoring_actif) {
+        if (! $this->monitoring_actif) {
             $recommandations['technique'][] = 'Activer le monitoring continu';
         }
 
         // Explicabilité
-        if ($this->criticite_erreur >= 7 && !$this->interpretabilite_requise) {
+        if ($this->criticite_erreur >= 7 && ! $this->interpretabilite_requise) {
             $recommandations['explicabilite'][] = 'Ajouter l\'explicabilité (criticité élevée)';
         }
 
@@ -1095,7 +1139,7 @@ class TypePrediction extends Model
      */
     public function creerEnsemble($autresTypes)
     {
-        if (!$this->combinable) {
+        if (! $this->combinable) {
             return ['erreur' => 'Type non combinable'];
         }
 
@@ -1107,22 +1151,22 @@ class TypePrediction extends Model
                 $compatibles[] = [
                     'type' => $type->nom,
                     'synergie' => $this->calculerSynergie($type),
-                    'poids_recommande' => $this->calculerPoidsRecommande($type)
+                    'poids_recommande' => $this->calculerPoidsRecommande($type),
                 ];
             } else {
                 $incompatibles[] = [
                     'type' => $type->nom,
-                    'raison' => $this->getRaisonIncompatibilite($type)
+                    'raison' => $this->getRaisonIncompatibilite($type),
                 ];
             }
         }
 
         return [
-            'ensemble_possible' => !empty($compatibles),
+            'ensemble_possible' => ! empty($compatibles),
             'types_compatibles' => $compatibles,
             'types_incompatibles' => $incompatibles,
             'performance_estimee' => $this->estimerPerformanceEnsemble($compatibles),
-            'methode_agregation' => $this->recommanderMethodeAgregation($compatibles)
+            'methode_agregation' => $this->recommanderMethodeAgregation($compatibles),
         ];
     }
 
@@ -1133,19 +1177,24 @@ class TypePrediction extends Model
     private function getTauxSucces()
     {
         $total = $this->predictions()->whereNotNull('est_correcte')->count();
-        if ($total === 0) return 0;
+        if ($total === 0) {
+            return 0;
+        }
 
         $succes = $this->predictionsReussies()->count();
+
         return round(($succes / $total) * 100, 1);
     }
 
     private function calculerEcartType($predictions)
     {
         $confiances = $predictions->pluck('confiance')->toArray();
-        if (empty($confiances)) return 0;
+        if (empty($confiances)) {
+            return 0;
+        }
 
         $moyenne = array_sum($confiances) / count($confiances);
-        $variances = array_map(function($x) use ($moyenne) {
+        $variances = array_map(function ($x) use ($moyenne) {
             return pow($x - $moyenne, 2);
         }, $confiances);
 
@@ -1182,17 +1231,31 @@ class TypePrediction extends Model
 
     private function getNiveauAdequation($score)
     {
-        if ($score >= 80) return 'Excellent';
-        if ($score >= 65) return 'Bon';
-        if ($score >= 50) return 'Moyen';
-        if ($score >= 35) return 'Faible';
+        if ($score >= 80) {
+            return 'Excellent';
+        }
+        if ($score >= 65) {
+            return 'Bon';
+        }
+        if ($score >= 50) {
+            return 'Moyen';
+        }
+        if ($score >= 35) {
+            return 'Faible';
+        }
+
         return 'Inadéquat';
     }
 
     private function getRecommandationAdequation($score)
     {
-        if ($score >= 65) return 'Utilisation recommandée';
-        if ($score >= 50) return 'Utilisation possible avec précautions';
+        if ($score >= 65) {
+            return 'Utilisation recommandée';
+        }
+        if ($score >= 50) {
+            return 'Utilisation possible avec précautions';
+        }
+
         return 'Utilisation déconseillée';
     }
 
@@ -1234,7 +1297,9 @@ class TypePrediction extends Model
     private function evaluerSeuilConfiance($predictions, $seuil)
     {
         $valides = $predictions->where('confiance', '>=', $seuil);
-        if ($valides->count() === 0) return 0;
+        if ($valides->count() === 0) {
+            return 0;
+        }
 
         $precision = $valides->where('est_correcte', true)->count() / $valides->count();
         $couverture = $valides->count() / $predictions->count();
@@ -1245,9 +1310,16 @@ class TypePrediction extends Model
     private function optimiserFrequenceMaj()
     {
         // Basé sur la volatilité et la demande
-        if ($this->volatilite >= 8) return 1; // Hourly
-        if ($this->volatilite >= 6) return 4; // Every 4 hours
-        if ($this->volatilite >= 4) return 12; // Twice daily
+        if ($this->volatilite >= 8) {
+            return 1;
+        } // Hourly
+        if ($this->volatilite >= 6) {
+            return 4;
+        } // Every 4 hours
+        if ($this->volatilite >= 4) {
+            return 12;
+        } // Twice daily
+
         return 24; // Daily
     }
 
@@ -1297,6 +1369,7 @@ class TypePrediction extends Model
         $precision2 = $autreType->precision_actuelle ?? 50;
 
         $total = $precision1 + $precision2;
+
         return round($precision1 / $total, 2);
     }
 
@@ -1311,7 +1384,9 @@ class TypePrediction extends Model
 
     private function estimerPerformanceEnsemble($compatibles)
     {
-        if (empty($compatibles)) return 0;
+        if (empty($compatibles)) {
+            return 0;
+        }
 
         $performances = array_column($compatibles, 'synergie');
         $bonus = count($performances) * 2; // Bonus ensemble
@@ -1321,8 +1396,13 @@ class TypePrediction extends Model
 
     private function recommanderMethodeAgregation($compatibles)
     {
-        if (count($compatibles) <= 2) return 'weighted_average';
-        if (count($compatibles) <= 4) return 'voting';
+        if (count($compatibles) <= 2) {
+            return 'weighted_average';
+        }
+        if (count($compatibles) <= 4) {
+            return 'voting';
+        }
+
         return 'stacking';
     }
 
@@ -1340,7 +1420,7 @@ class TypePrediction extends Model
             'horizon_prediction' => 'required|in:immediate,court_terme,moyen_terme,long_terme',
             'niveau_difficulte' => 'required|integer|min:1|max:10',
             'precision_cible' => 'nullable|numeric|min:0|max:100',
-            'audience_cible' => 'required|in:public,expert,professionnel,paris'
+            'audience_cible' => 'required|in:public,expert,professionnel,paris',
         ];
     }
 
@@ -1354,21 +1434,27 @@ class TypePrediction extends Model
 
         static::saving(function ($type) {
             // Auto-calculs
-            if (!$type->ordre_affichage) {
+            if (! $type->ordre_affichage) {
                 $type->ordre_affichage = ($type->popularite_score ?? 5) * 10;
             }
 
             // Seuils par défaut selon difficulté
-            if (!$type->precision_minimale && $type->niveau_difficulte) {
+            if (! $type->precision_minimale && $type->niveau_difficulte) {
                 $minimales = [1 => 90, 2 => 85, 3 => 80, 4 => 75, 5 => 70,
                     6 => 65, 7 => 60, 8 => 55, 9 => 50, 10 => 45];
                 $type->precision_minimale = $minimales[$type->niveau_difficulte];
             }
 
             // Valeurs par défaut
-            if ($type->actif === null) $type->actif = true;
-            if (!$type->version_actuelle) $type->version_actuelle = 1.0;
-            if (!$type->intervalle_confiance) $type->intervalle_confiance = 95.0;
+            if ($type->actif === null) {
+                $type->actif = true;
+            }
+            if (! $type->version_actuelle) {
+                $type->version_actuelle = 1.0;
+            }
+            if (! $type->intervalle_confiance) {
+                $type->intervalle_confiance = 95.0;
+            }
         });
 
         static::created(function ($type) {

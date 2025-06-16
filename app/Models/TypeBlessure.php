@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TypeBlessure extends Model
@@ -109,7 +109,7 @@ class TypeBlessure extends Model
         'icone',                  // Icône représentative
         'couleur_hex',            // Couleur d'affichage
         'ordre_affichage',        // Ordre dans les listes
-        'actif'
+        'actif',
     ];
 
     protected $casts = [
@@ -165,7 +165,7 @@ class TypeBlessure extends Model
         'affecte_smash' => 'boolean',
         'peut_finir_carriere' => 'boolean',
         'valide_medical' => 'boolean',
-        'actif' => 'boolean'
+        'actif' => 'boolean',
     ];
 
     protected $appends = [
@@ -175,7 +175,7 @@ class TypeBlessure extends Model
         'risque_surface_principale',
         'coups_tennis_affectes',
         'phase_critique_saison',
-        'facteur_ajustement_ia'
+        'facteur_ajustement_ia',
     ];
 
     // ===================================================================
@@ -212,16 +212,16 @@ class TypeBlessure extends Model
     public function getNiveauGraviteTexteAttribute()
     {
         $niveaux = [
-            1-2 => 'Très légère',
-            3-4 => 'Légère',
-            5-6 => 'Modérée',
-            7-8 => 'Grave',
-            9-10 => 'Très grave'
+            1 - 2 => 'Très légère',
+            3 - 4 => 'Légère',
+            5 - 6 => 'Modérée',
+            7 - 8 => 'Grave',
+            9 - 10 => 'Très grave',
         ];
 
         foreach ($niveaux as $range => $niveau) {
             if (is_string($range)) {
-                list($min, $max) = explode('-', $range);
+                [$min, $max] = explode('-', $range);
                 if ($this->niveau_gravite >= $min && $this->niveau_gravite <= $max) {
                     return $niveau;
                 }
@@ -233,18 +233,32 @@ class TypeBlessure extends Model
 
     public function getDureeRecuperationEstimeeAttribute()
     {
-        if (!$this->duree_moyenne_guerison) return 'Non déterminée';
+        if (! $this->duree_moyenne_guerison) {
+            return 'Non déterminée';
+        }
 
         $jours = $this->duree_moyenne_guerison;
 
-        if ($jours <= 7) return "1 semaine";
-        if ($jours <= 14) return "2 semaines";
-        if ($jours <= 30) return "1 mois";
-        if ($jours <= 60) return "2 mois";
-        if ($jours <= 90) return "3 mois";
-        if ($jours <= 180) return "6 mois";
+        if ($jours <= 7) {
+            return '1 semaine';
+        }
+        if ($jours <= 14) {
+            return '2 semaines';
+        }
+        if ($jours <= 30) {
+            return '1 mois';
+        }
+        if ($jours <= 60) {
+            return '2 mois';
+        }
+        if ($jours <= 90) {
+            return '3 mois';
+        }
+        if ($jours <= 180) {
+            return '6 mois';
+        }
 
-        return "Plus de 6 mois";
+        return 'Plus de 6 mois';
     }
 
     public function getImpactGlobalPerformanceAttribute()
@@ -254,21 +268,34 @@ class TypeBlessure extends Model
             $this->impact_puissance ?? 0,
             $this->impact_endurance ?? 0,
             $this->impact_mobilite ?? 0,
-            $this->impact_precision ?? 0
+            $this->impact_precision ?? 0,
         ];
 
-        $moyenne = array_sum($impacts) / count(array_filter($impacts, function($v) { return $v !== 0; }));
+        $moyenne = array_sum($impacts) / count(array_filter($impacts, function ($v) {
+            return $v !== 0;
+        }));
 
-        if ($moyenne <= -7) return 'Impact très sévère';
-        if ($moyenne <= -4) return 'Impact sévère';
-        if ($moyenne <= -2) return 'Impact modéré';
-        if ($moyenne <= -1) return 'Impact léger';
+        if ($moyenne <= -7) {
+            return 'Impact très sévère';
+        }
+        if ($moyenne <= -4) {
+            return 'Impact sévère';
+        }
+        if ($moyenne <= -2) {
+            return 'Impact modéré';
+        }
+        if ($moyenne <= -1) {
+            return 'Impact léger';
+        }
+
         return 'Impact minimal';
     }
 
     public function getRisqueSurfacePrincipaleAttribute()
     {
-        if (!$this->surfaces_risque) return 'Toutes surfaces';
+        if (! $this->surfaces_risque) {
+            return 'Toutes surfaces';
+        }
 
         $surfaces = $this->surfaces_risque;
 
@@ -277,10 +304,10 @@ class TypeBlessure extends Model
             'hard' => 'Dur',
             'clay' => 'Terre battue',
             'grass' => 'Gazon',
-            'indoor' => 'Indoor'
+            'indoor' => 'Indoor',
         ];
 
-        $surfacesNoms = array_map(function($surface) use ($mapping) {
+        $surfacesNoms = array_map(function ($surface) use ($mapping) {
             return $mapping[$surface] ?? $surface;
         }, $surfaces);
 
@@ -291,19 +318,33 @@ class TypeBlessure extends Model
     {
         $coups = [];
 
-        if ($this->affecte_service) $coups[] = 'Service';
-        if ($this->affecte_coup_droit) $coups[] = 'Coup droit';
-        if ($this->affecte_revers) $coups[] = 'Revers';
-        if ($this->affecte_volley) $coups[] = 'Volée';
-        if ($this->affecte_smash) $coups[] = 'Smash';
-        if ($this->affecte_deplacement) $coups[] = 'Déplacements';
+        if ($this->affecte_service) {
+            $coups[] = 'Service';
+        }
+        if ($this->affecte_coup_droit) {
+            $coups[] = 'Coup droit';
+        }
+        if ($this->affecte_revers) {
+            $coups[] = 'Revers';
+        }
+        if ($this->affecte_volley) {
+            $coups[] = 'Volée';
+        }
+        if ($this->affecte_smash) {
+            $coups[] = 'Smash';
+        }
+        if ($this->affecte_deplacement) {
+            $coups[] = 'Déplacements';
+        }
 
         return empty($coups) ? ['Aucun impact spécifique'] : $coups;
     }
 
     public function getPhaseCritiqueSaisonAttribute()
     {
-        if (!$this->saison_frequente) return 'Toute l\'année';
+        if (! $this->saison_frequente) {
+            return 'Toute l\'année';
+        }
 
         $saisons = [
             'printemps' => 'Printemps (saison terre)',
@@ -311,7 +352,7 @@ class TypeBlessure extends Model
             'automne' => 'Automne (fin de saison)',
             'hiver' => 'Hiver (indoor)',
             'debut_saison' => 'Début de saison',
-            'fin_saison' => 'Fin de saison'
+            'fin_saison' => 'Fin de saison',
         ];
 
         return $saisons[$this->saison_frequente] ?? $this->saison_frequente;
@@ -323,17 +364,22 @@ class TypeBlessure extends Model
         $facteur = 0;
 
         // Impact selon la gravité
-        if ($this->niveau_gravite >= 8) $facteur = -0.8;
-        elseif ($this->niveau_gravite >= 6) $facteur = -0.5;
-        elseif ($this->niveau_gravite >= 4) $facteur = -0.3;
-        elseif ($this->niveau_gravite >= 2) $facteur = -0.1;
+        if ($this->niveau_gravite >= 8) {
+            $facteur = -0.8;
+        } elseif ($this->niveau_gravite >= 6) {
+            $facteur = -0.5;
+        } elseif ($this->niveau_gravite >= 4) {
+            $facteur = -0.3;
+        } elseif ($this->niveau_gravite >= 2) {
+            $facteur = -0.1;
+        }
 
         // Ajustement selon l'impact sur performance
         $impactMoyen = array_sum([
-                $this->impact_vitesse ?? 0,
-                $this->impact_puissance ?? 0,
-                $this->impact_endurance ?? 0
-            ]) / 3;
+            $this->impact_vitesse ?? 0,
+            $this->impact_puissance ?? 0,
+            $this->impact_endurance ?? 0,
+        ]) / 3;
 
         $facteur += $impactMoyen / 10; // Normaliser entre -1 et +1
 
@@ -383,6 +429,7 @@ class TypeBlessure extends Model
     public function scopeAffectantCoups($query, $coup)
     {
         $champ = "affecte_{$coup}";
+
         return $query->where($champ, true);
     }
 
@@ -415,7 +462,7 @@ class TypeBlessure extends Model
 
     public function scopeRecherche($query, $terme)
     {
-        return $query->where(function($q) use ($terme) {
+        return $query->where(function ($q) use ($terme) {
             $q->where('nom', 'LIKE', "%{$terme}%")
                 ->orWhere('nom_medical', 'LIKE', "%{$terme}%")
                 ->orWhere('zone_corporelle', 'LIKE', "%{$terme}%")
@@ -452,7 +499,7 @@ class TypeBlessure extends Model
                 'impact_precision' => -4,
                 'frequence_tennis' => 23.5,
                 'surfaces_risque' => ['hard'],
-                'facteurs_risque' => ['technique_défaillante', 'raquette_inadaptée', 'surentraînement']
+                'facteurs_risque' => ['technique_défaillante', 'raquette_inadaptée', 'surentraînement'],
             ],
             [
                 'nom' => 'Entorse cheville',
@@ -469,7 +516,7 @@ class TypeBlessure extends Model
                 'impact_vitesse' => -5,
                 'frequence_tennis' => 18.2,
                 'surfaces_risque' => ['clay', 'grass'],
-                'facteurs_risque' => ['terrain_glissant', 'fatigue', 'chaussures_inadaptées']
+                'facteurs_risque' => ['terrain_glissant', 'fatigue', 'chaussures_inadaptées'],
             ],
             [
                 'nom' => 'Déchirure musculaire',
@@ -486,7 +533,7 @@ class TypeBlessure extends Model
                 'impact_vitesse' => -9,
                 'impact_puissance' => -7,
                 'frequence_tennis' => 15.8,
-                'facteurs_risque' => ['échauffement_insuffisant', 'fatigue', 'déséquilibre_musculaire']
+                'facteurs_risque' => ['échauffement_insuffisant', 'fatigue', 'déséquilibre_musculaire'],
             ],
             [
                 'nom' => 'Tendinite épaule',
@@ -504,7 +551,7 @@ class TypeBlessure extends Model
                 'impact_puissance' => -8,
                 'impact_precision' => -3,
                 'frequence_tennis' => 12.4,
-                'facteurs_risque' => ['volume_service_élevé', 'technique_défaillante']
+                'facteurs_risque' => ['volume_service_élevé', 'technique_défaillante'],
             ],
             [
                 'nom' => 'Lumbago',
@@ -522,7 +569,7 @@ class TypeBlessure extends Model
                 'impact_mobilite' => -7,
                 'impact_puissance' => -5,
                 'frequence_tennis' => 11.2,
-                'facteurs_risque' => ['rotation_excessive', 'déséquilibre_musculaire']
+                'facteurs_risque' => ['rotation_excessive', 'déséquilibre_musculaire'],
             ],
             [
                 'nom' => 'Fasciite plantaire',
@@ -540,7 +587,7 @@ class TypeBlessure extends Model
                 'impact_endurance' => -4,
                 'frequence_tennis' => 9.8,
                 'surfaces_risque' => ['hard'],
-                'facteurs_risque' => ['surpoids', 'chaussures_usées', 'surface_dure']
+                'facteurs_risque' => ['surpoids', 'chaussures_usées', 'surface_dure'],
             ],
             [
                 'nom' => 'Tendinite poignet',
@@ -558,7 +605,7 @@ class TypeBlessure extends Model
                 'impact_precision' => -7,
                 'impact_puissance' => -4,
                 'frequence_tennis' => 8.5,
-                'facteurs_risque' => ['grip_incorrect', 'raquette_lourde']
+                'facteurs_risque' => ['grip_incorrect', 'raquette_lourde'],
             ],
             [
                 'nom' => 'Syndrome rotulien',
@@ -576,8 +623,8 @@ class TypeBlessure extends Model
                 'impact_endurance' => -6,
                 'frequence_tennis' => 7.3,
                 'surfaces_risque' => ['hard', 'clay'],
-                'facteurs_risque' => ['déséquilibre_musculaire', 'surcharge']
-            ]
+                'facteurs_risque' => ['déséquilibre_musculaire', 'surcharge'],
+            ],
         ];
 
         foreach ($blessures as $blessure) {
@@ -621,7 +668,7 @@ class TypeBlessure extends Model
             'zones_plus_touchees' => self::selectRaw('zone_corporelle, COUNT(*) as nb')
                 ->groupBy('zone_corporelle')
                 ->orderBy('nb', 'desc')
-                ->pluck('nb', 'zone_corporelle')
+                ->pluck('nb', 'zone_corporelle'),
         ];
     }
 
@@ -670,7 +717,7 @@ class TypeBlessure extends Model
             'mesures_generales' => $this->mesures_prevention ?? [],
             'exercices' => $this->exercices_prevention ?? [],
             'materiel' => $this->materiel_prevention,
-            'echauffement' => $this->echauffement_specifique
+            'echauffement' => $this->echauffement_specifique,
         ];
 
         // Personnalisation selon le joueur
@@ -695,7 +742,9 @@ class TypeBlessure extends Model
     {
         $duree = $dureeArret ?? $this->duree_moyenne_guerison;
 
-        if (!$duree) return 0;
+        if (! $duree) {
+            return 0;
+        }
 
         // Formule d'estimation basée sur la durée et la gravité
         $impactBase = $this->impact_classement ?? 0;
@@ -727,34 +776,34 @@ class TypeBlessure extends Model
                 'nom_medical' => $this->nom_medical,
                 'gravite' => $this->niveau_gravite_texte,
                 'zone' => $this->zone_corporelle,
-                'frequence' => $this->frequence_tennis . '%'
+                'frequence' => $this->frequence_tennis.'%',
             ],
             'impact_tennis' => [
                 'coups_affectes' => $this->coups_tennis_affectes,
                 'impact_performance' => $this->impact_global_performance,
-                'duree_recuperation' => $this->duree_recuperation_estimee
+                'duree_recuperation' => $this->duree_recuperation_estimee,
             ],
             'facteurs_risque' => [
                 'surfaces' => $this->risque_surface_principale,
                 'facteurs' => $this->facteurs_risque ?? [],
-                'saison_critique' => $this->phase_critique_saison
+                'saison_critique' => $this->phase_critique_saison,
             ],
             'prevention' => [
                 'mesures' => $this->mesures_prevention ?? [],
                 'exercices' => $this->exercices_prevention ?? [],
-                'materiel' => $this->materiel_prevention
+                'materiel' => $this->materiel_prevention,
             ],
             'traitement' => [
                 'premiers_soins' => $this->traitements_initiaux ?? [],
                 'medical' => $this->traitements_medicaux ?? [],
-                'readaptation' => $this->phases_readaptation ?? []
+                'readaptation' => $this->phases_readaptation ?? [],
             ],
             'retour_jeu' => [
                 'criteres' => $this->criteres_retour ?? [],
                 'tests' => $this->tests_retour ?? [],
-                'programme' => $this->programme_retour ?? []
+                'programme' => $this->programme_retour ?? [],
             ],
-            'facteur_ia' => $this->facteur_ajustement_ia
+            'facteur_ia' => $this->facteur_ajustement_ia,
         ];
     }
 
@@ -767,18 +816,18 @@ class TypeBlessure extends Model
             'gravite' => [
                 'actuelle' => $this->niveau_gravite,
                 'comparee' => $autreTypeBlessure->niveau_gravite,
-                'difference' => $this->niveau_gravite - $autreTypeBlessure->niveau_gravite
+                'difference' => $this->niveau_gravite - $autreTypeBlessure->niveau_gravite,
             ],
             'frequence' => [
                 'actuelle' => $this->frequence_tennis,
                 'comparee' => $autreTypeBlessure->frequence_tennis,
-                'difference' => $this->frequence_tennis - $autreTypeBlessure->frequence_tennis
+                'difference' => $this->frequence_tennis - $autreTypeBlessure->frequence_tennis,
             ],
             'duree_guerison' => [
                 'actuelle' => $this->duree_moyenne_guerison,
                 'comparee' => $autreTypeBlessure->duree_moyenne_guerison,
-                'difference' => $this->duree_moyenne_guerison - $autreTypeBlessure->duree_moyenne_guerison
-            ]
+                'difference' => $this->duree_moyenne_guerison - $autreTypeBlessure->duree_moyenne_guerison,
+            ],
         ];
     }
 
@@ -820,7 +869,7 @@ class TypeBlessure extends Model
             'zone_corporelle' => 'required|in:bras,jambe,dos,tete,tronc',
             'niveau_gravite' => 'required|integer|min:1|max:10',
             'duree_moyenne_guerison' => 'nullable|integer|min:1|max:365',
-            'frequence_tennis' => 'nullable|numeric|min:0|max:100'
+            'frequence_tennis' => 'nullable|numeric|min:0|max:100',
         ];
     }
 
@@ -843,12 +892,14 @@ class TypeBlessure extends Model
             }
 
             // Ordre d'affichage par défaut
-            if (!$typeBlessure->ordre_affichage) {
+            if (! $typeBlessure->ordre_affichage) {
                 $typeBlessure->ordre_affichage = $typeBlessure->niveau_gravite;
             }
 
             // Valeurs par défaut
-            if ($typeBlessure->actif === null) $typeBlessure->actif = true;
+            if ($typeBlessure->actif === null) {
+                $typeBlessure->actif = true;
+            }
         });
     }
 }

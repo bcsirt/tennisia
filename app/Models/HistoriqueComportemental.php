@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -34,7 +34,7 @@ class HistoriqueComportemental extends Model
         'confiance_analyse',        // Niveau de confiance de l'analyse (1-10)
         'notes_analyste',          // Notes libres de l'analyste
         'derniere_maj_auto',       // Dernière mise à jour automatique
-        'validee_par_analyste'     // Boolean - validation manuelle
+        'validee_par_analyste',     // Boolean - validation manuelle
     ];
 
     protected $casts = [
@@ -46,22 +46,31 @@ class HistoriqueComportemental extends Model
         'sanctions_par_match' => 'decimal:4',
         'confiance_analyse' => 'integer',
         'derniere_maj_auto' => 'datetime',
-        'validee_par_analyste' => 'boolean'
+        'validee_par_analyste' => 'boolean',
     ];
 
     // CONSTANTES POUR LES TENDANCES
     public const TENDANCE_AMELIORATION = 'amelioration';
+
     public const TENDANCE_DETERIORATION = 'deterioration';
+
     public const TENDANCE_STABLE = 'stable';
+
     public const TENDANCE_VOLATILE = 'volatile';
+
     public const TENDANCE_NOUVEAU_JOUEUR = 'nouveau_joueur';
 
     // CONSTANTES POUR LES PATTERNS
     public const PATTERN_STRESS_GRAND_CHELEM = 'stress_grand_chelem';
+
     public const PATTERN_CONFLIT_ARBITRE = 'conflit_arbitre';
+
     public const PATTERN_PRESSION_RANKING = 'pression_ranking';
+
     public const PATTERN_FATIGUE_FIN_SAISON = 'fatigue_fin_saison';
+
     public const PATTERN_INSTABILITE_JEUNE = 'instabilite_jeune';
+
     public const PATTERN_VETERAN_CALME = 'veteran_calme';
 
     /**
@@ -121,7 +130,7 @@ class HistoriqueComportemental extends Model
         $facteurBase = 1 + ($this->facteur_risque / 100); // 1.00 à 1.10
 
         // Ajustement selon le pattern détecté
-        $ajustementPattern = match($this->pattern_detecte) {
+        $ajustementPattern = match ($this->pattern_detecte) {
             self::PATTERN_STRESS_GRAND_CHELEM => 0.05,
             self::PATTERN_PRESSION_RANKING => 0.03,
             self::PATTERN_INSTABILITE_JEUNE => 0.04,
@@ -134,7 +143,7 @@ class HistoriqueComportemental extends Model
 
     public function getTendanceLabelAttribute(): string
     {
-        return match($this->evolution_tendance) {
+        return match ($this->evolution_tendance) {
             self::TENDANCE_AMELIORATION => 'En amélioration',
             self::TENDANCE_DETERIORATION => 'En dégradation',
             self::TENDANCE_STABLE => 'Stable',
@@ -146,7 +155,7 @@ class HistoriqueComportemental extends Model
 
     public function getPatternLabelAttribute(): string
     {
-        return match($this->pattern_detecte) {
+        return match ($this->pattern_detecte) {
             self::PATTERN_STRESS_GRAND_CHELEM => 'Stress Grand Chelem',
             self::PATTERN_CONFLIT_ARBITRE => 'Conflits avec arbitrage',
             self::PATTERN_PRESSION_RANKING => 'Pression classement',
@@ -177,7 +186,7 @@ class HistoriqueComportemental extends Model
             ->whereBetween('created_at', [$debut, $fin])
             ->get();
 
-        $matchs = MatchTennis::where(function($q) use ($joueurId) {
+        $matchs = MatchTennis::where(function ($q) use ($joueurId) {
             $q->where('joueur1_id', $joueurId)
                 ->orWhere('joueur2_id', $joueurId);
         })
@@ -192,7 +201,7 @@ class HistoriqueComportemental extends Model
             'nombre_matchs_periode' => $matchs,
             'sanctions_par_match' => $matchs > 0 ? $sanctions->count() / $matchs : 0,
             'gravite_moyenne' => $sanctions->avg('gravite') ?? 0,
-            'derniere_maj_auto' => now()
+            'derniere_maj_auto' => now(),
         ]);
 
         // Calcul du score fair-play
@@ -219,7 +228,7 @@ class HistoriqueComportemental extends Model
      */
     public static function mettreAJourAutomatique(): void
     {
-        $joueursActifs = Joueur::whereHas('matchs', function($q) {
+        $joueursActifs = Joueur::whereHas('matchs', function ($q) {
             $q->where('date_match', '>=', Carbon::now()->subMonths(3));
         })->get();
 
@@ -231,7 +240,7 @@ class HistoriqueComportemental extends Model
                 ->where('periode_fin', '>=', $finPeriode->subDays(7))
                 ->first();
 
-            if (!$existant) {
+            if (! $existant) {
                 self::genererPourPeriode($joueur->id, $debutPeriode, $finPeriode);
             }
         }
@@ -240,14 +249,13 @@ class HistoriqueComportemental extends Model
     /**
      * MÉTHODES PRIVÉES DE CALCUL
      */
-
     private function calculerScoreFairPlay(Collection $sanctions): float
     {
         if ($sanctions->isEmpty()) {
             return 10.0;
         }
 
-        $penalite = $sanctions->sum(function($sanction) {
+        $penalite = $sanctions->sum(function ($sanction) {
             return $sanction->gravite * 0.15;
         });
 
@@ -272,7 +280,7 @@ class HistoriqueComportemental extends Model
             ->orderByDesc('periode_fin')
             ->first();
 
-        if (!$periodePrecedente) {
+        if (! $periodePrecedente) {
             return self::TENDANCE_NOUVEAU_JOUEUR;
         }
 
@@ -310,9 +318,9 @@ class HistoriqueComportemental extends Model
         $gravites = $sanctions->pluck('gravite')->toArray();
         $moyenne = array_sum($gravites) / count($gravites);
 
-        $variance = array_sum(array_map(function($g) use ($moyenne) {
-                return pow($g - $moyenne, 2);
-            }, $gravites)) / count($gravites);
+        $variance = array_sum(array_map(function ($g) use ($moyenne) {
+            return pow($g - $moyenne, 2);
+        }, $gravites)) / count($gravites);
 
         return sqrt($variance);
     }
@@ -359,7 +367,7 @@ class HistoriqueComportemental extends Model
         }
 
         // Pattern Grand Chelem (analyse des tournois)
-        $sanctionsGrandChelem = $sanctions->filter(function($sanction) {
+        $sanctionsGrandChelem = $sanctions->filter(function ($sanction) {
             return in_array($sanction->match->tournoi->categorie,
                 ['Grand Slam', 'Grand_Slam']);
         });
@@ -371,7 +379,9 @@ class HistoriqueComportemental extends Model
 
         // Pattern conflit arbitre
         $arbitresFrequents = $sanctions->groupBy('arbitre_nom')
-            ->filter(function($group) { return $group->count() > 1; });
+            ->filter(function ($group) {
+                return $group->count() > 1;
+            });
 
         if ($arbitresFrequents->count() > 0) {
             $pattern = self::PATTERN_CONFLIT_ARBITRE;
@@ -379,7 +389,7 @@ class HistoriqueComportemental extends Model
         }
 
         // Pattern fin de saison
-        $sanctionsFinAnnee = $sanctions->filter(function($sanction) {
+        $sanctionsFinAnnee = $sanctions->filter(function ($sanction) {
             return $sanction->created_at->month >= 10;
         });
 
@@ -411,18 +421,18 @@ class HistoriqueComportemental extends Model
             ->avg('score_fair_play');
 
         $percentileRisque = self::where('facteur_risque', '<=', $this->facteur_risque)
-                ->count() / self::count() * 100;
+            ->count() / self::count() * 100;
 
         return [
             'score_vs_moyenne' => $this->score_fair_play - $moyenneCircuit,
             'percentile_fair_play' => $percentileRisque,
-            'categorie' => match(true) {
+            'categorie' => match (true) {
                 $this->score_fair_play >= 9 => 'Excellent',
                 $this->score_fair_play >= 7 => 'Bon',
                 $this->score_fair_play >= 5 => 'Moyen',
                 $this->score_fair_play >= 3 => 'Problématique',
                 default => 'Critique'
-            }
+            },
         ];
     }
 
@@ -439,7 +449,7 @@ class HistoriqueComportemental extends Model
         if ($historiques->count() < 3) {
             return [
                 'prediction' => 'insuffisant_donnees',
-                'confiance' => 1
+                'confiance' => 1,
             ];
         }
 
@@ -449,7 +459,7 @@ class HistoriqueComportemental extends Model
         $tendanceRisque = $historiques->last()->facteur_risque -
             $historiques->first()->facteur_risque;
 
-        $prediction = match(true) {
+        $prediction = match (true) {
             $tendanceScore > 1 && $tendanceRisque < -1 => 'amelioration_continue',
             $tendanceScore < -1 && $tendanceRisque > 1 => 'deterioration_preoccupante',
             abs($tendanceScore) <= 0.5 => 'stabilite',
@@ -463,7 +473,7 @@ class HistoriqueComportemental extends Model
             'confiance' => $confiance,
             'facteur_risque_estime_3_mois' => max(1, min(10,
                 $this->facteur_risque + ($tendanceRisque * 0.5)
-            ))
+            )),
         ];
     }
 
@@ -476,27 +486,27 @@ class HistoriqueComportemental extends Model
             'periode' => [
                 'debut' => $this->periode_debut->format('d/m/Y'),
                 'fin' => $this->periode_fin->format('d/m/Y'),
-                'duree_jours' => $this->periode_debut->diffInDays($this->periode_fin)
+                'duree_jours' => $this->periode_debut->diffInDays($this->periode_fin),
             ],
             'metriques' => [
                 'score_fair_play' => $this->score_fair_play,
                 'facteur_risque' => $this->facteur_risque,
                 'sanctions_par_match' => round($this->sanctions_par_match, 3),
-                'gravite_moyenne' => round($this->gravite_moyenne, 2)
+                'gravite_moyenne' => round($this->gravite_moyenne, 2),
             ],
             'analyse' => [
                 'tendance' => $this->tendance_label,
                 'pattern' => $this->pattern_label,
                 'confiance' => $this->confiance_analyse,
-                'fiabilite' => $this->est_fiable ? 'Fiable' : 'Données insuffisantes'
+                'fiabilite' => $this->est_fiable ? 'Fiable' : 'Données insuffisantes',
             ],
             'comparaison' => $this->comparerAvecCircuit(),
             'prediction' => $this->predireEvolutionFuture(),
             'impact_predictions' => [
                 'facteur_risque' => $this->facteur_risque_prediction,
                 'recommandation' => $this->facteur_risque >= 7 ?
-                    'Surveillance accrue recommandée' : 'Comportement stable'
-            ]
+                    'Surveillance accrue recommandée' : 'Comportement stable',
+            ],
         ];
     }
 }

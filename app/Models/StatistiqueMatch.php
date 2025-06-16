@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class StatistiqueMatch extends Model
 {
@@ -275,7 +274,7 @@ class StatistiqueMatch extends Model
         'stats_validees',           // Boolean validation
         'stats_completes',          // Boolean complétude
         'utilisable_pour_ia',       // Boolean utilisable IA
-        'anomalie_detectee'         // Boolean anomalie
+        'anomalie_detectee',         // Boolean anomalie
     ];
 
     protected $casts = [
@@ -467,7 +466,7 @@ class StatistiqueMatch extends Model
         'pattern_service' => 'json',
         'pattern_retour' => 'json',
         'zones_faiblesses' => 'json',
-        'zones_forces' => 'json'
+        'zones_forces' => 'json',
     ];
 
     protected $appends = [
@@ -480,7 +479,7 @@ class StatistiqueMatch extends Model
         'resume_performance',
         'impact_elo_estime',
         'niveau_jeu_observe',
-        'facteurs_cles_performance'
+        'facteurs_cles_performance',
     ];
 
     // ===================================================================
@@ -585,7 +584,7 @@ class StatistiqueMatch extends Model
             'premiere_balle' => $this->pourcentage_premiere_balle ?? 0,
             'efficacite_premiere' => $this->pourcentage_points_premiere_balle ?? 0,
             'efficacite_deuxieme' => $this->pourcentage_points_deuxieme_balle ?? 0,
-            'double_fautes' => max(0, 100 - (($this->double_fautes ?? 0) * 15)) // Pénalité par DF
+            'double_fautes' => max(0, 100 - (($this->double_fautes ?? 0) * 15)), // Pénalité par DF
         ];
 
         return round(array_sum($composantes) / count($composantes), 1);
@@ -593,13 +592,15 @@ class StatistiqueMatch extends Model
 
     public function getEfficaciteRetourGlobaleAttribute()
     {
-        if (!$this->points_retour_joues || $this->points_retour_joues === 0) return 0;
+        if (! $this->points_retour_joues || $this->points_retour_joues === 0) {
+            return 0;
+        }
 
         $composantes = [
             'retour_premiere' => $this->pourcentage_retour_premiere_balle ?? 0,
             'retour_deuxieme' => $this->pourcentage_retour_deuxieme_balle ?? 0,
             'breaks' => min(100, ($this->break_points_convertis ?? 0) * 25), // Max 4 breaks = 100%
-            'retours_gagnants' => min(100, ($this->retours_gagnants ?? 0) * 20)
+            'retours_gagnants' => min(100, ($this->retours_gagnants ?? 0) * 20),
         ];
 
         return round(array_sum($composantes) / count($composantes), 1);
@@ -611,7 +612,7 @@ class StatistiqueMatch extends Model
             'service' => $this->efficacite_service_globale * 0.3,
             'retour' => $this->efficacite_retour_globale * 0.3,
             'winners' => min(100, ($this->coups_gagnants ?? 0) * 2) * 0.2,
-            'erreurs' => max(0, 100 - (($this->erreurs_directes ?? 0) * 3)) * 0.2
+            'erreurs' => max(0, 100 - (($this->erreurs_directes ?? 0) * 3)) * 0.2,
         ];
 
         return round(array_sum($facteurs), 1);
@@ -626,7 +627,7 @@ class StatistiqueMatch extends Model
             'agressivite' => $this->score_agressivite ?? 50,
             'regularite' => $this->score_regularite ?? 50,
             'mental' => $this->score_mental ?? 50,
-            'physique' => $this->score_physique ?? 50
+            'physique' => $this->score_physique ?? 50,
         ];
     }
 
@@ -635,17 +636,31 @@ class StatistiqueMatch extends Model
         $points_forts = [];
 
         // Service
-        if (($this->aces ?? 0) >= 10) $points_forts[] = 'Service puissant';
-        if (($this->pourcentage_premiere_balle ?? 0) >= 70) $points_forts[] = 'Première balle précise';
-        if (($this->pourcentage_points_premiere_balle ?? 0) >= 75) $points_forts[] = 'Efficacité première balle';
+        if (($this->aces ?? 0) >= 10) {
+            $points_forts[] = 'Service puissant';
+        }
+        if (($this->pourcentage_premiere_balle ?? 0) >= 70) {
+            $points_forts[] = 'Première balle précise';
+        }
+        if (($this->pourcentage_points_premiere_balle ?? 0) >= 75) {
+            $points_forts[] = 'Efficacité première balle';
+        }
 
         // Retour
-        if (($this->pourcentage_retour_premiere_balle ?? 0) >= 40) $points_forts[] = 'Retour première balle';
-        if (($this->pourcentage_break_points_convertis ?? 0) >= 40) $points_forts[] = 'Conversion break points';
+        if (($this->pourcentage_retour_premiere_balle ?? 0) >= 40) {
+            $points_forts[] = 'Retour première balle';
+        }
+        if (($this->pourcentage_break_points_convertis ?? 0) >= 40) {
+            $points_forts[] = 'Conversion break points';
+        }
 
         // Jeu général
-        if (($this->ratio_gagnants_erreurs ?? 0) >= 1.5) $points_forts[] = 'Ratio winners/erreurs';
-        if (($this->pourcentage_points_filet ?? 0) >= 70) $points_forts[] = 'Jeu au filet';
+        if (($this->ratio_gagnants_erreurs ?? 0) >= 1.5) {
+            $points_forts[] = 'Ratio winners/erreurs';
+        }
+        if (($this->pourcentage_points_filet ?? 0) >= 70) {
+            $points_forts[] = 'Jeu au filet';
+        }
 
         return $points_forts;
     }
@@ -655,16 +670,28 @@ class StatistiqueMatch extends Model
         $points_faibles = [];
 
         // Service
-        if (($this->double_fautes ?? 0) >= 8) $points_faibles[] = 'Doubles fautes';
-        if (($this->pourcentage_premiere_balle ?? 0) <= 50) $points_faibles[] = 'Première balle imprécise';
+        if (($this->double_fautes ?? 0) >= 8) {
+            $points_faibles[] = 'Doubles fautes';
+        }
+        if (($this->pourcentage_premiere_balle ?? 0) <= 50) {
+            $points_faibles[] = 'Première balle imprécise';
+        }
 
         // Retour
-        if (($this->pourcentage_retour_premiere_balle ?? 0) <= 25) $points_faibles[] = 'Retour première balle';
-        if (($this->pourcentage_break_points_convertis ?? 0) <= 20) $points_faibles[] = 'Conversion break points';
+        if (($this->pourcentage_retour_premiere_balle ?? 0) <= 25) {
+            $points_faibles[] = 'Retour première balle';
+        }
+        if (($this->pourcentage_break_points_convertis ?? 0) <= 20) {
+            $points_faibles[] = 'Conversion break points';
+        }
 
         // Jeu général
-        if (($this->ratio_gagnants_erreurs ?? 0) <= 0.8) $points_faibles[] = 'Trop d\'erreurs directes';
-        if (($this->erreurs_directes ?? 0) >= 40) $points_faibles[] = 'Erreurs directes nombreuses';
+        if (($this->ratio_gagnants_erreurs ?? 0) <= 0.8) {
+            $points_faibles[] = 'Trop d\'erreurs directes';
+        }
+        if (($this->erreurs_directes ?? 0) >= 40) {
+            $points_faibles[] = 'Erreurs directes nombreuses';
+        }
 
         return $points_faibles;
     }
@@ -672,16 +699,16 @@ class StatistiqueMatch extends Model
     public function getResumePerformanceAttribute()
     {
         return [
-            'dominance' => $this->dominance_score . '/100',
-            'service' => $this->efficacite_service_globale . '/100',
-            'retour' => $this->efficacite_retour_globale . '/100',
+            'dominance' => $this->dominance_score.'/100',
+            'service' => $this->efficacite_service_globale.'/100',
+            'retour' => $this->efficacite_retour_globale.'/100',
             'aces' => $this->aces ?? 0,
             'double_fautes' => $this->double_fautes ?? 0,
             'winners' => $this->coups_gagnants ?? 0,
             'erreurs' => $this->erreurs_directes ?? 0,
             'breaks' => $this->break_points_convertis ?? 0,
             'points_forts' => $this->points_forts_match,
-            'points_faibles' => $this->points_faibles_match
+            'points_faibles' => $this->points_faibles_match,
         ];
     }
 
@@ -690,15 +717,24 @@ class StatistiqueMatch extends Model
         $impact_base = 0;
 
         // Impact selon dominance
-        if ($this->dominance_score >= 80) $impact_base += 20;
-        elseif ($this->dominance_score >= 60) $impact_base += 10;
-        elseif ($this->dominance_score <= 30) $impact_base -= 15;
-        elseif ($this->dominance_score <= 50) $impact_base -= 5;
+        if ($this->dominance_score >= 80) {
+            $impact_base += 20;
+        } elseif ($this->dominance_score >= 60) {
+            $impact_base += 10;
+        } elseif ($this->dominance_score <= 30) {
+            $impact_base -= 15;
+        } elseif ($this->dominance_score <= 50) {
+            $impact_base -= 5;
+        }
 
         // Ajustements contextuels
         $classement_adversaire = $this->match->getClassementAdversaire($this->joueur_id);
-        if ($classement_adversaire <= 50) $impact_base *= 1.5; // Bonus vs top 50
-        if ($classement_adversaire >= 500) $impact_base *= 0.7; // Malus vs classement bas
+        if ($classement_adversaire <= 50) {
+            $impact_base *= 1.5;
+        } // Bonus vs top 50
+        if ($classement_adversaire >= 500) {
+            $impact_base *= 0.7;
+        } // Malus vs classement bas
 
         return round($impact_base, 1);
     }
@@ -707,11 +743,22 @@ class StatistiqueMatch extends Model
     {
         $score = $this->dominance_score;
 
-        if ($score >= 85) return 'Exceptionnel';
-        if ($score >= 70) return 'Très bon';
-        if ($score >= 55) return 'Bon';
-        if ($score >= 40) return 'Moyen';
-        if ($score >= 25) return 'Faible';
+        if ($score >= 85) {
+            return 'Exceptionnel';
+        }
+        if ($score >= 70) {
+            return 'Très bon';
+        }
+        if ($score >= 55) {
+            return 'Bon';
+        }
+        if ($score >= 40) {
+            return 'Moyen';
+        }
+        if ($score >= 25) {
+            return 'Faible';
+        }
+
         return 'Très faible';
     }
 
@@ -725,7 +772,7 @@ class StatistiqueMatch extends Model
             'agressivite' => $this->score_agressivite ?? 50,
             'regularite' => $this->score_regularite ?? 50,
             'pression' => $this->performance_sous_pression ?? 50,
-            'adaptation' => $this->adaptation_conditions ?? 50
+            'adaptation' => $this->adaptation_conditions ?? 50,
         ];
     }
 
@@ -755,24 +802,26 @@ class StatistiqueMatch extends Model
     public function comparerAvecAdversaire()
     {
         $statsAdversaire = $this->comparaison;
-        if (!$statsAdversaire) return null;
+        if (! $statsAdversaire) {
+            return null;
+        }
 
         return [
             'service' => [
                 'joueur' => $this->efficacite_service_globale,
                 'adversaire' => $statsAdversaire->efficacite_service_globale,
-                'avantage' => $this->efficacite_service_globale - $statsAdversaire->efficacite_service_globale
+                'avantage' => $this->efficacite_service_globale - $statsAdversaire->efficacite_service_globale,
             ],
             'retour' => [
                 'joueur' => $this->efficacite_retour_globale,
                 'adversaire' => $statsAdversaire->efficacite_retour_globale,
-                'avantage' => $this->efficacite_retour_globale - $statsAdversaire->efficacite_retour_globale
+                'avantage' => $this->efficacite_retour_globale - $statsAdversaire->efficacite_retour_globale,
             ],
             'dominance' => [
                 'joueur' => $this->dominance_score,
                 'adversaire' => $statsAdversaire->dominance_score,
-                'avantage' => $this->dominance_score - $statsAdversaire->dominance_score
-            ]
+                'avantage' => $this->dominance_score - $statsAdversaire->dominance_score,
+            ],
         ];
     }
 
@@ -793,7 +842,7 @@ class StatistiqueMatch extends Model
                 'service' => $set->efficacite_service_globale,
                 'retour' => $set->efficacite_retour_globale,
                 'dominance' => $set->dominance_score,
-                'gagne' => $set->{"set{$set->set_numero}_gagne"} ?? false
+                'gagne' => $set->{"set{$set->set_numero}_gagne"} ?? false,
             ];
         }
 
@@ -813,7 +862,7 @@ class StatistiqueMatch extends Model
                 'type' => 'break_realise',
                 'importance' => 'haute',
                 'impact' => 'positif',
-                'nombre' => $this->break_points_convertis
+                'nombre' => $this->break_points_convertis,
             ];
         }
 
@@ -822,7 +871,7 @@ class StatistiqueMatch extends Model
                 'type' => 'break_sauve',
                 'importance' => 'haute',
                 'impact' => 'positif',
-                'nombre' => $this->break_points_sauves
+                'nombre' => $this->break_points_sauves,
             ];
         }
 
@@ -832,7 +881,7 @@ class StatistiqueMatch extends Model
                 'type' => 'serie_points',
                 'importance' => 'moyenne',
                 'impact' => 'positif',
-                'nombre' => $this->points_consécutifs_max
+                'nombre' => $this->points_consécutifs_max,
             ];
         }
 
@@ -842,7 +891,7 @@ class StatistiqueMatch extends Model
                 'type' => 'comeback',
                 'importance' => 'très_haute',
                 'impact' => 'positif',
-                'nombre' => $this->comebacks_realises
+                'nombre' => $this->comebacks_realises,
             ];
         }
 
@@ -861,18 +910,18 @@ class StatistiqueMatch extends Model
             'points_faibles' => $this->points_faibles_match,
             'patterns_detectes' => [
                 'service' => $this->pattern_service,
-                'retour' => $this->pattern_retour
+                'retour' => $this->pattern_retour,
             ],
             'zones_analyse' => [
                 'forces' => $this->zones_forces,
-                'faiblesses' => $this->zones_faiblesses
+                'faiblesses' => $this->zones_faiblesses,
             ],
             'evolution_match' => $this->analyserEvolutionSets(),
             'moments_cles' => $this->identifierMomentssCles(),
             'impact_elo' => $this->impact_elo_estime,
             'facteur_ajustement' => $this->facteur_ajustement_elo,
             'fiabilite_donnees' => $this->fiabilite_donnees,
-            'utilisable_prediction' => $this->utilisable_pour_ia
+            'utilisable_prediction' => $this->utilisable_pour_ia,
         ];
     }
 
@@ -958,12 +1007,14 @@ class StatistiqueMatch extends Model
         $champs_cles = ['aces', 'double_fautes', 'points_gagnes', 'coups_gagnants', 'erreurs_directes'];
 
         foreach ($champs_cles as $champ) {
-            if (!is_null($this->$champ)) $completude += 20;
+            if (! is_null($this->$champ)) {
+                $completude += 20;
+            }
         }
 
         $this->completude_donnees = $completude;
         $this->stats_completes = $completude >= 80;
-        $this->utilisable_pour_ia = $this->stats_completes && !$this->anomalie_detectee;
+        $this->utilisable_pour_ia = $this->stats_completes && ! $this->anomalie_detectee;
     }
 
     private function calculerScoreAgressivite()
@@ -972,7 +1023,7 @@ class StatistiqueMatch extends Model
             'winners' => min(100, ($this->coups_gagnants ?? 0) * 2),
             'montees_filet' => min(100, ($this->montees_filet ?? 0) * 5),
             'retours_gagnants' => min(100, ($this->retours_gagnants ?? 0) * 10),
-            'vitesse_service' => min(100, (($this->vitesse_service_max ?? 150) - 150) * 2)
+            'vitesse_service' => min(100, (($this->vitesse_service_max ?? 150) - 150) * 2),
         ];
 
         return round(array_sum($facteurs) / count($facteurs), 1);
@@ -991,7 +1042,7 @@ class StatistiqueMatch extends Model
         $facteurs = [
             'break_points' => $this->pourcentage_break_points_sauves ?? 50,
             'points_importants' => $this->pourcentage_points_importants ?? 50,
-            'constance' => $this->constance_niveau ?? 50
+            'constance' => $this->constance_niveau ?? 50,
         ];
 
         return round(array_sum($facteurs) / count($facteurs), 1);
@@ -1010,7 +1061,7 @@ class StatistiqueMatch extends Model
             'position_match' => 'required|in:joueur1,joueur2',
             'statut_joueur' => 'required|in:gagnant,perdant',
             'aces' => 'nullable|integer|min:0|max:50',
-            'double_fautes' => 'nullable|integer|min:0|max:30'
+            'double_fautes' => 'nullable|integer|min:0|max:30',
         ];
     }
 

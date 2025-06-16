@@ -61,6 +61,7 @@
         "analyse": [
             "@pint:check",
             "@rector:check",
+            "@stan",
             "@test"
         ],
         "fix": [
@@ -70,17 +71,13 @@
         "tennis:analyse": [
             "@pint:check",
             "@rector:check",
+            "@stan:models",
             "@test:tennis"
         ],
         "tennis:fix": [
             "@pint:models",
             "@rector:models"
         ],
-        "tennis:format": "./vendor/bin/pint app/Models app/Services",
-        "tennis:format-check": "./vendor/bin/pint --test app/Models app/Services",
-        "tennis:test": "./vendor/bin/pest --group=tennis",
-        "tennis:test-models": "./vendor/bin/pest tests/Feature/Models",
-        "tennis:test-predictions": "./vendor/bin/pest tests/Feature/Predictions",
         "pint": "./vendor/bin/pint",
         "pint:check": "./vendor/bin/pint --test",
         "pint:models": "./vendor/bin/pint app/Models",
@@ -89,18 +86,39 @@
         "rector:check": "./vendor/bin/rector --dry-run",
         "rector:fix": "./vendor/bin/rector",
         "rector:models": "./vendor/bin/rector app/Models --dry-run",
+        "stan": "./vendor/bin/phpstan analyse --memory-limit=2G",
+        "stan:models": "./vendor/bin/phpstan analyse app/Models --memory-limit=1G",
+        "stan:services": "./vendor/bin/phpstan analyse app/Services --memory-limit=1G",
+        "stan:strict": "./vendor/bin/phpstan analyse app/Services/*Prediction* --level=8",
         "test": "./vendor/bin/pest",
         "test:tennis": "./vendor/bin/pest --group=tennis",
         "test:models": "./vendor/bin/pest tests/Feature/Models",
-        "test:coverage": "./vendor/bin/pest --coverage",
+        "test:predictions": "./vendor/bin/pest tests/Feature/Predictions --group=predictions",
+        "test:api": "./vendor/bin/pest tests/Feature/Api --group=api",
+        "test:coverage": "./vendor/bin/pest --coverage --min=80",
         "test:parallel": "./vendor/bin/pest --parallel",
-        "rubix:optimize": "@php artisan optimize",
+        "rubix:optimize": "@php artisan rubix:cache-datasets",
         "telescope:clear": "@php artisan telescope:clear",
+        "ci": [
+            "@pint:check",
+            "@rector:check",
+            "@stan",
+            "@test:coverage"
+        ],
         "dev:setup": [
             "@composer install",
             "@php artisan key:generate",
             "@php artisan migrate:fresh --seed",
-            "@php artisan telescope:install"
+            "@php artisan db:seed --class=TennisDataSeeder",
+            "@php artisan telescope:install",
+            "npm install && npm run build"
+        ],
+        "prod:deploy": [
+            "@composer install --no-dev --optimize-autoloader",
+            "@php artisan config:cache",
+            "@php artisan route:cache",
+            "@php artisan view:cache",
+            "@php artisan queue:restart"
         ]
     },
     "extra": {
