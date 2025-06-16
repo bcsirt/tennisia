@@ -1042,7 +1042,7 @@ class AlgorithmeIA extends Model
             'maintenance' => [
                 'derniere_maj' => $this->date_derniere_maj,
                 'recommandations' => $this->recommandations_amelioration,
-                'priorite_maintenance' => $this->getPrioriteMaintenanc
+                'priorite_maintenance' => $this->getPrioriteMaintenance()
 
             ],
             'impact' => [
@@ -1216,9 +1216,7 @@ class AlgorithmeIA extends Model
             ->count();
     }
 
-    private function getPrioriteMaintenanc
-
-    ()
+    private function getPrioriteMaintenance()
     {
         $score = 0;
 
