@@ -191,7 +191,7 @@ class BlessureMatch extends Model
 
     public function getGraviteLabelAttribute(): string
     {
-        return match($this->gravite) {
+        return match ($this->gravite) {
             1, 2 => 'Légère',
             3, 4 => 'Modérée',
             5, 6 => 'Significative',
@@ -445,7 +445,7 @@ class BlessureMatch extends Model
         }
 
         $patterns['patterns_detectes'] = $patternsDetectes;
-        $patterns['risque_global'] = $this->calculerRisqueGlobal($blessures);
+        $patterns['risque_global'] = self::calculerRisqueGlobal($blessures);
 
         return $patterns;
     }
@@ -458,7 +458,7 @@ class BlessureMatch extends Model
 
         $score = $frequence * 2 + $graviteMoyenne * 3 + $abandons * 5;
 
-        return match(true) {
+        return match (true) {
             $score <= 10 => 'faible',
             $score <= 25 => 'modere',
             $score <= 40 => 'eleve',
@@ -577,7 +577,7 @@ class EvolutionBlessureMatch extends Model
 
         $diffGravite = $derniere->gravite_actuelle - $premiere->gravite_actuelle;
 
-        return match(true) {
+        return match (true) {
             $diffGravite >= 2 => 'aggravation_forte',
             $diffGravite >= 1 => 'aggravation_legere',
             $diffGravite <= -2 => 'amelioration_forte',
